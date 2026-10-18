@@ -3979,7 +3979,7 @@ async function loadAllCsvFromGithub() {
                 const res = await fetch(GH_BASE_URL + encodeURIComponent(fileName) + '?t=' + Date.now());
                 if (!res.ok) throw new Error('HTTP ' + res.status);
                 const csvText = await res.text();
-                const parsed = Papa.parse(csvText, { header: false, skipEmptyLines: true, delimiter: "\t" });
+                const parsed = Papa.parse(csvText, { header: false, skipEmptyLines: true });
                 const rawSheet = parsed.data;
                 let headerIdx = -1;
                 for (let j = 0; j < Math.min(rawSheet.length, 50); j++) {
