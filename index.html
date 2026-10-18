@@ -3952,6 +3952,81 @@
         URL.revokeObjectURL(url);
         showToast("Advanced Comparison berhasil diexport ke CSV!");
     });
+        // ============================================================
+// AUTO-LOAD CSV DARI GITHUB
+// GANTI dua baris di bawah dengan milik Anda
+// ============================================================
+const GH_USER = 'rohmanfahrudi';
+const GH_REPO = 'lmdp-b2c-analytic-performance';
+const GH_BASE_URL = `https://raw.githubusercontent.com/${GH_USER}/${GH_REPO}/main/`;
+
+async function loadAllCsvFromGithub() {
+    try {
+        const manifestRes = await fetch(GH_BASE_URL + 'manifest.json?t=' + Date.now());
+        if (!manifestRes.ok) throw new Error('manifest.json tidak ditemukan');
+        const fileList = await manifestRes.json();
+        if (fileList.length === 0) { showToast('Manifest kosong.', 'error'); return; }
+
+        els.loadUI.classList.add('active');
+        setLoadingProgress(0, `Memuat ${fileList.length} file CSV...`);
+        rawData = [];
+
+        for (let i = 0; i < fileList.length; i++) {
+            const fileName = fileList[i];
+            const pct = Math.round((i / fileList.length) * 100);
+            setLoadingProgress(pct, `Memuat ${fileName} (${i+1}/${fileList.length})...`);
+            try {
+                const res = await fetch(GH_BASE_URL + encodeURIComponent(fileName) + '?t=' + Date.now());
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const csvText = await res.text();
+                const parsed = Papa.parse(csvText, { header: false, skipEmptyLines: true });
+                const rawSheet = parsed.data;
+                let headerIdx = -1;
+                for (let j = 0; j < Math.min(rawSheet.length, 50); j++) {
+                    const rowStr = (rawSheet[j] || []).join(' ');
+                    if (rowStr.includes('Net Sales') && (rowStr.includes('Receipt Number') || rowStr.includes('SKU'))) { headerIdx = j; break; }
+                }
+                if (headerIdx !== -1) {
+                    const headers = rawSheet[headerIdx];
+                    const json = [];
+                    for (let r = headerIdx + 1; r < rawSheet.length; r++) {
+                        const obj = {};
+                        for (let c = 0; c < headers.length; c++) { if (headers[c]) obj[headers[c]] = rawSheet[r][c]; }
+                        json.push(obj);
+                    }
+                    processParsedJSON(json);
+                }
+            } catch (err) {
+                console.warn(`Gagal memuat ${fileName}:`, err);
+                showToast(`Gagal memuat ${fileName}`, 'error');
+            }
+        }
+
+        setLoadingProgress(95, 'Menyiapkan dasbor...');
+        if (rawData.length > 0) {
+            setupDatePickers();
+            populateDropdowns();
+            populateItemDropdown();
+            els.empty.classList.add('hidden');
+            els.content.classList.remove('hidden');
+            const navCtrl = document.getElementById('navDashboardControls');
+            if (navCtrl) { navCtrl.classList.remove('hidden'); navCtrl.classList.add('flex'); }
+            await executeFilterAndRender();
+            setLoadingProgress(100, 'Selesai!');
+            showToast(`Berhasil memuat ${formatNum(rawData.length)} baris dari ${fileList.length} file.`);
+        } else {
+            showToast('Tidak ada data valid. Periksa format CSV.', 'error');
+        }
+    } catch (err) {
+        console.error(err);
+        showToast('Gagal memuat data: ' + err.message, 'error');
+    } finally {
+        els.loadUI.classList.remove('active');
+        setLoadingProgress(0, '');
+    }
+}
+
+window.addEventListener('DOMContentLoaded', loadAllCsvFromGithub);
     </script>
 <div id="customMultiTooltip" class="hidden absolute bg-slate-800 text-white p-2.5 rounded-md shadow-xl border border-slate-700 z-[9999] max-h-64 overflow-y-auto w-max min-w-[200px] pointer-events-none opacity-0 transition-opacity duration-200"></div>
 </body>
