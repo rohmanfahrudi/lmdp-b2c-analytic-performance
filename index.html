@@ -174,13 +174,13 @@
             <div class="flex items-center justify-between w-full md:w-auto gap-3">
                 <div class="flex items-center gap-3">
                     <label class="cursor-pointer flex items-center justify-center shrink-0 hover:opacity-80 transition-opacity" title="Klik untuk Upload Custom Logo">
-                        <img id="brandLogoImg" src="logo.jpeg?v=1" class="h-8 w-auto object-contain max-w-[150px]" onerror="this.style.display='none'; document.getElementById('defaultLogo').style.display='flex';">
-                        <div id="defaultLogo" class="flex gap-0.5 border border-gray-200 p-0.5 shadow-sm bg-white"><div class="w-3 h-3 bg-fr-blue"></div><div class="w-3 h-3 bg-fr-white border border-gray-300"></div><div class="w-3 h-3 bg-fr-red"></div></div>
+                        <!-- LOGO LANGSUNG DITAMPILKAN DI SINI TANPA CLASS HIDDEN -->
+                        <img id="brandLogoImg" src="logo.jpeg?v=2" class="h-8 w-auto object-contain max-w-[150px]" onerror="this.style.display='none'; document.getElementById('defaultLogo').style.display='flex';">
+                        <div id="defaultLogo" class="hidden gap-0.5 border border-gray-200 p-0.5 shadow-sm bg-white"><div class="w-3 h-3 bg-fr-blue"></div><div class="w-3 h-3 bg-fr-white border border-gray-300"></div><div class="w-3 h-3 bg-fr-red"></div></div>
                         <input type="file" id="logoInput" accept="image/*" class="hidden">
                     </label>
                     <span class="font-bold text-[10px] sm:text-[11px] xl:text-xs tracking-tight ml-1 sm:ml-2 text-fr-text uppercase whitespace-normal sm:whitespace-nowrap leading-tight">LA MAISON DE PIERRE BOULANGERIE ANALYTIC PERFORMANCE</span>
                 </div>
-                <!-- Mobile Menu Toggle (Jika diperlukan, meski flex-wrap sudah cukup) -->
             </div>
             
             <!-- Nav Controls -->
@@ -491,8 +491,9 @@
         
         <!-- Empty State -->
         <div id="emptyState" class="flex flex-col items-center justify-center py-24 text-center px-4">
-            <img id="emptyStateLogoImg" src="logo.jpeg?v=1" class="h-20 w-auto object-contain mb-6" onerror="this.style.display='none'; document.getElementById('emptyStateDefaultLogo').style.display='flex';">
-            <div id="emptyStateDefaultLogo" class="w-16 h-16 mb-6 flex border border-gray-200 p-1 shadow-sm"><div class="w-1/3 bg-fr-blue h-full"></div><div class="w-1/3 bg-white h-full"></div><div class="w-1/3 bg-fr-red h-full"></div></div>
+            <!-- LOGO LANGSUNG DITAMPILKAN DI SINI TANPA CLASS HIDDEN -->
+            <img id="emptyStateLogoImg" src="logo.jpeg?v=2" class="h-20 w-auto object-contain mb-6" onerror="this.style.display='none'; document.getElementById('emptyStateDefaultLogo').style.display='flex';">
+            <div id="emptyStateDefaultLogo" class="hidden w-16 h-16 mb-6 border border-gray-200 p-1 shadow-sm"><div class="w-1/3 bg-fr-blue h-full"></div><div class="w-1/3 bg-white h-full"></div><div class="w-1/3 bg-fr-red h-full"></div></div>
             <h2 class="text-xl sm:text-2xl font-bold text-fr-text">Selamat Datang</h2><h3 class="text-base sm:text-lg font-bold text-fr-blue mt-1 uppercase tracking-wide">La Maison De Pierre Boulangerie</h3>
             <p class="text-xs sm:text-sm text-fr-muted mt-4 max-w-md">Silakan unggah dataset POS Anda (Excel atau CSV) melalui menu di atas untuk memulai analisis performa bisnis.</p>
         </div>
@@ -633,16 +634,9 @@
                     let year = new Date().getFullYear();
                     let start = new Date(year, idx, 1);
                     let end = new Date(year, idx + 1, 0);
-                    const toIsoLocal = (d) => {
-                        let y = d.getFullYear(); let m = String(d.getMonth()+1).padStart(2,'0'); let dt = String(d.getDate()).padStart(2,'0');
-                        return `${y}-${m}-${dt}`;
-                    };
-                    filters.dStart.value = toIsoLocal(start);
-                    filters.dEnd.value = toIsoLocal(end);
-                    filters.quick.value = 'custom';
-                    monthSubmenu.classList.remove('show');
-                    executeFilterAndRender();
-                    showToast(`Filter: ${m} ${year}`);
+                    const toIsoLocal = (d) => { let y = d.getFullYear(); let m = String(d.getMonth()+1).padStart(2,'0'); let dt = String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${dt}`; };
+                    filters.dStart.value = toIsoLocal(start); filters.dEnd.value = toIsoLocal(end);
+                    filters.quick.value = 'custom'; monthSubmenu.classList.remove('show'); executeFilterAndRender(); showToast(`Filter: ${m} ${year}`);
                 };
                 monthList.appendChild(item);
             });
@@ -650,10 +644,7 @@
         populateMonthList();
         
         quickDateSelect.addEventListener('mouseenter', (e) => { if(e.target.value === 'choose_month') monthSubmenu.classList.add('show'); });
-        quickDateSelect.addEventListener('change', (e) => {
-            if(e.target.value === 'choose_month') monthSubmenu.classList.add('show');
-            else { monthSubmenu.classList.remove('show'); handleQuickDate(); }
-        });
+        quickDateSelect.addEventListener('change', (e) => { if(e.target.value === 'choose_month') monthSubmenu.classList.add('show'); else { monthSubmenu.classList.remove('show'); handleQuickDate(); } });
         monthSubmenu.addEventListener('mouseenter', () => monthSubmenu.classList.add('show'));
         document.addEventListener('click', (e) => { if(!dateRangeContainer.contains(e.target) && !monthSubmenu.contains(e.target)) monthSubmenu.classList.remove('show'); });
 
@@ -794,137 +785,71 @@
             else if (val === 'this_year') { start.setMonth(0, 1); } 
             else if (val === 'custom' || val === 'choose_month') { return; } 
             
-            const toIsoLocal = (d) => {
-               let y = d.getFullYear(); let m = String(d.getMonth()+1).padStart(2,'0'); let dt = String(d.getDate()).padStart(2,'0');
-               return `${y}-${m}-${dt}`;
-            };
-            filters.dStart.value = toIsoLocal(start); 
-            filters.dEnd.value = toIsoLocal(end); 
-            executeFilterAndRender(); 
+            const toIsoLocal = (d) => { let y = d.getFullYear(); let m = String(d.getMonth()+1).padStart(2,'0'); let dt = String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${dt}`; };
+            filters.dStart.value = toIsoLocal(start); filters.dEnd.value = toIsoLocal(end); executeFilterAndRender(); 
         }
         
         const yieldToMain = () => new Promise(resolve => setTimeout(resolve, 0)); let pendingFilesToProcess = [];
         
         async function promptFileSelection(e) { 
-            const files = e.target.files; 
-            if (files.length === 0) return; 
+            const files = e.target.files; if (files.length === 0) return; 
             pendingFilesToProcess = Array.from(files).filter(f => f.name.match(/\.(xlsx|xls|csv)$/i)); 
             if(pendingFilesToProcess.length === 0) { showToast("Tidak ada file Excel/CSV yang valid ditemukan.", "error"); e.target.value = ''; return; } 
-            const container = document.getElementById('fileListContainer'); 
-            container.innerHTML = ''; 
-            const selectAllCb = document.getElementById('selectAllFilesCb'); 
-            selectAllCb.checked = true; 
+            const container = document.getElementById('fileListContainer'); container.innerHTML = ''; const selectAllCb = document.getElementById('selectAllFilesCb'); selectAllCb.checked = true; 
             pendingFilesToProcess.forEach((f, idx) => { 
-                const row = document.createElement('label'); 
-                row.className = "flex items-center gap-3 p-2 hover:bg-gray-100 rounded cursor-pointer transition-colors border border-transparent hover:border-gray-200 min-w-max"; 
-                const cb = document.createElement('input'); 
-                cb.type = "checkbox"; 
-                cb.className = "file-item-cb rounded text-fr-blue focus:ring-fr-blue h-3.5 w-3.5 cursor-pointer flex-shrink-0"; 
-                cb.checked = true; 
-                cb.dataset.idx = idx; 
-                cb.addEventListener('change', () => { 
-                    const allCbs = document.querySelectorAll('.file-item-cb'); 
-                    const allChecked = Array.from(allCbs).every(c => c.checked); 
-                    selectAllCb.checked = allChecked; 
-                }); 
-                const nameSpan = document.createElement('span'); 
-                nameSpan.className = "text-xs font-medium text-gray-700 whitespace-nowrap"; 
-                nameSpan.innerText = f.webkitRelativePath || f.name; 
-                nameSpan.title = f.webkitRelativePath || f.name;
-                row.appendChild(cb); 
-                row.appendChild(nameSpan); 
-                container.appendChild(row); 
+                const row = document.createElement('label'); row.className = "flex items-center gap-3 p-2 hover:bg-gray-100 rounded cursor-pointer transition-colors border border-transparent hover:border-gray-200 min-w-max"; 
+                const cb = document.createElement('input'); cb.type = "checkbox"; cb.className = "file-item-cb rounded text-fr-blue focus:ring-fr-blue h-3.5 w-3.5 cursor-pointer flex-shrink-0"; cb.checked = true; cb.dataset.idx = idx; 
+                cb.addEventListener('change', () => { const allCbs = document.querySelectorAll('.file-item-cb'); const allChecked = Array.from(allCbs).every(c => c.checked); selectAllCb.checked = allChecked; }); 
+                const nameSpan = document.createElement('span'); nameSpan.className = "text-xs font-medium text-gray-700 whitespace-nowrap"; nameSpan.innerText = f.webkitRelativePath || f.name; nameSpan.title = f.webkitRelativePath || f.name;
+                row.appendChild(cb); row.appendChild(nameSpan); container.appendChild(row); 
             }); 
             document.getElementById('fileSelectModal').classList.remove('hidden'); 
         }
         document.getElementById('selectAllFilesCb').addEventListener('change', (e) => { document.querySelectorAll('.file-item-cb').forEach(cb => cb.checked = e.target.checked); }); 
         const closeModal = () => { document.getElementById('fileSelectModal').classList.add('hidden'); els.file.value = ''; els.folder.value = ''; }; 
-        document.getElementById('closeFileModalBtn').addEventListener('click', closeModal); 
-        document.getElementById('cancelFileModalBtn').addEventListener('click', closeModal);
+        document.getElementById('closeFileModalBtn').addEventListener('click', closeModal); document.getElementById('cancelFileModalBtn').addEventListener('click', closeModal);
         document.getElementById('processFilesBtn').addEventListener('click', () => { 
             const selectedIndexes = Array.from(document.querySelectorAll('.file-item-cb:checked')).map(cb => parseInt(cb.dataset.idx)); 
             const selectedFiles = selectedIndexes.map(idx => pendingFilesToProcess[idx]); 
-            if(selectedFiles.length > 0) { closeModal(); executeFileProcessing(selectedFiles); } 
-            else { showToast("Pilih minimal satu file untuk diproses.", "error"); } 
+            if(selectedFiles.length > 0) { closeModal(); executeFileProcessing(selectedFiles); } else { showToast("Pilih minimal satu file untuk diproses.", "error"); } 
         });
 
         function setLoadingProgress(pct, text) {
-            const bar = document.getElementById('loadingProgressBar');
-            if(bar) bar.style.width = pct + '%';
-            if(text) {
-                const el = document.getElementById('loadingSubText');
-                if(el) el.innerText = text;
-            }
+            const bar = document.getElementById('loadingProgressBar'); if(bar) bar.style.width = pct + '%';
+            if(text) { const el = document.getElementById('loadingSubText'); if(el) el.innerText = text; }
         }
 
         async function executeFileProcessing(files) { 
-            els.loadUI.classList.add('active'); 
-            setLoadingProgress(0, 'Memulai...');
+            els.loadUI.classList.add('active'); setLoadingProgress(0, 'Memulai...');
             try { 
-                rawData = []; 
-                let totalFiles = files.length; 
+                rawData = []; let totalFiles = files.length; 
                 for(let i=0; i<totalFiles; i++) { 
-                    let pct = Math.round(((i)/totalFiles)*100);
-                    setLoadingProgress(pct, `Mengunggah file ${i+1} dari ${totalFiles}... (${pct}%)`);
-                    await new Promise(r => requestAnimationFrame(() => r()));
-                    await processExcel(files[i]); 
+                    let pct = Math.round(((i)/totalFiles)*100); setLoadingProgress(pct, `Mengunggah file ${i+1} dari ${totalFiles}... (${pct}%)`); await new Promise(r => requestAnimationFrame(() => r())); await processExcel(files[i]); 
                 } 
-                setLoadingProgress(95, 'Menyiapkan dasbor...');
-                await yieldToMain(); 
+                setLoadingProgress(95, 'Menyiapkan dasbor...'); await yieldToMain(); 
                 if (rawData.length > 0) { 
-                    setupDatePickers(); 
-                    populateDropdowns(); 
-                    populateItemDropdown(); 
-                    els.empty.classList.add('hidden'); 
-                    els.content.classList.remove('hidden'); 
-                    const navCtrl = document.getElementById('navDashboardControls');
-                    navCtrl.classList.remove('hidden');
-                    navCtrl.classList.add('flex');
-                    await executeFilterAndRender(); 
-                    setLoadingProgress(100, 'Selesai!');
-                    showToast(`Berhasil memuat ${formatNum(rawData.length)} baris data.`); 
-                } else { 
-                    showToast("Data tidak valid, tidak dapat menemukan header yang tepat.", "error"); 
-                } 
-            } catch (err) { 
-                showToast("Error membaca file excel.", "error"); 
-                console.error(err); 
-            } finally { 
-                els.loadUI.classList.remove('active'); 
-                setLoadingProgress(0, ''); 
-            } 
+                    setupDatePickers(); populateDropdowns(); populateItemDropdown(); els.empty.classList.add('hidden'); els.content.classList.remove('hidden'); 
+                    const navCtrl = document.getElementById('navDashboardControls'); navCtrl.classList.remove('hidden'); navCtrl.classList.add('flex');
+                    await executeFilterAndRender(); setLoadingProgress(100, 'Selesai!'); showToast(`Berhasil memuat ${formatNum(rawData.length)} baris data.`); 
+                } else { showToast("Data tidak valid, tidak dapat menemukan header yang tepat.", "error"); } 
+            } catch (err) { showToast("Error membaca file excel.", "error"); console.error(err); } finally { els.loadUI.classList.remove('active'); setLoadingProgress(0, ''); } 
         }
         
         function processExcel(file) {
         return new Promise((res, rej) => {
             if (file.name.toLowerCase().endsWith('.csv')) {
                 Papa.parse(file, {
-                    header: false,
-                    skipEmptyLines: true,
-                    worker: false,
+                    header: false, skipEmptyLines: true, worker: false,
                     complete: async function(results) {
-                        await yieldToMain();
-                        let rawSheet = results.data;
-                        let headerIdx = -1;
-                        for(let j=0; j < Math.min(rawSheet.length, 50); j++) {
-                            let rowStr = (rawSheet[j] || []).join(' ');
-                            if(rowStr.includes('Net Sales') && (rowStr.includes('Receipt Number') || rowStr.includes('SKU'))) { headerIdx = j; break; }
-                        }
+                        await yieldToMain(); let rawSheet = results.data; let headerIdx = -1;
+                        for(let j=0; j < Math.min(rawSheet.length, 50); j++) { let rowStr = (rawSheet[j] || []).join(' '); if(rowStr.includes('Net Sales') && (rowStr.includes('Receipt Number') || rowStr.includes('SKU'))) { headerIdx = j; break; } }
                         if(headerIdx !== -1) {
-                            let headers = rawSheet[headerIdx];
-                            let json = [];
-                            for(let i = headerIdx + 1; i < rawSheet.length; i++) {
-                                let obj = {};
-                                for(let c = 0; c < headers.length; c++) {
-                                    if(headers[c]) obj[headers[c]] = rawSheet[i][c];
-                                }
-                                json.push(obj);
-                            }
+                            let headers = rawSheet[headerIdx]; let json = [];
+                            for(let i = headerIdx + 1; i < rawSheet.length; i++) { let obj = {}; for(let c = 0; c < headers.length; c++) { if(headers[c]) obj[headers[c]] = rawSheet[i][c]; } json.push(obj); }
                             processParsedJSON(json);
                         }
                         res();
-                    },
-                    error: function(err) { console.error(err); rej(err); }
+                    }, error: function(err) { console.error(err); rej(err); }
                 });
             } else {
                 const r = new FileReader();
@@ -933,21 +858,11 @@
                     try {
                         const wb = XLSX.read(e.target.result, {type: 'array', cellDates: false});
                         for (let sIdx = 0; sIdx < wb.SheetNames.length; sIdx++) {
-                            const sn = wb.SheetNames[sIdx]; const sheet = wb.Sheets[sn];
-                            if (!sheet || !sheet['!ref']) continue;
-                            let refRange = XLSX.utils.decode_range(sheet['!ref']);
-                            let maxRow = Math.min(refRange.e.r, 50);
-                            let searchRange = Object.assign({}, refRange, { e: { c: refRange.e.c, r: maxRow } });
-                            const rawSheet = XLSX.utils.sheet_to_json(sheet, {header: 1, range: searchRange, defval: null});
-                            if(rawSheet.length === 0) continue;
-                            let headerIdx = -1;
-                            for(let j=0; j < rawSheet.length; j++) {
-                                let rowStr = (rawSheet[j] || []).join(' ');
-                                if(rowStr.includes('Net Sales') && (rowStr.includes('Receipt Number') || rowStr.includes('SKU'))) { headerIdx = j; break; }
-                            }
-                            if(headerIdx === -1) continue;
-                            let json = XLSX.utils.sheet_to_json(sheet, {defval: null, range: headerIdx});
-                            processParsedJSON(json);
+                            const sn = wb.SheetNames[sIdx]; const sheet = wb.Sheets[sn]; if (!sheet || !sheet['!ref']) continue;
+                            let refRange = XLSX.utils.decode_range(sheet['!ref']); let maxRow = Math.min(refRange.e.r, 50); let searchRange = Object.assign({}, refRange, { e: { c: refRange.e.c, r: maxRow } });
+                            const rawSheet = XLSX.utils.sheet_to_json(sheet, {header: 1, range: searchRange, defval: null}); if(rawSheet.length === 0) continue; let headerIdx = -1;
+                            for(let j=0; j < rawSheet.length; j++) { let rowStr = (rawSheet[j] || []).join(' '); if(rowStr.includes('Net Sales') && (rowStr.includes('Receipt Number') || rowStr.includes('SKU'))) { headerIdx = j; break; } }
+                            if(headerIdx === -1) continue; let json = XLSX.utils.sheet_to_json(sheet, {defval: null, range: headerIdx}); processParsedJSON(json);
                         }
                         res();
                     } catch(err) { rej(err); }
@@ -959,13 +874,10 @@
 
     function processParsedJSON(json) {
         for (let i = 0; i < json.length; i++) {
-            let row = json[i]; let nr = {};
-            for(let k in row) nr[k.trim()] = row[k];
-            if(!nr['Date'] && !nr['Items'] && !nr['Receipt Number']) continue;
+            let row = json[i]; let nr = {}; for(let k in row) nr[k.trim()] = row[k]; if(!nr['Date'] && !nr['Items'] && !nr['Receipt Number']) continue;
             let rawOutlet = nr['Outlet'] ? String(nr['Outlet']).trim() : ''; nr['Outlet'] = rawOutlet.split(',')[0].trim();
             nr['AREA'] = nr['AREA'] ? String(nr['AREA']).trim() : 'Unknown'; nr['DEPT'] = nr['DEPT'] ? String(nr['DEPT']).trim() : 'Unknown';
             nr['Event Type'] = nr['Event Type'] ? String(nr['Event Type']).trim() : 'Unknown'; nr['Items'] = nr['Items'] ? String(nr['Items']).trim() : 'Unknown';
-            
             nr['Collected By'] = nr['Collected By'] ? String(nr['Collected By']).trim() : (nr['CollectedBy'] || nr['collected by'] || '-');
             nr['Served By'] = nr['Served By'] ? String(nr['Served By']).trim() : (nr['ServedBy'] || nr['served by'] || '-');
             nr['Customer'] = nr['Customer'] ? String(nr['Customer']).trim() : (nr['customer'] || nr['CUSTOMER'] || '-');
@@ -973,8 +885,7 @@
             
             let rawDate = nr['Date']; let dateStr = ''; let formattedDate = '';
             if (typeof rawDate === 'number') {
-                let d = new Date(Math.round((rawDate - 25569) * 86400 * 1000));
-                let y = d.getUTCFullYear(); let m = String(d.getUTCMonth() + 1).padStart(2, '0'); let day = String(d.getUTCDate()).padStart(2, '0');
+                let d = new Date(Math.round((rawDate - 25569) * 86400 * 1000)); let y = d.getUTCFullYear(); let m = String(d.getUTCMonth() + 1).padStart(2, '0'); let day = String(d.getUTCDate()).padStart(2, '0');
                 dateStr = `${y}-${m}-${day}`; formattedDate = `${day}/${m}/${y}`;
             } else if (typeof rawDate === 'string') {
                 let str = rawDate.split(' ')[0]; let parts = str.split(/[-/]/);
@@ -986,148 +897,63 @@
             }
             nr['DateStr'] = dateStr; nr['FormattedDate'] = formattedDate;
 
-            let hrStr = nr['HOUR'] ? String(nr['HOUR']).trim() : '';
-            let exactTime = '-';
-            let rawTime = nr['Time'];
+            let hrStr = nr['HOUR'] ? String(nr['HOUR']).trim() : ''; let exactTime = '-'; let rawTime = nr['Time'];
             if (typeof rawDate === 'number' && rawDate % 1 !== 0) {
                 let d = new Date(Math.round((rawDate - 25569) * 86400 * 1000)); hrStr = d.getUTCHours().toString();
                 exactTime = String(d.getUTCHours()).padStart(2,'0') + ':' + String(d.getUTCMinutes()).padStart(2,'0');
             } else if (typeof rawTime === 'number') {
-                let totalMins = Math.round((rawTime % 1) * 24 * 60);
-                hrStr = Math.floor(totalMins / 60).toString();
+                let totalMins = Math.round((rawTime % 1) * 24 * 60); hrStr = Math.floor(totalMins / 60).toString();
                 exactTime = String(Math.floor(totalMins / 60)).padStart(2,'0') + ':' + String(totalMins % 60).padStart(2,'0');
-            } else if (typeof rawTime === 'string') {
-                hrStr = rawTime.split(':')[0];
-                exactTime = rawTime;
-            } else if (hrStr) {
-                exactTime = hrStr.padStart(2, '0') + ':00';
-            }
-            nr['ParsedHour'] = hrStr.padStart(2, '0');
-            nr['ExactTime'] = exactTime;
+            } else if (typeof rawTime === 'string') { hrStr = rawTime.split(':')[0]; exactTime = rawTime; } 
+            else if (hrStr) { exactTime = hrStr.padStart(2, '0') + ':00'; }
+            nr['ParsedHour'] = hrStr.padStart(2, '0'); nr['ExactTime'] = exactTime;
             
             let dayStr = nr['DAY OF WEEK'] ? String(nr['DAY OF WEEK']).trim() : '';
-            if(nr['DateStr']) {
-                let parts = nr['DateStr'].split('-');
-                if (parts.length === 3) {
-                    let safeDate = new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]), 12, 0, 0);
-                    let dayIdx = safeDate.getDay(); let isoDay = dayIdx === 0 ? 6 : dayIdx - 1; dayStr = DAYS[isoDay];
-                }
-            }
+            if(nr['DateStr']) { let parts = nr['DateStr'].split('-'); if (parts.length === 3) { let safeDate = new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]), 12, 0, 0); let dayIdx = safeDate.getDay(); let isoDay = dayIdx === 0 ? 6 : dayIdx - 1; dayStr = DAYS[isoDay]; } }
             nr['ParsedDay'] = dayStr;
             const nCols = ['Net Sales', 'Gross Sales', 'Quantity', 'Tax', 'Gratuity', 'Discounts', 'Refunds', 'Total Collected', 'Total Collected Exc Rounding', 'Discount Applied (Rp)'];
-            nCols.forEach(c => {
-                if(nr[c] !== undefined && typeof nr[c] === 'string') {
-                    let s = nr[c].replace(/,/g, '').trim();
-                    nr[c] = parseFloat(s) || 0;
-                }
-            });
+            nCols.forEach(c => { if(nr[c] !== undefined && typeof nr[c] === 'string') { let s = nr[c].replace(/,/g, '').trim(); nr[c] = parseFloat(s) || 0; } });
             rawData.push(nr);
         }
     }
         const getCleanNum = (r, key) => { let val = r[key]; if(typeof val === 'number') return val; if(!val) return 0; let p = parseFloat(val.toString().replace(/,/g, '')); return isNaN(p) ? 0 : p; };
-
-        function getDiscountValue(r) {
-            let discVal = getCleanNum(r, 'Discounts');
-            if (discVal === 0) discVal = getCleanNum(r, 'Discount Applied (Rp)');
-            return Math.abs(discVal);
-        }
-        
+        function getDiscountValue(r) { let discVal = getCleanNum(r, 'Discounts'); if (discVal === 0) discVal = getCleanNum(r, 'Discount Applied (Rp)'); return Math.abs(discVal); }
         function getGratuityValue(r) { return getCleanNum(r, 'Gratuity'); }
 
-        const filterWrapper = document.getElementById('filterWrapper');
-        const toggleFiltersBtn = document.getElementById('toggleFiltersBtn');
-        const filterToggleIcon = document.getElementById('filterToggleIcon');
-        const filterToggleText = document.getElementById('filterToggleText');
-        let filtersExpanded = true;
-        
+        const filterWrapper = document.getElementById('filterWrapper'); const toggleFiltersBtn = document.getElementById('toggleFiltersBtn'); const filterToggleIcon = document.getElementById('filterToggleIcon'); const filterToggleText = document.getElementById('filterToggleText'); let filtersExpanded = true;
         toggleFiltersBtn.addEventListener('click', () => {
             filtersExpanded = !filtersExpanded;
-            if(filtersExpanded) {
-                filterWrapper.classList.remove('hidden');
-                filterToggleIcon.style.transform = 'rotate(0deg)';
-                filterToggleText.innerText = 'Hide Filters';
-            } else {
-                filterWrapper.classList.add('hidden');
-                filterToggleIcon.style.transform = 'rotate(180deg)';
-                filterToggleText.innerText = 'Show Filters';
-            }
+            if(filtersExpanded) { filterWrapper.classList.remove('hidden'); filterToggleIcon.style.transform = 'rotate(0deg)'; filterToggleText.innerText = 'Hide Filters'; } 
+            else { filterWrapper.classList.add('hidden'); filterToggleIcon.style.transform = 'rotate(180deg)'; filterToggleText.innerText = 'Show Filters'; }
         });
 
         let filterUIConfig = [
-            { id: 'daterange', label: 'Date Range', visible: true },
-            { id: 'compare', label: 'Compare Vs', visible: true },
-            { id: 'search', label: 'Search Item/Receipt', visible: true },
-            { id: 'outlet', label: 'Outlet', visible: true },
-            { id: 'area', label: 'Area', visible: true },
-            { id: 'dept', label: 'Dept', visible: true },
-            { id: 'event', label: 'Event Type', visible: true },
-            { id: 'discount', label: 'Discount Applied', visible: true }
+            { id: 'daterange', label: 'Date Range', visible: true }, { id: 'compare', label: 'Compare Vs', visible: true }, { id: 'search', label: 'Search Item/Receipt', visible: true }, { id: 'outlet', label: 'Outlet', visible: true }, { id: 'area', label: 'Area', visible: true }, { id: 'dept', label: 'Dept', visible: true }, { id: 'event', label: 'Event Type', visible: true }, { id: 'discount', label: 'Discount Applied', visible: true }
         ]; 
 
         let dragStartFilterIdx = -1;
         function initFilterSettings() {
-            const list = document.getElementById('filterSettingsList');
-            list.innerHTML = '';
+            const list = document.getElementById('filterSettingsList'); list.innerHTML = '';
             filterUIConfig.forEach((col, idx) => {
-                let li = document.createElement('li');
-                li.className = "flex items-center p-1.5 border-b border-gray-100 bg-white mb-1 rounded cursor-move hover:bg-gray-100 transition-colors";
-                li.draggable = true;
-                li.dataset.idx = idx;
-                let html = `<div class="flex items-center gap-2 w-full pointer-events-none">
-                    <span class="text-gray-400 cursor-move tracking-tighter">⋮⋮</span>
-                    <input type="checkbox" class="pointer-events-auto rounded text-fr-blue w-3 h-3 cursor-pointer focus:ring-0" ${col.visible ? 'checked' : ''}>
-                    <span class="font-medium text-gray-700">${col.label}</span>
-                </div>`;
+                let li = document.createElement('li'); li.className = "flex items-center p-1.5 border-b border-gray-100 bg-white mb-1 rounded cursor-move hover:bg-gray-100 transition-colors"; li.draggable = true; li.dataset.idx = idx;
+                let html = `<div class="flex items-center gap-2 w-full pointer-events-none"> <span class="text-gray-400 cursor-move tracking-tighter">⋮⋮</span> <input type="checkbox" class="pointer-events-auto rounded text-fr-blue w-3 h-3 cursor-pointer focus:ring-0" ${col.visible ? 'checked' : ''}> <span class="font-medium text-gray-700">${col.label}</span> </div>`;
                 li.innerHTML = html;
-                
                 li.querySelector('input').addEventListener('change', (e) => { col.visible = e.target.checked; applyFilterVisibility(); });
                 li.addEventListener('dragstart', (e) => { dragStartFilterIdx = +e.target.closest('li').dataset.idx; e.dataTransfer.effectAllowed = 'move'; setTimeout(() => e.target.classList.add('opacity-50'), 0); });
-                li.addEventListener('dragover', (e) => { e.preventDefault(); return false; });
-                li.addEventListener('dragenter', (e) => { e.preventDefault(); e.target.closest('li')?.classList.add('border-blue-400', 'border-t-2'); });
-                li.addEventListener('dragleave', (e) => { e.target.closest('li')?.classList.remove('border-blue-400', 'border-t-2'); });
-                li.addEventListener('dragend', (e) => { e.target.classList.remove('opacity-50'); });
+                li.addEventListener('dragover', (e) => { e.preventDefault(); return false; }); li.addEventListener('dragenter', (e) => { e.preventDefault(); e.target.closest('li')?.classList.add('border-blue-400', 'border-t-2'); }); li.addEventListener('dragleave', (e) => { e.target.closest('li')?.classList.remove('border-blue-400', 'border-t-2'); }); li.addEventListener('dragend', (e) => { e.target.classList.remove('opacity-50'); });
                 li.addEventListener('drop', (e) => {
-                    e.stopPropagation();
-                    const targetLi = e.target.closest('li');
-                    if(!targetLi) return false;
-                    targetLi.classList.remove('border-fr-blue', 'border-t-4');
-                    const dragEndIndex = +targetLi.dataset.idx;
-                    
-                    const item = filterUIConfig.splice(dragStartFilterIdx, 1)[0];
-                    filterUIConfig.splice(dragEndIndex, 0, item);
-                    initFilterSettings();
-                    applyFilterVisibility();
-                    return false;
+                    e.stopPropagation(); const targetLi = e.target.closest('li'); if(!targetLi) return false; targetLi.classList.remove('border-fr-blue', 'border-t-4'); const dragEndIndex = +targetLi.dataset.idx;
+                    const item = filterUIConfig.splice(dragStartFilterIdx, 1)[0]; filterUIConfig.splice(dragEndIndex, 0, item); initFilterSettings(); applyFilterVisibility(); return false;
                 });
                 list.appendChild(li);
             });
         }
 
-        function applyFilterVisibility() {
-            filterUIConfig.forEach((f, idx) => {
-                let el = document.querySelector(`.filter-item[data-id="${f.id}"]`);
-                if(el) { el.style.order = idx; if(f.visible) el.classList.remove('hidden'); else el.classList.add('hidden'); }
-            });
-        }
-        
-        document.getElementById('resetFilterOrderBtn').addEventListener('click', () => {
-            const defOrder = ['daterange', 'compare', 'search', 'outlet', 'area', 'dept', 'event', 'discount'];
-            filterUIConfig.sort((a,b) => defOrder.indexOf(a.id) - defOrder.indexOf(b.id));
-            initFilterSettings();
-            applyFilterVisibility();
-        });
-
-        document.getElementById('filterSettingsBtn').addEventListener('click', () => {
-            const menu = document.getElementById('filterSettingsMenu');
-            menu.classList.toggle('hidden');
-            if(!menu.classList.contains('hidden')) initFilterSettings();
-        });
+        function applyFilterVisibility() { filterUIConfig.forEach((f, idx) => { let el = document.querySelector(`.filter-item[data-id="${f.id}"]`); if(el) { el.style.order = idx; if(f.visible) el.classList.remove('hidden'); else el.classList.add('hidden'); } }); }
+        document.getElementById('resetFilterOrderBtn').addEventListener('click', () => { const defOrder = ['daterange', 'compare', 'search', 'outlet', 'area', 'dept', 'event', 'discount']; filterUIConfig.sort((a,b) => defOrder.indexOf(a.id) - defOrder.indexOf(b.id)); initFilterSettings(); applyFilterVisibility(); });
+        document.getElementById('filterSettingsBtn').addEventListener('click', () => { const menu = document.getElementById('filterSettingsMenu'); menu.classList.toggle('hidden'); if(!menu.classList.contains('hidden')) initFilterSettings(); });
         document.getElementById('closeFilterMenu').addEventListener('click', () => { document.getElementById('filterSettingsMenu').classList.add('hidden'); });
-        document.addEventListener('click', (e) => {
-            const menu = document.getElementById('filterSettingsMenu');
-            const btn = document.getElementById('filterSettingsBtn');
-            if(!menu.contains(e.target) && !btn.contains(e.target)) { menu.classList.add('hidden'); }
-        });
+        document.addEventListener('click', (e) => { const menu = document.getElementById('filterSettingsMenu'); const btn = document.getElementById('filterSettingsBtn'); if(!menu.contains(e.target) && !btn.contains(e.target)) { menu.classList.add('hidden'); } });
         
         let allDiscountsList = []; let selectedDiscountsSet = new Set();
         const discountSearch = document.getElementById('filterDiscountSearch'); const discountDropdown = document.getElementById('discountDropdown'); const discountOptContainer = document.getElementById('discountOptionsContainer'); const clearDiscountBtnContainer = document.getElementById('clearDiscountBtnContainer');
@@ -1146,8 +972,7 @@
                     e.stopPropagation(); if(e.target !== cb) cb.checked = !cb.checked; 
                     if(cb.checked) selectedDiscountsSet.add(out); else selectedDiscountsSet.delete(out); 
                     let curSearch = discountSearch.value;
-                    renderDiscountDropdown(curSearch);
-                    updateClearDiscountButton();
+                    renderDiscountDropdown(curSearch); updateClearDiscountButton();
                     clearTimeout(window.filterDebounceTimer); window.filterDebounceTimer = setTimeout(() => { executeFilterAndRender(); }, 350);
                 }; 
                 div.appendChild(cb); div.appendChild(span); frag.appendChild(div); 
@@ -1181,64 +1006,37 @@
             else { customCompareWrapper.classList.add('hidden'); customCompareWrapper.classList.remove('flex'); }
             if(rawData.length > 0) executeFilterAndRender();
         });
-        document.getElementById('compareDateStart').addEventListener('change', executeFilterAndRender);
-        document.getElementById('compareDateEnd').addEventListener('change', executeFilterAndRender);
-        const searchMode = document.getElementById('searchMode');
-        searchMode.addEventListener('change', () => { selectedItemsSet.clear(); updateSelectedItemsUI(); populateItemDropdown(); executeFilterAndRender(); });
+        document.getElementById('compareDateStart').addEventListener('change', executeFilterAndRender); document.getElementById('compareDateEnd').addEventListener('change', executeFilterAndRender);
+        const searchMode = document.getElementById('searchMode'); searchMode.addEventListener('change', () => { selectedItemsSet.clear(); updateSelectedItemsUI(); populateItemDropdown(); executeFilterAndRender(); });
         function populateItemDropdown() { 
-            let mode = searchMode.value;
-            let list = [];
-            if(mode === 'item') { list = rawData.map(r => r.Items).filter(x => x && x !== 'Unknown'); } 
-            else { list = rawData.map(r => r['Receipt Number']).filter(x => x && x !== 'Unknown' && x !== '-'); }
-            allItemsList = Array.from(new Set(list)).sort(); 
-            renderItemDropdown(''); 
+            let mode = searchMode.value; let list = [];
+            if(mode === 'item') { list = rawData.map(r => r.Items).filter(x => x && x !== 'Unknown'); } else { list = rawData.map(r => r['Receipt Number']).filter(x => x && x !== 'Unknown' && x !== '-'); }
+            allItemsList = Array.from(new Set(list)).sort(); renderItemDropdown(''); 
         }
         function renderItemDropdown(searchStr) { 
-            optContainer.innerHTML = ''; 
-            updateClearButton(); 
+            optContainer.innerHTML = ''; updateClearButton(); 
             let filtered = allItemsList.filter(x => x.toLowerCase().includes(searchStr.toLowerCase())).slice(0, 100); 
-            if(filtered.length === 0) { 
-                let emptyDiv = document.createElement('div'); 
-                emptyDiv.className = 'px-3 py-2 text-[11px] text-gray-500 italic'; 
-                emptyDiv.innerText = 'Item tidak ditemukan'; 
-                optContainer.appendChild(emptyDiv); 
-                return; 
-            } 
+            if(filtered.length === 0) { let emptyDiv = document.createElement('div'); emptyDiv.className = 'px-3 py-2 text-[11px] text-gray-500 italic'; emptyDiv.innerText = 'Item tidak ditemukan'; optContainer.appendChild(emptyDiv); return; } 
             let frag = document.createDocumentFragment();
             filtered.forEach(item => { 
-                let div = document.createElement('div'); 
-                div.className = 'px-3 py-2 hover:bg-gray-50 flex items-center gap-2 cursor-pointer border-b border-gray-50 last:border-0'; 
-                let cb = document.createElement('input'); 
-                cb.type = 'checkbox'; 
-                cb.className = 'cursor-pointer rounded text-fr-blue focus:ring-fr-blue h-3 w-3 shrink-0'; 
-                cb.checked = selectedItemsSet.has(item); 
-                let span = document.createElement('span'); 
-                span.className = 'text-[11px] font-medium text-gray-700 whitespace-nowrap pr-4 select-none leading-tight'; 
-                span.innerText = item; 
-                span.title = item; 
+                let div = document.createElement('div'); div.className = 'px-3 py-2 hover:bg-gray-50 flex items-center gap-2 cursor-pointer border-b border-gray-50 last:border-0'; 
+                let cb = document.createElement('input'); cb.type = 'checkbox'; cb.className = 'cursor-pointer rounded text-fr-blue focus:ring-fr-blue h-3 w-3 shrink-0'; cb.checked = selectedItemsSet.has(item); 
+                let span = document.createElement('span'); span.className = 'text-[11px] font-medium text-gray-700 whitespace-nowrap pr-4 select-none leading-tight'; span.innerText = item; span.title = item; 
                 div.addEventListener('mousedown', (e) => { e.preventDefault(); });
                 div.addEventListener('click', (e) => { 
-                    e.stopPropagation(); 
-                    if(e.target !== cb) cb.checked = !cb.checked; 
-                    if(cb.checked) selectedItemsSet.add(item); 
-                    else selectedItemsSet.delete(item); 
-                    let curSearch = searchInput.value;
-                    renderItemDropdown(curSearch);
-                    updateClearButton();
-                    clearTimeout(window.filterDebounceTimer); 
-                    window.filterDebounceTimer = setTimeout(() => { executeFilterAndRender(); }, 350);
+                    e.stopPropagation(); if(e.target !== cb) cb.checked = !cb.checked; 
+                    if(cb.checked) selectedItemsSet.add(item); else selectedItemsSet.delete(item); 
+                    let curSearch = searchInput.value; renderItemDropdown(curSearch); updateClearButton();
+                    clearTimeout(window.filterDebounceTimer); window.filterDebounceTimer = setTimeout(() => { executeFilterAndRender(); }, 350);
                 }); 
-                div.appendChild(cb); 
-                div.appendChild(span); 
-                frag.appendChild(div); 
+                div.appendChild(cb); div.appendChild(span); frag.appendChild(div); 
             }); 
             optContainer.appendChild(frag); 
         }
         function updateClearButton() { if(selectedItemsSet.size > 0) { clearBtnContainer.innerHTML = `<div class="px-3 py-2 bg-red-50 border-b border-red-100 text-fr-red text-[11px] font-bold cursor-pointer hover:bg-red-100 flex justify-between items-center sticky top-0 z-10 transition-colors"><span>${selectedItemsSet.size} item terpilih</span> <span>Hapus Semua &times;</span></div>`; clearBtnContainer.firstElementChild.onclick = (e) => { e.stopPropagation(); selectedItemsSet.clear(); updateSelectedItemsUI(); renderItemDropdown(searchInput.value); executeFilterAndRender(); }; } else { clearBtnContainer.innerHTML = ''; } }
         function updateSelectedItemsUI(returnOnly = false) { 
             let val = '';
-            if(selectedItemsSet.size === 1) val = Array.from(selectedItemsSet)[0]; 
-            else if(selectedItemsSet.size > 1) val = `${selectedItemsSet.size} terpilih`; 
+            if(selectedItemsSet.size === 1) val = Array.from(selectedItemsSet)[0]; else if(selectedItemsSet.size > 1) val = `${selectedItemsSet.size} terpilih`; 
             if(returnOnly) return val;
             if (document.activeElement !== searchInput) searchInput.value = val;
             searchInput.title = selectedItemsSet.size > 0 ? Array.from(selectedItemsSet).map(x => '• ' + x).join('\n') : '';
@@ -1255,17 +1053,11 @@
                 if(setObj.size > 0 && dropdownEl.classList.contains('hidden')) {
                     let listHtml = Array.from(setObj).map(item => `<div class="text-[10px] leading-relaxed border-b border-slate-700 last:border-0 py-0.5 whitespace-normal break-words">• ${item}</div>`).join('');
                     customMultiTooltip.innerHTML = `<div class="font-bold text-[10px] mb-1 border-b border-slate-600 pb-1 text-blue-300">Daftar Pilihan (${setObj.size}):</div>` + listHtml;
-                    let rect = targetEl.getBoundingClientRect();
-                    customMultiTooltip.style.top = (rect.bottom + window.scrollY + 5) + 'px';
-                    customMultiTooltip.style.left = rect.left + 'px';
-                    customMultiTooltip.classList.remove('hidden');
-                    setTimeout(() => customMultiTooltip.classList.remove('opacity-0'), 10);
+                    let rect = targetEl.getBoundingClientRect(); customMultiTooltip.style.top = (rect.bottom + window.scrollY + 5) + 'px'; customMultiTooltip.style.left = rect.left + 'px';
+                    customMultiTooltip.classList.remove('hidden'); setTimeout(() => customMultiTooltip.classList.remove('opacity-0'), 10);
                 }
             });
-            targetEl.addEventListener('mouseleave', () => {
-                customMultiTooltip.classList.add('opacity-0');
-                setTimeout(() => customMultiTooltip.classList.add('hidden'), 200);
-            });
+            targetEl.addEventListener('mouseleave', () => { customMultiTooltip.classList.add('opacity-0'); setTimeout(() => customMultiTooltip.classList.add('hidden'), 200); });
         }
 
         bindFilterTooltip(searchInput, itemDropdown, selectedItemsSet); 
@@ -1287,9 +1079,7 @@
                 div.onclick = (e) => { 
                     e.stopPropagation(); if(e.target !== cb) cb.checked = !cb.checked; 
                     if(cb.checked) selectedOutletsSet.add(out); else selectedOutletsSet.delete(out); 
-                    let curSearch = outletSearch.value;
-                    renderOutletDropdown(curSearch);
-                    updateClearOutletButton();
+                    let curSearch = outletSearch.value; renderOutletDropdown(curSearch); updateClearOutletButton();
                     clearTimeout(window.filterDebounceTimer); window.filterDebounceTimer = setTimeout(() => { executeFilterAndRender(); }, 350);
                 }; 
                 div.appendChild(cb); div.appendChild(span); frag.appendChild(div); 
@@ -1304,8 +1094,7 @@
         }
         function updateSelectedOutletsUI(returnOnly = false) { 
             let val = '';
-            if(selectedOutletsSet.size === 1) val = Array.from(selectedOutletsSet)[0]; 
-            else if(selectedOutletsSet.size > 1) val = `${selectedOutletsSet.size} outlets terpilih`; 
+            if(selectedOutletsSet.size === 1) val = Array.from(selectedOutletsSet)[0]; else if(selectedOutletsSet.size > 1) val = `${selectedOutletsSet.size} outlets terpilih`; 
             if(returnOnly) return val;
             if (document.activeElement !== outletSearch) outletSearch.value = val;
             outletSearch.title = selectedOutletsSet.size > 0 ? Array.from(selectedOutletsSet).map(x => '• ' + x).join('\n') : ''; 
@@ -1323,118 +1112,57 @@
         function bindSimpleTooltip(el, textFunc) {
             el.addEventListener('mouseenter', () => {
                 let text = textFunc();
-                if(text) {
-                    customMultiTooltip.innerHTML = `<div class="text-[10px] leading-relaxed p-1">${text}</div>`;
-                    let rect = el.getBoundingClientRect();
-                    customMultiTooltip.style.top = (rect.bottom + window.scrollY + 5) + 'px';
-                    customMultiTooltip.style.left = rect.left + 'px';
-                    customMultiTooltip.classList.remove('hidden');
-                    setTimeout(() => customMultiTooltip.classList.remove('opacity-0'), 10);
-                }
+                if(text) { customMultiTooltip.innerHTML = `<div class="text-[10px] leading-relaxed p-1">${text}</div>`; let rect = el.getBoundingClientRect(); customMultiTooltip.style.top = (rect.bottom + window.scrollY + 5) + 'px'; customMultiTooltip.style.left = rect.left + 'px'; customMultiTooltip.classList.remove('hidden'); setTimeout(() => customMultiTooltip.classList.remove('opacity-0'), 10); }
             });
-            el.addEventListener('mouseleave', () => {
-                customMultiTooltip.classList.add('opacity-0');
-                setTimeout(() => customMultiTooltip.classList.add('hidden'), 200);
-            });
+            el.addEventListener('mouseleave', () => { customMultiTooltip.classList.add('opacity-0'); setTimeout(() => customMultiTooltip.classList.add('hidden'), 200); });
         }
         
-        let drContainer = document.querySelector('[data-id="daterange"]');
-        if(drContainer) bindSimpleTooltip(drContainer, () => `<strong>Main Period:</strong><br/>${filters.dStart.value || '-'} s/d ${filters.dEnd.value || '-'}`);
-        
-        let cvsContainer = document.querySelector('[data-id="compare"]');
-        if(cvsContainer) bindSimpleTooltip(cvsContainer, () => `<strong>Compare VS:</strong><br/>${compareSelect.value === 'custom' ? document.getElementById('compareDateStart').value + ' s/d ' + document.getElementById('compareDateEnd').value : compareSelect.options[compareSelect.selectedIndex].text}`);
-        
-        let dptContainer = document.querySelector('[data-id="dept"]');
-        if(dptContainer) bindSimpleTooltip(dptContainer, () => `<strong>Dept:</strong><br/>${filters.dept.value}`);
-        
-        let evtContainer = document.querySelector('[data-id="event"]');
-        if(evtContainer) bindSimpleTooltip(evtContainer, () => `<strong>Event Type:</strong><br/>${filters.eventType.value}`);
+        let drContainer = document.querySelector('[data-id="daterange"]'); if(drContainer) bindSimpleTooltip(drContainer, () => `<strong>Main Period:</strong><br/>${filters.dStart.value || '-'} s/d ${filters.dEnd.value || '-'}`);
+        let cvsContainer = document.querySelector('[data-id="compare"]'); if(cvsContainer) bindSimpleTooltip(cvsContainer, () => `<strong>Compare VS:</strong><br/>${compareSelect.value === 'custom' ? document.getElementById('compareDateStart').value + ' s/d ' + document.getElementById('compareDateEnd').value : compareSelect.options[compareSelect.selectedIndex].text}`);
+        let dptContainer = document.querySelector('[data-id="dept"]'); if(dptContainer) bindSimpleTooltip(dptContainer, () => `<strong>Dept:</strong><br/>${filters.dept.value}`);
+        let evtContainer = document.querySelector('[data-id="event"]'); if(evtContainer) bindSimpleTooltip(evtContainer, () => `<strong>Event Type:</strong><br/>${filters.eventType.value}`);
 
         const logoInput = document.getElementById('logoInput'); const brandLogoImg = document.getElementById('brandLogoImg'); const defaultLogo = document.getElementById('defaultLogo'); const emptyStateLogoImg = document.getElementById('emptyStateLogoImg'); const emptyStateDefaultLogo = document.getElementById('emptyStateDefaultLogo');
-        function applyLogo(src) { brandLogoImg.src = src; brandLogoImg.classList.remove('hidden'); defaultLogo.classList.add('hidden'); if(emptyStateLogoImg) { emptyStateLogoImg.src = src; emptyStateLogoImg.classList.remove('hidden'); emptyStateDefaultLogo.classList.add('hidden'); } }
-        
+        function applyLogo(src) { brandLogoImg.src = src; brandLogoImg.classList.remove('hidden'); brandLogoImg.style.display = 'block'; defaultLogo.classList.add('hidden'); defaultLogo.style.display = 'none'; if(emptyStateLogoImg) { emptyStateLogoImg.src = src; emptyStateLogoImg.classList.remove('hidden'); emptyStateLogoImg.style.display = 'block'; emptyStateDefaultLogo.classList.add('hidden'); emptyStateDefaultLogo.style.display = 'none'; } }
         logoInput.addEventListener('change', (e) => { const file = e.target.files[0]; if(!file) return; const r = new FileReader(); r.onload = (evt) => { const src = evt.target.result; try { localStorage.setItem('LA_MAISON_LOGO', src); } catch(err) { console.warn("Logo too large for localStorage"); } applyLogo(src); }; r.readAsDataURL(file); });
         
         function setupDatePickers() { 
-            let dates = rawData.map(r => r.DateStr).filter(d => d).sort(); 
-            if(dates.length === 0) return; 
-            
-            const toIsoLocal = (d) => {
-                let y = d.getFullYear(); let m = String(d.getMonth()+1).padStart(2,'0'); let dt = String(d.getDate()).padStart(2,'0');
-                return `${y}-${m}-${dt}`;
-            };
-            
-            filters.dStart.min = dates[0]; filters.dStart.max = dates[dates.length-1]; 
-            filters.dEnd.min = dates[0]; filters.dEnd.max = dates[dates.length-1]; 
-            
-            const today = new Date();
-            const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-            const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-            
-            let defaultStart = toIsoLocal(firstDay); let defaultEnd = toIsoLocal(lastDay);
-            let dataStart = dates[0]; let dataEnd = dates[dates.length-1];
-            
-            if (defaultEnd < dataStart || defaultStart > dataEnd) {
-                const lastDataDate = new Date(dataEnd);
-                const fallbackFirst = new Date(lastDataDate.getFullYear(), lastDataDate.getMonth(), 1);
-                const fallbackLast = new Date(lastDataDate.getFullYear(), lastDataDate.getMonth() + 1, 0);
-                defaultStart = toIsoLocal(fallbackFirst); defaultEnd = toIsoLocal(fallbackLast);
-            }
-            
-            if (defaultStart < dataStart) defaultStart = dataStart;
-            if (defaultStart > dataEnd) defaultStart = dataStart;
-            if (defaultEnd > dataEnd) defaultEnd = dataEnd;
-            if (defaultEnd < dataStart) defaultEnd = dataEnd;
-            
+            let dates = rawData.map(r => r.DateStr).filter(d => d).sort(); if(dates.length === 0) return; 
+            const toIsoLocal = (d) => { let y = d.getFullYear(); let m = String(d.getMonth()+1).padStart(2,'0'); let dt = String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${dt}`; };
+            filters.dStart.min = dates[0]; filters.dStart.max = dates[dates.length-1]; filters.dEnd.min = dates[0]; filters.dEnd.max = dates[dates.length-1]; 
+            const today = new Date(); const firstDay = new Date(today.getFullYear(), today.getMonth(), 1); const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+            let defaultStart = toIsoLocal(firstDay); let defaultEnd = toIsoLocal(lastDay); let dataStart = dates[0]; let dataEnd = dates[dates.length-1];
+            if (defaultEnd < dataStart || defaultStart > dataEnd) { const lastDataDate = new Date(dataEnd); const fallbackFirst = new Date(lastDataDate.getFullYear(), lastDataDate.getMonth(), 1); const fallbackLast = new Date(lastDataDate.getFullYear(), lastDataDate.getMonth() + 1, 0); defaultStart = toIsoLocal(fallbackFirst); defaultEnd = toIsoLocal(fallbackLast); }
+            if (defaultStart < dataStart) defaultStart = dataStart; if (defaultStart > dataEnd) defaultStart = dataStart; if (defaultEnd > dataEnd) defaultEnd = dataEnd; if (defaultEnd < dataStart) defaultEnd = dataEnd;
             filters.dStart.value = defaultStart; filters.dEnd.value = defaultEnd; 
-            
-            const now = new Date();
-            const isCurrentMonth = defaultStart === toIsoLocal(new Date(now.getFullYear(), now.getMonth(), 1)) && defaultEnd === toIsoLocal(new Date(now.getFullYear(), now.getMonth() + 1, 0));
+            const now = new Date(); const isCurrentMonth = defaultStart === toIsoLocal(new Date(now.getFullYear(), now.getMonth(), 1)) && defaultEnd === toIsoLocal(new Date(now.getFullYear(), now.getMonth() + 1, 0));
             filters.quick.value = isCurrentMonth ? 'this_month' : 'custom';
         }
         
-        function populateDropdowns() { 
-            const getU = (key) => { let s = new Set(); rawData.forEach(r => { if(r[key] && r[key] !== 'Unknown') s.add(r[key].toString().trim()); }); return Array.from(s).sort(); }; 
-            const fill = (el, vals) => { el.innerHTML = '<option value="ALL">All</option>'; vals.forEach(v => { let opt = document.createElement('option'); opt.value = v; opt.innerText = v; el.appendChild(opt); }); }; 
-            fill(filters.dept, getU('DEPT')); fill(filters.eventType, getU('Event Type')); populateOutletDropdownUI(); populateDiscountDropdownUI(); populateAreaDropdownUI(); 
-        }
+        function populateDropdowns() { const getU = (key) => { let s = new Set(); rawData.forEach(r => { if(r[key] && r[key] !== 'Unknown') s.add(r[key].toString().trim()); }); return Array.from(s).sort(); }; const fill = (el, vals) => { el.innerHTML = '<option value="ALL">All</option>'; vals.forEach(v => { let opt = document.createElement('option'); opt.value = v; opt.innerText = v; el.appendChild(opt); }); }; fill(filters.dept, getU('DEPT')); fill(filters.eventType, getU('Event Type')); populateOutletDropdownUI(); populateDiscountDropdownUI(); populateAreaDropdownUI(); }
 
         async function executeFilterAndRender() { 
             const sStart = filters.dStart.value; const sEnd = filters.dEnd.value; const sDept = filters.dept.value; const sEvt = filters.eventType.value; 
             filteredData = rawData.filter(r => { 
                 let m = true; const sv = (v) => v ? v.toString().trim() : ''; 
-                if (sStart && (!r.DateStr || r.DateStr < sStart)) m = false; 
-                if (sEnd && (!r.DateStr || r.DateStr > sEnd)) m = false; 
-                if (selectedAreasSet.size > 0 && !selectedAreasSet.has(sv(r['AREA']))) m = false; 
-                if (selectedOutletsSet.size > 0 && !selectedOutletsSet.has(sv(r['Outlet']))) m = false; 
-                if (sDept !== 'ALL' && sv(r['DEPT']) !== sDept) m = false; 
-                if (sEvt !== 'ALL' && sv(r['Event Type']) !== sEvt) m = false; 
-                if (selectedItemsSet.size > 0) { 
-                    if(searchMode.value === 'item') { if(!selectedItemsSet.has(sv(r['Items']))) m = false; }
-                    else { if(!selectedItemsSet.has(sv(r['Receipt Number']))) m = false; }
-                }
+                if (sStart && (!r.DateStr || r.DateStr < sStart)) m = false; if (sEnd && (!r.DateStr || r.DateStr > sEnd)) m = false; 
+                if (selectedAreasSet.size > 0 && !selectedAreasSet.has(sv(r['AREA']))) m = false; if (selectedOutletsSet.size > 0 && !selectedOutletsSet.has(sv(r['Outlet']))) m = false; 
+                if (sDept !== 'ALL' && sv(r['DEPT']) !== sDept) m = false; if (sEvt !== 'ALL' && sv(r['Event Type']) !== sEvt) m = false; 
+                if (selectedItemsSet.size > 0) { if(searchMode.value === 'item') { if(!selectedItemsSet.has(sv(r['Items']))) m = false; } else { if(!selectedItemsSet.has(sv(r['Receipt Number']))) m = false; } }
                 if (selectedDiscountsSet.size > 0 && !selectedDiscountsSet.has(sv(r['Discount Applied']))) m = false; 
                 return m; 
             }); 
-            
             renderDashboard(); 
-            
             setTimeout(() => { 
                 updateFilterDropdownLists(); 
-                if(!itemDropdown.classList.contains('hidden')) renderItemDropdown(searchInput.value);
-                if(!outletDropdown.classList.contains('hidden')) renderOutletDropdown(outletSearch.value);
-                if(!areaDropdown.classList.contains('hidden')) renderAreaDropdown(areaSearch.value);
-                if(!discountDropdown.classList.contains('hidden')) renderDiscountDropdown(discountSearch.value);
+                if(!itemDropdown.classList.contains('hidden')) renderItemDropdown(searchInput.value); if(!outletDropdown.classList.contains('hidden')) renderOutletDropdown(outletSearch.value); if(!areaDropdown.classList.contains('hidden')) renderAreaDropdown(areaSearch.value); if(!discountDropdown.classList.contains('hidden')) renderDiscountDropdown(discountSearch.value);
             }, 10); 
         }
 
         function renderDashboard() { 
-            window.currentStats = { gross:0, net:0, coll:0, qty:0, disc:0, tax:0, grat:0, ref:0, tx:0 }; 
-            let txSet = new Set(); 
+            window.currentStats = { gross:0, net:0, coll:0, qty:0, disc:0, tax:0, grat:0, ref:0, tx:0 }; let txSet = new Set(); 
             let aggDate = {}, aggCat = {}, aggCatQty = {}, aggCatTx = {}, aggItems = {}, aggArea = {}, aggOutlet = {}, aggDept = {}; 
-            let heatMatrix = {}; 
-            DAYS.forEach(d => { heatMatrix[d] = {}; HOURS.forEach(h => heatMatrix[d][h] = 0); }); 
-            let maxHeatValue = 0; 
+            let heatMatrix = {}; DAYS.forEach(d => { heatMatrix[d] = {}; HOURS.forEach(h => heatMatrix[d][h] = 0); }); let maxHeatValue = 0; 
             const gs = (r,k) => r[k]?r[k].toString().trim():''; 
             
             filteredData.forEach(r => { 
@@ -1442,81 +1170,44 @@
                 const rc = getCleanNum(r,'Total Collected Exc Rounding') || getCleanNum(r,'Total Collected') || (rn + rt); 
                 const rq = getCleanNum(r,'Quantity'); const rd = getDiscountValue(r); const rgrat = getGratuityValue(r); const rref = getCleanNum(r,'Refunds'); 
                 window.currentStats.net += rn; window.currentStats.gross += rg; window.currentStats.coll += rc; window.currentStats.qty += rq; window.currentStats.disc += rd; window.currentStats.tax += rt; window.currentStats.grat += rgrat; window.currentStats.ref += Math.abs(rref); 
-                
                 const rec = gs(r,'Receipt Number'); if(rec) txSet.add(rec); 
-                const dt = gs(r,'DateStr'); 
-                if(dt) { 
-                    if(!aggDate[dt]) aggDate[dt] = { net: 0, qty: 0, tx: new Set() }; 
-                    aggDate[dt].net += rn; aggDate[dt].qty += rq; if(rec) aggDate[dt].tx.add(rec); 
-                } 
-                const cat = gs(r,'Category'); 
-                if(cat && cat !== 'Unknown') { 
-                    if(!aggCat[cat]) aggCat[cat] = 0; if(!aggCatQty[cat]) aggCatQty[cat] = 0; if(!aggCatTx[cat]) aggCatTx[cat] = new Set(); 
-                    aggCat[cat] += rn; aggCatQty[cat] += rq; if(rec) aggCatTx[cat].add(rec); 
-                } 
+                const dt = gs(r,'DateStr'); if(dt) { if(!aggDate[dt]) aggDate[dt] = { net: 0, qty: 0, tx: new Set() }; aggDate[dt].net += rn; aggDate[dt].qty += rq; if(rec) aggDate[dt].tx.add(rec); } 
+                const cat = gs(r,'Category'); if(cat && cat !== 'Unknown') { if(!aggCat[cat]) aggCat[cat] = 0; if(!aggCatQty[cat]) aggCatQty[cat] = 0; if(!aggCatTx[cat]) aggCatTx[cat] = new Set(); aggCat[cat] += rn; aggCatQty[cat] += rq; if(rec) aggCatTx[cat].add(rec); } 
                 const area = gs(r,'AREA'); if(area && area !== 'Unknown') aggArea[area] = (aggArea[area]||0) + rn; 
                 const outlet = gs(r,'Outlet'); if(outlet && outlet !== 'Unknown') aggOutlet[outlet] = (aggOutlet[outlet]||0) + rn; 
                 const dept = gs(r,'DEPT'); if(dept && dept !== 'Unknown') aggDept[dept] = (aggDept[dept]||0) + rn; 
-                const item = gs(r,'Items'); 
-                if(item && item !== 'Unknown') { 
-                    if(!aggItems[item]) aggItems[item] = {q:0, n:0}; 
-                    aggItems[item].q += rq; aggItems[item].n += rn; 
-                } 
+                const item = gs(r,'Items'); if(item && item !== 'Unknown') { if(!aggItems[item]) aggItems[item] = {q:0, n:0}; aggItems[item].q += rq; aggItems[item].n += rn; } 
                 let day = r['ParsedDay']; let hr = r['ParsedHour']; 
                 const indoDays = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu']; 
                 if(!DAYS.includes(day)) { const idx = indoDays.indexOf(day); if(idx !== -1) day = DAYS[idx]; } 
-                if(day && hr && heatMatrix[day] && heatMatrix[day][hr] !== undefined) { 
-                    heatMatrix[day][hr] += rn; if(heatMatrix[day][hr] > maxHeatValue) maxHeatValue = heatMatrix[day][hr]; 
-                } 
+                if(day && hr && heatMatrix[day] && heatMatrix[day][hr] !== undefined) { heatMatrix[day][hr] += rn; if(heatMatrix[day][hr] > maxHeatValue) maxHeatValue = heatMatrix[day][hr]; } 
             }); 
-            window.currentStats.tx = txSet.size; 
-            const c = window.currentStats; 
+            window.currentStats.tx = txSet.size; const c = window.currentStats; 
             
             document.getElementById('kpiGrossSales').innerText = formatRp(c.gross); document.getElementById('kpiNetSales').innerText = formatRp(c.net); document.getElementById('kpiTotalCollected').innerText = formatRp(c.coll); 
             document.getElementById('kpiTransactions').innerText = formatNum(c.tx); document.getElementById('kpiItems').innerText = formatNum(c.qty); document.getElementById('kpiDiscounts').innerText = formatRp(c.disc); 
             document.getElementById('kpiRefunds').innerText = formatRp(c.ref); document.getElementById('kpiTax').innerText = formatRp(c.tax); document.getElementById('kpiGratuity').innerText = formatRp(c.grat);
             let avgTx = c.tx > 0 ? (c.net / c.tx) : 0; document.getElementById('kpiAvgTx').innerText = formatRp(avgTx); 
             
-            currentAggDate = aggDate; currentAggCat = { net: aggCat, qty: aggCatQty, tx: aggCatTx }; window.currentAggCat = aggCat; 
-            currentAggArea = aggArea; currentAggOutlet = aggOutlet; currentAggDept = aggDept; window.currentAggItems = aggItems;
+            currentAggDate = aggDate; currentAggCat = { net: aggCat, qty: aggCatQty, tx: aggCatTx }; window.currentAggCat = aggCat; currentAggArea = aggArea; currentAggOutlet = aggOutlet; currentAggDept = aggDept; window.currentAggItems = aggItems;
             
-            calculateAndRenderGrowth(); 
-            drawTrend(); drawCat(currentAggCat); drawLocationChart(); drawDeptChart(aggDept); drawHeatmap(heatMatrix, maxHeatValue); drawItemsTable(aggItems); applyTableSortAndRender(); 
+            calculateAndRenderGrowth(); drawTrend(); drawCat(currentAggCat); drawLocationChart(); drawDeptChart(aggDept); drawHeatmap(heatMatrix, maxHeatValue); drawItemsTable(aggItems); applyTableSortAndRender(); 
         }
         
         function calculateAndRenderGrowth() { 
-        let dates = filteredData.map(r => r.DateStr).filter(d=>d).sort(); 
-        if(dates.length === 0) return renderAllGrowth(0,0,0,0,0,0,0,0,0,0, '',''); 
-        
+        let dates = filteredData.map(r => r.DateStr).filter(d=>d).sort(); if(dates.length === 0) return renderAllGrowth(0,0,0,0,0,0,0,0,0,0, '',''); 
         function toIsoLocal(d) { let y = d.getFullYear(); let m = String(d.getMonth()+1).padStart(2,'0'); let dt = String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${dt}`; }
-        
         let pStartStr = ''; let pEndStr = ''; let compMode = compareSelect.value;
-        if (compMode === 'custom') {
-            pStartStr = document.getElementById('compareDateStart').value; pEndStr = document.getElementById('compareDateEnd').value;
-        } else if (compMode === 'prev_year') {
-            let currStart = new Date(dates[0]); let currEnd = new Date(dates[dates.length-1]);
-            currStart.setFullYear(currStart.getFullYear() - 1); currEnd.setFullYear(currEnd.getFullYear() - 1);
-            pStartStr = toIsoLocal(currStart); pEndStr = toIsoLocal(currEnd);
-        } else {
-            let currStart = new Date(dates[0]); let currEnd = new Date(dates[dates.length-1]);
-            let diffTime = Math.abs(currEnd - currStart); let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-            let prevEnd = new Date(currStart); prevEnd.setDate(prevEnd.getDate() - 1);
-            let prevStart = new Date(prevEnd); prevStart.setDate(prevStart.getDate() - (diffDays - 1));
-            pStartStr = toIsoLocal(prevStart); pEndStr = toIsoLocal(prevEnd);
-        }
+        if (compMode === 'custom') { pStartStr = document.getElementById('compareDateStart').value; pEndStr = document.getElementById('compareDateEnd').value; } 
+        else if (compMode === 'prev_year') { let currStart = new Date(dates[0]); let currEnd = new Date(dates[dates.length-1]); currStart.setFullYear(currStart.getFullYear() - 1); currEnd.setFullYear(currEnd.getFullYear() - 1); pStartStr = toIsoLocal(currStart); pEndStr = toIsoLocal(currEnd); } 
+        else { let currStart = new Date(dates[0]); let currEnd = new Date(dates[dates.length-1]); let diffTime = Math.abs(currEnd - currStart); let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; let prevEnd = new Date(currStart); prevEnd.setDate(prevEnd.getDate() - 1); let prevStart = new Date(prevEnd); prevStart.setDate(prevStart.getDate() - (diffDays - 1)); pStartStr = toIsoLocal(prevStart); pEndStr = toIsoLocal(prevEnd); }
 
         const sDept = filters.dept.value; const sEvt = filters.eventType.value; const sv = (v) => v ? v.toString().trim() : ''; 
         let prevData = rawData.filter(r => { 
-            let m = true; 
-            if(!r.DateStr || r.DateStr < pStartStr || r.DateStr > pEndStr) m = false; 
-            if (selectedAreasSet.size > 0 && !selectedAreasSet.has(sv(r['AREA']))) m = false; 
-            if (selectedOutletsSet.size > 0 && !selectedOutletsSet.has(sv(r['Outlet']))) m = false; 
-            if (sDept !== 'ALL' && sv(r['DEPT']) !== sDept) m = false; 
-            if (sEvt !== 'ALL' && sv(r['Event Type']) !== sEvt) m = false; 
-            if (selectedItemsSet.size > 0) { 
-                if(searchMode.value === 'item') { if(!selectedItemsSet.has(sv(r['Items']))) m = false; }
-                else { if(!selectedItemsSet.has(sv(r['Receipt Number']))) m = false; }
-            }
+            let m = true; if(!r.DateStr || r.DateStr < pStartStr || r.DateStr > pEndStr) m = false; 
+            if (selectedAreasSet.size > 0 && !selectedAreasSet.has(sv(r['AREA']))) m = false; if (selectedOutletsSet.size > 0 && !selectedOutletsSet.has(sv(r['Outlet']))) m = false; 
+            if (sDept !== 'ALL' && sv(r['DEPT']) !== sDept) m = false; if (sEvt !== 'ALL' && sv(r['Event Type']) !== sEvt) m = false; 
+            if (selectedItemsSet.size > 0) { if(searchMode.value === 'item') { if(!selectedItemsSet.has(sv(r['Items']))) m = false; } else { if(!selectedItemsSet.has(sv(r['Receipt Number']))) m = false; } }
             if (selectedDiscountsSet.size > 0 && !selectedDiscountsSet.has(sv(r['Discount Applied']))) m = false; 
             return m; 
         }); 
@@ -1524,255 +1215,130 @@
         let pGross=0, pNet=0, pColl=0, pQty=0, pDisc=0, pRef=0, pTax=0, pGrat=0; let pTx = new Set(); 
         let pAggDate = {}; let pAggCat = {}; let pAggCatQty = {}; let pAggCatTx = {}; let pAggOutlet = {}; let pAggArea = {}; let pAggDept = {};
         prevData.forEach(r => { 
-            const rn = getCleanNum(r, 'Net Sales'); const rg = getCleanNum(r, 'Gross Sales'); const rt = getCleanNum(r, 'Tax'); const rq = getCleanNum(r, 'Quantity');
-            let rc = getCleanNum(r, 'Total Collected Exc Rounding') || getCleanNum(r, 'Total Collected') || (rn + rt);
-            let rd = getDiscountValue(r); let rref = Math.abs(getCleanNum(r, 'Refunds') || 0); let rgrat = getGratuityValue(r);
+            const rn = getCleanNum(r, 'Net Sales'); const rg = getCleanNum(r, 'Gross Sales'); const rt = getCleanNum(r, 'Tax'); const rq = getCleanNum(r, 'Quantity'); let rc = getCleanNum(r, 'Total Collected Exc Rounding') || getCleanNum(r, 'Total Collected') || (rn + rt); let rd = getDiscountValue(r); let rref = Math.abs(getCleanNum(r, 'Refunds') || 0); let rgrat = getGratuityValue(r);
             pGross += rg; pNet += rn; pColl += rc; pQty += rq; pDisc += rd; pRef += rref; pTax += rt; pGrat += rgrat; 
             let rec = r['Receipt Number']; if(rec) pTx.add(rec); 
-            let dt = r.DateStr; if(dt) {
-                if(!pAggDate[dt]) pAggDate[dt] = { net: 0, qty: 0, tx: new Set() };
-                pAggDate[dt].net += rn; pAggDate[dt].qty += rq; if(rec) pAggDate[dt].tx.add(rec);
-            }
-            let cat = r.Category; if(cat && cat !== 'Unknown') { 
-                pAggCat[cat] = (pAggCat[cat]||0) + rn; pAggCatQty[cat] = (pAggCatQty[cat]||0) + rq; if(!pAggCatTx[cat]) pAggCatTx[cat] = new Set(); if(rec) pAggCatTx[cat].add(rec);
-            }
-            let out = r.Outlet; if(out && out !== 'Unknown') pAggOutlet[out] = (pAggOutlet[out]||0) + rn;
-            let area = r.AREA; if(area && area !== 'Unknown') pAggArea[area] = (pAggArea[area]||0) + rn;
-            let dept = r.DEPT; if(dept && dept !== 'Unknown') pAggDept[dept] = (pAggDept[dept]||0) + rn;
+            let dt = r.DateStr; if(dt) { if(!pAggDate[dt]) pAggDate[dt] = { net: 0, qty: 0, tx: new Set() }; pAggDate[dt].net += rn; pAggDate[dt].qty += rq; if(rec) pAggDate[dt].tx.add(rec); }
+            let cat = r.Category; if(cat && cat !== 'Unknown') { pAggCat[cat] = (pAggCat[cat]||0) + rn; pAggCatQty[cat] = (pAggCatQty[cat]||0) + rq; if(!pAggCatTx[cat]) pAggCatTx[cat] = new Set(); if(rec) pAggCatTx[cat].add(rec); }
+            let out = r.Outlet; if(out && out !== 'Unknown') pAggOutlet[out] = (pAggOutlet[out]||0) + rn; let area = r.AREA; if(area && area !== 'Unknown') pAggArea[area] = (pAggArea[area]||0) + rn; let dept = r.DEPT; if(dept && dept !== 'Unknown') pAggDept[dept] = (pAggDept[dept]||0) + rn;
         });
-        window.currentCompareCat = pAggCat; window.currentCompareCatQty = pAggCatQty; window.currentCompareCatTx = pAggCatTx;
-        window.currentCompareOutlet = pAggOutlet; window.currentCompareArea = pAggArea; window.currentCompareDept = pAggDept;
-        window.prevDataExport = prevData; window.currentCompareDateRange = {start: pStartStr, end: pEndStr}; 
+        window.currentCompareCat = pAggCat; window.currentCompareCatQty = pAggCatQty; window.currentCompareCatTx = pAggCatTx; window.currentCompareOutlet = pAggOutlet; window.currentCompareArea = pAggArea; window.currentCompareDept = pAggDept; window.prevDataExport = prevData; window.currentCompareDateRange = {start: pStartStr, end: pEndStr}; 
         
-        let currDatesArr = Object.keys(currentAggDate).sort();
-        window.currentCompareSeries = { net: [], qty: [], tx: [], dates: [] };
-        let vsDatesArr = [];
-        if (pStartStr && pEndStr) {
-            let currD = new Date(pStartStr); let endD = new Date(pEndStr);
-            while(currD <= endD) { vsDatesArr.push(toIsoLocal(currD)); currD.setDate(currD.getDate() + 1); }
-        }
-        currDatesArr.forEach((cd, i) => {
-            let vsDate = vsDatesArr[i] || '';
-            window.currentCompareSeries.dates.push(vsDate);
-            if (vsDate && pAggDate[vsDate]) {
-                window.currentCompareSeries.net.push(pAggDate[vsDate].net); window.currentCompareSeries.qty.push(pAggDate[vsDate].qty); window.currentCompareSeries.tx.push(pAggDate[vsDate].tx.size);
-            } else {
-                window.currentCompareSeries.net.push(0); window.currentCompareSeries.qty.push(0); window.currentCompareSeries.tx.push(0);
-            }
-        });
-
+        let currDatesArr = Object.keys(currentAggDate).sort(); window.currentCompareSeries = { net: [], qty: [], tx: [], dates: [] };
+        let vsDatesArr = []; if (pStartStr && pEndStr) { let currD = new Date(pStartStr); let endD = new Date(pEndStr); while(currD <= endD) { vsDatesArr.push(toIsoLocal(currD)); currD.setDate(currD.getDate() + 1); } }
+        currDatesArr.forEach((cd, i) => { let vsDate = vsDatesArr[i] || ''; window.currentCompareSeries.dates.push(vsDate); if (vsDate && pAggDate[vsDate]) { window.currentCompareSeries.net.push(pAggDate[vsDate].net); window.currentCompareSeries.qty.push(pAggDate[vsDate].qty); window.currentCompareSeries.tx.push(pAggDate[vsDate].tx.size); } else { window.currentCompareSeries.net.push(0); window.currentCompareSeries.qty.push(0); window.currentCompareSeries.tx.push(0); } });
         let pAvgTx = pTx.size > 0 ? (pNet / pTx.size) : 0;
         renderAllGrowth(pGross, pNet, pColl, pTx.size, pQty, pDisc, pRef, pTax, pGrat, pAvgTx, pStartStr, pEndStr); 
     }
     
     function renderAllGrowth(pGross, pNet, pColl, pTx, pQty, pDisc, pRef, pTax, pGrat, pAvgTx, dStart, dEnd) { 
-        const cur = window.currentStats; 
-        updateGrowUI('growGrossSales', cur.gross, pGross, dStart, dEnd, true); updateGrowUI('growNetSales', cur.net, pNet, dStart, dEnd, true); 
-        updateGrowUI('growTotalCollected', cur.coll, pColl, dStart, dEnd, true); updateGrowUI('growTransactions', cur.tx, pTx, dStart, dEnd, false); 
-        updateGrowUI('growItems', cur.qty, pQty, dStart, dEnd, false); updateGrowUI('growDiscounts', cur.disc, pDisc, dStart, dEnd, true); 
-        updateGrowUI('growRefunds', cur.ref, pRef, dStart, dEnd, true); updateGrowUI('growTax', cur.tax, pTax, dStart, dEnd, true); 
-        updateGrowUI('growGratuity', cur.grat, pGrat, dStart, dEnd, true); 
-        let cAvgTx = cur.tx > 0 ? (cur.net / cur.tx) : 0; updateGrowUI('growAvgTx', cAvgTx, pAvgTx, dStart, dEnd, true);
+        const cur = window.currentStats; updateGrowUI('growGrossSales', cur.gross, pGross, dStart, dEnd, true); updateGrowUI('growNetSales', cur.net, pNet, dStart, dEnd, true); updateGrowUI('growTotalCollected', cur.coll, pColl, dStart, dEnd, true); updateGrowUI('growTransactions', cur.tx, pTx, dStart, dEnd, false); updateGrowUI('growItems', cur.qty, pQty, dStart, dEnd, false); updateGrowUI('growDiscounts', cur.disc, pDisc, dStart, dEnd, true); updateGrowUI('growRefunds', cur.ref, pRef, dStart, dEnd, true); updateGrowUI('growTax', cur.tax, pTax, dStart, dEnd, true); updateGrowUI('growGratuity', cur.grat, pGrat, dStart, dEnd, true); let cAvgTx = cur.tx > 0 ? (cur.net / cur.tx) : 0; updateGrowUI('growAvgTx', cAvgTx, pAvgTx, dStart, dEnd, true);
     }
     
     function updateGrowUI(elId, curVal, prevVal, dStart, dEnd, isRp = false) { 
-        let el = document.getElementById(elId); if(!el) return; 
-        let label = compareSelect.value === 'prev_year' ? 'vs year' : (compareSelect.value === 'custom' ? 'vs custom' : 'vs prev');
-        let prevFormatted = isRp ? 'Rp ' + formatRp(prevVal) : formatNum(prevVal);
-        let tooltipTitle = `Prev: ${prevFormatted} <br/> <span class="text-gray-300">${dStart} to ${dEnd}</span>`;
-        if(!dStart || !dEnd) tooltipTitle = "Data tidak tersedia";
-        
+        let el = document.getElementById(elId); if(!el) return; let label = compareSelect.value === 'prev_year' ? 'vs year' : (compareSelect.value === 'custom' ? 'vs custom' : 'vs prev'); let prevFormatted = isRp ? 'Rp ' + formatRp(prevVal) : formatNum(prevVal);
+        let tooltipTitle = `Prev: ${prevFormatted} <br/> <span class="text-gray-300">${dStart} to ${dEnd}</span>`; if(!dStart || !dEnd) tooltipTitle = "Data tidak tersedia";
         let lblHtml = `<span class="group/tt relative cursor-help text-gray-400 text-[9px] ml-1 underline decoration-dotted"><span class="hidden group-hover/tt:block absolute left-full top-1/2 transform -translate-y-1/2 ml-2 z-[200] bg-gray-800 text-white p-2 rounded w-max min-w-[150px] shadow-xl text-[10px] text-center font-normal whitespace-nowrap before:content-[''] before:absolute before:top-1/2 before:-left-2 before:-translate-y-1/2 before:border-4 before:border-transparent before:border-r-gray-800">${tooltipTitle}</span>${label}</span>`;
-
-        if(prevVal === 0 && curVal === 0) { el.innerHTML = `<span class="text-gray-400 font-semibold text-[11px]">— 0.0%</span> ${lblHtml}`; return; } 
-        if(prevVal === 0) { el.innerHTML = `<span class="text-gray-400 font-semibold text-[11px]">No Prev Data</span> ${lblHtml}`; return; } 
-        
-        let pct = ((curVal - prevVal) / prevVal) * 100; 
-        if (pct === 0 || isNaN(pct)) { el.innerHTML = `<span class="text-gray-400 font-semibold text-[11px]">— 0.0%</span> ${lblHtml}`; return; } 
-        
-        let isPositive = pct > 0; let icon = isPositive ? '↑' : '↓'; let color = isPositive ? 'text-green-600' : 'text-fr-red'; 
-        if(elId === 'growDiscounts' || elId === 'growRefunds') { color = isPositive ? 'text-fr-red' : 'text-green-600'; }
-        
+        if(prevVal === 0 && curVal === 0) { el.innerHTML = `<span class="text-gray-400 font-semibold text-[11px]">— 0.0%</span> ${lblHtml}`; return; } if(prevVal === 0) { el.innerHTML = `<span class="text-gray-400 font-semibold text-[11px]">No Prev Data</span> ${lblHtml}`; return; } 
+        let pct = ((curVal - prevVal) / prevVal) * 100; if (pct === 0 || isNaN(pct)) { el.innerHTML = `<span class="text-gray-400 font-semibold text-[11px]">— 0.0%</span> ${lblHtml}`; return; } 
+        let isPositive = pct > 0; let icon = isPositive ? '↑' : '↓'; let color = isPositive ? 'text-green-600' : 'text-fr-red'; if(elId === 'growDiscounts' || elId === 'growRefunds') { color = isPositive ? 'text-fr-red' : 'text-green-600'; }
         el.innerHTML = `<span class="${color} font-semibold text-[11px]">${icon} ${Math.abs(pct).toFixed(1)}%</span> ${lblHtml}`; 
     }
 
-    function getWeekNumber(d) {
-        let date = new Date(d); date.setHours(0,0,0,0); date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
-        let week1 = new Date(date.getFullYear(), 0, 4);
-        return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
-    }
-    
+    function getWeekNumber(d) { let date = new Date(d); date.setHours(0,0,0,0); date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7); let week1 = new Date(date.getFullYear(), 0, 4); return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7); }
     function formatDateShort(d) { let dateObj = new Date(d); return `${dateObj.getDate().toString().padStart(2, '0')} ${dateObj.toLocaleString('en-US', {month:'short'})}`; }
 
     function drawTrend() { 
-        let data = currentAggDate; let labels = Object.keys(data).sort(); 
-        let aggregated = {}; let weekRanges = {}; let weekNumbers = {}; 
-        
+        let data = currentAggDate; let labels = Object.keys(data).sort(); let aggregated = {}; let weekRanges = {}; let weekNumbers = {}; 
         labels.forEach(l => {
             let key = l;
-            if(trendAgg === 'week') {
-                let d = new Date(l); let day = d.getDay(); let diff = d.getDate() - day + (day === 0 ? -6 : 1);
-                let monday = new Date(d.setDate(diff)); key = monday.toISOString().split('T')[0];
-                if(!weekRanges[key]) { let sunday = new Date(monday); sunday.setDate(sunday.getDate() + 6); weekRanges[key] = { start: key, end: sunday.toISOString().split('T')[0] }; weekNumbers[key] = getWeekNumber(monday); }
-            } else if(trendAgg === 'month') { key = l.substring(0, 7); } 
-            else if(trendAgg === 'quarter') { let d = new Date(l); let q = Math.floor(d.getMonth() / 3) + 1; key = `${d.getFullYear()}-Q${q}`; }
-            if(!aggregated[key]) aggregated[key] = { net: 0, qty: 0, tx: new Set() };
-            aggregated[key].net += data[l].net; aggregated[key].qty += data[l].qty; data[l].tx.forEach(t => aggregated[key].tx.add(t));
+            if(trendAgg === 'week') { let d = new Date(l); let day = d.getDay(); let diff = d.getDate() - day + (day === 0 ? -6 : 1); let monday = new Date(d.setDate(diff)); key = monday.toISOString().split('T')[0]; if(!weekRanges[key]) { let sunday = new Date(monday); sunday.setDate(sunday.getDate() + 6); weekRanges[key] = { start: key, end: sunday.toISOString().split('T')[0] }; weekNumbers[key] = getWeekNumber(monday); } } 
+            else if(trendAgg === 'month') { key = l.substring(0, 7); } else if(trendAgg === 'quarter') { let d = new Date(l); let q = Math.floor(d.getMonth() / 3) + 1; key = `${d.getFullYear()}-Q${q}`; }
+            if(!aggregated[key]) aggregated[key] = { net: 0, qty: 0, tx: new Set() }; aggregated[key].net += data[l].net; aggregated[key].qty += data[l].qty; data[l].tx.forEach(t => aggregated[key].tx.add(t));
         });
-        
         let vsAggregated = {}; let vsWeekRanges = {};
         if (window.currentCompareSeries && window.currentCompareSeries.dates && window.currentCompareSeries.dates.length > 0) {
             labels.forEach((mainDateKey, idx) => {
-                let vsNet = window.currentCompareSeries.net[idx] || 0; let vsQty = window.currentCompareSeries.qty[idx] || 0; let vsTx = window.currentCompareSeries.tx[idx] || 0; let vsDate = window.currentCompareSeries.dates[idx] || '';
-                let key = mainDateKey;
-                if(trendAgg === 'week') { let d = new Date(mainDateKey); let day = d.getDay(); let diff = d.getDate() - day + (day === 0 ? -6 : 1); let monday = new Date(d.setDate(diff)); key = monday.toISOString().split('T')[0]; } 
-                else if(trendAgg === 'month') { key = mainDateKey.substring(0, 7); } 
-                else if(trendAgg === 'quarter') { let d = new Date(mainDateKey); let q = Math.floor(d.getMonth() / 3) + 1; key = `${d.getFullYear()}-Q${q}`; }
-                
-                if(!vsAggregated[key]) vsAggregated[key] = { net: 0, qty: 0, tx: 0 };
-                vsAggregated[key].net += vsNet; vsAggregated[key].qty += vsQty; vsAggregated[key].tx += vsTx;
+                let vsNet = window.currentCompareSeries.net[idx] || 0; let vsQty = window.currentCompareSeries.qty[idx] || 0; let vsTx = window.currentCompareSeries.tx[idx] || 0; let vsDate = window.currentCompareSeries.dates[idx] || ''; let key = mainDateKey;
+                if(trendAgg === 'week') { let d = new Date(mainDateKey); let day = d.getDay(); let diff = d.getDate() - day + (day === 0 ? -6 : 1); let monday = new Date(d.setDate(diff)); key = monday.toISOString().split('T')[0]; } else if(trendAgg === 'month') { key = mainDateKey.substring(0, 7); } else if(trendAgg === 'quarter') { let d = new Date(mainDateKey); let q = Math.floor(d.getMonth() / 3) + 1; key = `${d.getFullYear()}-Q${q}`; }
+                if(!vsAggregated[key]) vsAggregated[key] = { net: 0, qty: 0, tx: 0 }; vsAggregated[key].net += vsNet; vsAggregated[key].qty += vsQty; vsAggregated[key].tx += vsTx;
                 if(vsDate) { if(!vsWeekRanges[key]) vsWeekRanges[key] = { vsDates: [] }; vsWeekRanges[key].vsDates.push(vsDate); }
             });
         }
-        
-        let aggLabels = Object.keys(aggregated).sort();
-        let vals = aggLabels.map(l => { if (trendMode === 'net') return aggregated[l].net; if (trendMode === 'qty') return aggregated[l].qty; if (trendMode === 'tx') return aggregated[l].tx.size; return 0; }); 
-        let displayLabels = aggLabels.map(d => { 
-            if(trendAgg === 'month') { let parts = d.split('-'); let dateObj = new Date(parseInt(parts[0]), parseInt(parts[1])-1, 1); return `${dateObj.toLocaleString('en-US', {month:'short'})} ${parts[0]}`; }
-            if(trendAgg === 'week') { return `W${weekNumbers[d]}`; }
-            if(trendAgg === 'quarter') { return d; }
-            return formatDateShort(d);
-        }); 
-        
-        let labelText = trendMode === 'net' ? 'Net Sales' : (trendMode === 'qty' ? 'Quantity Sold' : 'Transactions'); 
-        let lineColor = trendMode === 'net' ? '#002395' : (trendMode === 'qty' ? '#0ea5e9' : '#8b5cf6'); 
-        let bgColor = trendMode === 'net' ? 'rgba(0, 35, 149, 0.05)' : (trendMode === 'qty' ? 'rgba(14, 165, 233, 0.05)' : 'rgba(139, 92, 246, 0.05)'); 
-        
+        let aggLabels = Object.keys(aggregated).sort(); let vals = aggLabels.map(l => { if (trendMode === 'net') return aggregated[l].net; if (trendMode === 'qty') return aggregated[l].qty; if (trendMode === 'tx') return aggregated[l].tx.size; return 0; }); 
+        let displayLabels = aggLabels.map(d => { if(trendAgg === 'month') { let parts = d.split('-'); let dateObj = new Date(parseInt(parts[0]), parseInt(parts[1])-1, 1); return `${dateObj.toLocaleString('en-US', {month:'short'})} ${parts[0]}`; } if(trendAgg === 'week') { return `W${weekNumbers[d]}`; } if(trendAgg === 'quarter') { return d; } return formatDateShort(d); }); 
+        let labelText = trendMode === 'net' ? 'Net Sales' : (trendMode === 'qty' ? 'Quantity Sold' : 'Transactions'); let lineColor = trendMode === 'net' ? '#002395' : (trendMode === 'qty' ? '#0ea5e9' : '#8b5cf6'); let bgColor = trendMode === 'net' ? 'rgba(0, 35, 149, 0.05)' : (trendMode === 'qty' ? 'rgba(14, 165, 233, 0.05)' : 'rgba(139, 92, 246, 0.05)'); 
         let datasets = [{ label: labelText, data:vals, borderColor: lineColor, backgroundColor: trendChartType === 'bar' ? lineColor : bgColor, borderWidth: 2, fill: trendChartType === 'line', tension:0.1, pointBackgroundColor: '#ffffff', pointBorderColor: lineColor, pointBorderWidth: 2, pointRadius: 3, pointHoverRadius: 5, borderRadius: trendChartType === 'bar' ? 3 : 0, maxBarThickness: 40 }];
-        
         let showVs = document.getElementById('toggleVsLineCheckbox').checked;
-        if (showVs && Object.keys(vsAggregated).length > 0) {
-            let vsVals = aggLabels.map(l => { if(!vsAggregated[l]) return 0; if(trendMode === 'net') return vsAggregated[l].net; if(trendMode === 'qty') return vsAggregated[l].qty; if(trendMode === 'tx') return vsAggregated[l].tx; return 0; });
-            datasets.push({ label: 'VS ' + labelText, data: vsVals, borderColor: '#94a3b8', backgroundColor: trendChartType === 'bar' ? '#cbd5e1' : 'transparent', borderWidth: 2, borderDash: trendChartType === 'line' ? [5, 5] : [], fill: false, tension: 0.1, pointBackgroundColor: '#ffffff', pointBorderColor: '#94a3b8', pointRadius: 2, pointHoverRadius: 4, borderRadius: trendChartType === 'bar' ? 3 : 0, maxBarThickness: 40 });
-        }
+        if (showVs && Object.keys(vsAggregated).length > 0) { let vsVals = aggLabels.map(l => { if(!vsAggregated[l]) return 0; if(trendMode === 'net') return vsAggregated[l].net; if(trendMode === 'qty') return vsAggregated[l].qty; if(trendMode === 'tx') return vsAggregated[l].tx; return 0; }); datasets.push({ label: 'VS ' + labelText, data: vsVals, borderColor: '#94a3b8', backgroundColor: trendChartType === 'bar' ? '#cbd5e1' : 'transparent', borderWidth: 2, borderDash: trendChartType === 'line' ? [5, 5] : [], fill: false, tension: 0.1, pointBackgroundColor: '#ffffff', pointBorderColor: '#94a3b8', pointRadius: 2, pointHoverRadius: 4, borderRadius: trendChartType === 'bar' ? 3 : 0, maxBarThickness: 40 }); }
         
         if(charts['trend']) charts['trend'].destroy(); 
-        charts['trend'] = new Chart(document.getElementById('trendChart').getContext('2d'), { 
-            type: trendChartType, data:{ labels: displayLabels, datasets: datasets }, options:{ layout: { padding: { top: 25 } }, responsive:true, maintainAspectRatio:false, 
-                plugins:{ tooltip: { callbacks: { title: function(context) { let idx = context[0].dataIndex; let key = aggLabels[idx]; let datasetIdx = context[0].datasetIndex;
-                                if (datasetIdx === 1) { let vsInfo = vsWeekRanges[key]; if(vsInfo && vsInfo.vsDates && vsInfo.vsDates.length > 0) { let vsDates = vsInfo.vsDates.slice().sort(); let minDate = vsDates[0]; let maxDate = vsDates[vsDates.length - 1]; let startObj = new Date(minDate); let endObj = new Date(maxDate);
-                                        if(trendAgg === 'week') { let startStr = `${startObj.getDate().toString().padStart(2,'0')} ${startObj.toLocaleString('en-US',{month:'short'})}`; let endStr = `${endObj.getDate().toString().padStart(2,'0')} ${endObj.toLocaleString('en-US',{month:'short'})}`; let vsWeekNum = getWeekNumber(startObj); return `VS Week ${vsWeekNum}: ${startStr} - ${endStr}`; } 
-                                        else if(trendAgg === 'month') { return `VS: ${startObj.toLocaleString('en-US',{month:'long'})} ${startObj.getFullYear()}`; } 
-                                        else if(trendAgg === 'quarter') { let q = Math.floor(startObj.getMonth() / 3) + 1; return `VS: Q${q} ${startObj.getFullYear()}`; } 
-                                        else { return `VS: ${formatDateShort(minDate)} ${startObj.getFullYear()}`; } } return `VS ${context[0].label}`; }
-                                if(trendAgg === 'week' && weekRanges[key]) { let startObj = new Date(weekRanges[key].start); let endObj = new Date(weekRanges[key].end); let startStr = `${startObj.getDate().toString().padStart(2,'0')} ${startObj.toLocaleString('en-US',{month:'short'})}`; let endStr = `${endObj.getDate().toString().padStart(2,'0')} ${endObj.toLocaleString('en-US',{month:'short'})}`; return `Week ${weekNumbers[key]}: ${startStr} - ${endStr}`; }
-                                if(trendAgg === 'month') { let parts = key.split('-'); let dateObj = new Date(parseInt(parts[0]), parseInt(parts[1])-1, 1); return `${dateObj.toLocaleString('en-US', {month:'long'})} ${parts[0]}`; }
-                                if(trendAgg === 'quarter') { return key; }
-                                return context[0].label; },
-                            label: function(context) { let val = context.raw; let label = context.dataset.label; let isRp = trendMode === 'net'; return isRp ? ` ${label}: Rp ${formatRp(val)}` : ` ${label}: ${formatNum(val)}`; } } },
-                    legend:{display: showVs, position: 'bottom', align: 'center', labels: {boxWidth: 12, usePointStyle: true, font: {size: 10}}}, 
-                    datalabels: getLabelConfig(lineColor, 'top', 'center', 8) }, 
-                scales: { x: { grid: { display: false } }, y: { border: { display: false }, grid: { color: '#e2e8f0', drawTicks: false }, ticks: { callback: function(value) { if(value >= 1000000) return (value/1000000) + 'M'; if(value >= 1000) return (value/1000) + 'K'; return value; } } } } 
-            } 
-        }); 
+        charts['trend'] = new Chart(document.getElementById('trendChart').getContext('2d'), { type: trendChartType, data:{ labels: displayLabels, datasets: datasets }, options:{ layout: { padding: { top: 25 } }, responsive:true, maintainAspectRatio:false, 
+            plugins:{ tooltip: { callbacks: { title: function(context) { let idx = context[0].dataIndex; let key = aggLabels[idx]; let datasetIdx = context[0].datasetIndex; if (datasetIdx === 1) { let vsInfo = vsWeekRanges[key]; if(vsInfo && vsInfo.vsDates && vsInfo.vsDates.length > 0) { let vsDates = vsInfo.vsDates.slice().sort(); let minDate = vsDates[0]; let maxDate = vsDates[vsDates.length - 1]; let startObj = new Date(minDate); let endObj = new Date(maxDate); if(trendAgg === 'week') { let startStr = `${startObj.getDate().toString().padStart(2,'0')} ${startObj.toLocaleString('en-US',{month:'short'})}`; let endStr = `${endObj.getDate().toString().padStart(2,'0')} ${endObj.toLocaleString('en-US',{month:'short'})}`; let vsWeekNum = getWeekNumber(startObj); return `VS Week ${vsWeekNum}: ${startStr} - ${endStr}`; } else if(trendAgg === 'month') { return `VS: ${startObj.toLocaleString('en-US',{month:'long'})} ${startObj.getFullYear()}`; } else if(trendAgg === 'quarter') { let q = Math.floor(startObj.getMonth() / 3) + 1; return `VS: Q${q} ${startObj.getFullYear()}`; } else { return `VS: ${formatDateShort(minDate)} ${startObj.getFullYear()}`; } } return `VS ${context[0].label}`; }
+                    if(trendAgg === 'week' && weekRanges[key]) { let startObj = new Date(weekRanges[key].start); let endObj = new Date(weekRanges[key].end); let startStr = `${startObj.getDate().toString().padStart(2,'0')} ${startObj.toLocaleString('en-US',{month:'short'})}`; let endStr = `${endObj.getDate().toString().padStart(2,'0')} ${endObj.toLocaleString('en-US',{month:'short'})}`; return `Week ${weekNumbers[key]}: ${startStr} - ${endStr}`; }
+                    if(trendAgg === 'month') { let parts = key.split('-'); let dateObj = new Date(parseInt(parts[0]), parseInt(parts[1])-1, 1); return `${dateObj.toLocaleString('en-US', {month:'long'})} ${parts[0]}`; } if(trendAgg === 'quarter') { return key; } return context[0].label; },
+                label: function(context) { let val = context.raw; let label = context.dataset.label; let isRp = trendMode === 'net'; return isRp ? ` ${label}: Rp ${formatRp(val)}` : ` ${label}: ${formatNum(val)}`; } } },
+            legend:{display: showVs, position: 'bottom', align: 'center', labels: {boxWidth: 12, usePointStyle: true, font: {size: 10}}}, datalabels: getLabelConfig(lineColor, 'top', 'center', 8) }, 
+            scales: { x: { grid: { display: false } }, y: { border: { display: false }, grid: { color: '#e2e8f0', drawTicks: false }, ticks: { callback: function(value) { if(value >= 1000000) return (value/1000000) + 'M'; if(value >= 1000) return (value/1000) + 'K'; return value; } } } } 
+        } }); 
     }
     
     function drawCat(catData) { 
-        if(!catData || !catData.net) return;
-        let mainArr;
-        if(catMode === 'net') { mainArr = Object.keys(catData.net).map(k => ({k, v: catData.net[k]})).sort((a,b)=>b.v-a.v).slice(0,6); } 
-        else if(catMode === 'qty') { mainArr = Object.keys(catData.qty).map(k => ({k, v: catData.qty[k]})).sort((a,b)=>b.v-a.v).slice(0,6); } 
-        else { mainArr = Object.keys(catData.tx).map(k => ({k, v: catData.tx[k].size})).sort((a,b)=>b.v-a.v).slice(0,6); }
-        
-        let labels = mainArr.map(x=>x.k);
-        let datasets = [{ label: catMode === 'net' ? 'Net Sales' : (catMode === 'qty' ? 'Quantity' : 'Transactions'), data: mainArr.map(x=>x.v), backgroundColor:'#002395', borderRadius: 2, maxBarThickness: 32 }];
-        
+        if(!catData || !catData.net) return; let mainArr;
+        if(catMode === 'net') { mainArr = Object.keys(catData.net).map(k => ({k, v: catData.net[k]})).sort((a,b)=>b.v-a.v).slice(0,6); } else if(catMode === 'qty') { mainArr = Object.keys(catData.qty).map(k => ({k, v: catData.qty[k]})).sort((a,b)=>b.v-a.v).slice(0,6); } else { mainArr = Object.keys(catData.tx).map(k => ({k, v: catData.tx[k].size})).sort((a,b)=>b.v-a.v).slice(0,6); }
+        let labels = mainArr.map(x=>x.k); let datasets = [{ label: catMode === 'net' ? 'Net Sales' : (catMode === 'qty' ? 'Quantity' : 'Transactions'), data: mainArr.map(x=>x.v), backgroundColor:'#002395', borderRadius: 2, maxBarThickness: 32 }];
         let showVs = document.getElementById('toggleVsLineCheckbox').checked;
-        if (showVs) {
-            let vsData = null;
-            if(catMode === 'net' && window.currentCompareCat) { vsData = labels.map(l => window.currentCompareCat[l] || 0); } 
-            else if(catMode === 'qty' && window.currentCompareCatQty) { vsData = labels.map(l => window.currentCompareCatQty[l] || 0); } 
-            else if(catMode === 'tx' && window.currentCompareCatTx) { vsData = labels.map(l => (window.currentCompareCatTx[l] ? window.currentCompareCatTx[l].size : 0)); }
-            if(vsData) { datasets.push({ label:'VS ' + (catMode === 'net' ? 'Sales' : (catMode === 'qty' ? 'Qty' : 'Tx')), data: vsData, backgroundColor:'#cbd5e1', borderRadius: 2, maxBarThickness: 32 }); }
-        }
-        
+        if (showVs) { let vsData = null; if(catMode === 'net' && window.currentCompareCat) { vsData = labels.map(l => window.currentCompareCat[l] || 0); } else if(catMode === 'qty' && window.currentCompareCatQty) { vsData = labels.map(l => window.currentCompareCatQty[l] || 0); } else if(catMode === 'tx' && window.currentCompareCatTx) { vsData = labels.map(l => (window.currentCompareCatTx[l] ? window.currentCompareCatTx[l].size : 0)); } if(vsData) { datasets.push({ label:'VS ' + (catMode === 'net' ? 'Sales' : (catMode === 'qty' ? 'Qty' : 'Tx')), data: vsData, backgroundColor:'#cbd5e1', borderRadius: 2, maxBarThickness: 32 }); } }
         let isRp = catMode === 'net';
         if(charts['cat']) charts['cat'].destroy(); 
-        charts['cat'] = new Chart(document.getElementById('categoryChart').getContext('2d'), { 
-            type:'bar', data:{ labels:labels, datasets:datasets }, options:{ layout: { padding: { top: 25 } }, responsive:true, maintainAspectRatio:false, 
-                plugins:{ tooltip: { callbacks: { title: function(context) { if (context[0].datasetIndex === 1 && window.currentCompareDateRange) { return `VS Period: ${window.currentCompareDateRange.start} to ${window.currentCompareDateRange.end}`; } return context[0].label; },
-                            label: function(context) { let val = context.raw; let label = context.dataset.label; let text = isRp ? ` ${label}: Rp ${formatRp(val)}` : ` ${label}: ${formatNum(val)}`;
-                                if (context.datasetIndex === 0 && window.currentCompareCat && document.getElementById('toggleVsLineCheckbox').checked) { let prevVal = 0; if(catMode === 'net') prevVal = window.currentCompareCat[context.label] || 0; else if(catMode === 'qty') prevVal = window.currentCompareCatQty?.[context.label] || 0; else if(catMode === 'tx') prevVal = window.currentCompareCatTx?.[context.label]?.size || 0;
-                                    if (prevVal > 0) { let pct = ((val - prevVal) / prevVal * 100); let sign = pct > 0 ? '+' : ''; text += ` (${sign}${pct.toFixed(1)}% vs prev)`; } } return text; } } },
-                    legend:{display: showVs, position: 'top', align: 'end', labels: {boxWidth: 10, font: {size: 10}}}, datalabels: getLabelConfig('#002395', 'end', 'end', 4) }, 
-                scales: { x: { grid: { display: false } }, y: { border: { display: false }, grid: { color: '#e2e8f0', drawTicks: false }, ticks: { callback: function(value) { if(value >= 1000000) return (value/1000000) + 'M'; if(value >= 1000) return (value/1000) + 'K'; return value; } } } } 
-            } 
-        }); 
+        charts['cat'] = new Chart(document.getElementById('categoryChart').getContext('2d'), { type:'bar', data:{ labels:labels, datasets:datasets }, options:{ layout: { padding: { top: 25 } }, responsive:true, maintainAspectRatio:false, 
+            plugins:{ tooltip: { callbacks: { title: function(context) { if (context[0].datasetIndex === 1 && window.currentCompareDateRange) { return `VS Period: ${window.currentCompareDateRange.start} to ${window.currentCompareDateRange.end}`; } return context[0].label; }, label: function(context) { let val = context.raw; let label = context.dataset.label; let text = isRp ? ` ${label}: Rp ${formatRp(val)}` : ` ${label}: ${formatNum(val)}`; if (context.datasetIndex === 0 && window.currentCompareCat && document.getElementById('toggleVsLineCheckbox').checked) { let prevVal = 0; if(catMode === 'net') prevVal = window.currentCompareCat[context.label] || 0; else if(catMode === 'qty') prevVal = window.currentCompareCatQty?.[context.label] || 0; else if(catMode === 'tx') prevVal = window.currentCompareCatTx?.[context.label]?.size || 0; if (prevVal > 0) { let pct = ((val - prevVal) / prevVal * 100); let sign = pct > 0 ? '+' : ''; text += ` (${sign}${pct.toFixed(1)}% vs prev)`; } } return text; } } }, legend:{display: showVs, position: 'top', align: 'end', labels: {boxWidth: 10, font: {size: 10}}}, datalabels: getLabelConfig('#002395', 'end', 'end', 4) }, 
+            scales: { x: { grid: { display: false } }, y: { border: { display: false }, grid: { color: '#e2e8f0', drawTicks: false }, ticks: { callback: function(value) { if(value >= 1000000) return (value/1000000) + 'M'; if(value >= 1000) return (value/1000) + 'K'; return value; } } } } 
+        } }); 
     }
     
     function drawLocationChart() { 
-        let data = locationMode === 'area' ? currentAggArea : currentAggOutlet; 
-        let arr = Object.keys(data).map(k=>({k,v:data[k]})).sort((a,b)=>b.v-a.v); 
-        let canvasId = 'locationChart'; 
-        if(charts[canvasId]) charts[canvasId].destroy(); 
-        
+        let data = locationMode === 'area' ? currentAggArea : currentAggOutlet; let arr = Object.keys(data).map(k=>({k,v:data[k]})).sort((a,b)=>b.v-a.v); let canvasId = 'locationChart'; if(charts[canvasId]) charts[canvasId].destroy(); 
         if (locationMode === 'area') { 
             let colors = ['#002395', '#ED2939', '#1e40af', '#64748b', '#cbd5e1', '#f87171', '#3b82f6']; 
             charts[canvasId] = new Chart(document.getElementById(canvasId).getContext('2d'), { type:'pie', data: { labels: arr.map(x=>x.k), datasets: [{ data: arr.map(x=>x.v), backgroundColor: colors, borderWidth: 1, borderColor: '#fff' }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: {size: 10} } }, datalabels: getLabelConfig('#ffffff', 'center'), tooltip: { callbacks: { label: function(context) { let val = context.raw; let total = context.chart._metasets[context.datasetIndex].total; let pct = ((val/total) * 100).toFixed(1) + '%'; return ` ${context.label}: Rp ${formatRp(val)} (${pct})`; } } } } } }); 
         } else { 
             if(arr.length > 15) { let top = arr.slice(0, 14); let others = arr.slice(14).reduce((sum, item) => sum + item.v, 0); top.push({k: 'Others', v: others}); arr = top; } 
-            let labels = arr.map(x=>x.k); let datasets = [{ label: 'Net Sales', data: arr.map(x=>x.v), backgroundColor: '#002395', borderRadius: 3, barPercentage: 0.7 }];
-            let showVs = document.getElementById('toggleVsLineCheckbox').checked;
+            let labels = arr.map(x=>x.k); let datasets = [{ label: 'Net Sales', data: arr.map(x=>x.v), backgroundColor: '#002395', borderRadius: 3, barPercentage: 0.7 }]; let showVs = document.getElementById('toggleVsLineCheckbox').checked;
             if (showVs && window.currentCompareOutlet) { let vsData = labels.map(l => { if (l === 'Others') { let allKeys = Object.keys(window.currentCompareOutlet); let topKeys = labels.slice(0, -1); return allKeys.filter(k => !topKeys.includes(k)).reduce((sum, k) => sum + window.currentCompareOutlet[k], 0); } return window.currentCompareOutlet[l] || 0; }); datasets.push({ label:'VS Net Sales', data:vsData, backgroundColor:'#cbd5e1', borderRadius: 3, barPercentage: 0.7 }); }
-            
             charts[canvasId] = new Chart(document.getElementById(canvasId).getContext('2d'), { type: 'bar', data: { labels: labels, datasets: datasets }, options: { layout: { padding: { right: 45 } }, indexAxis: 'y', responsive: true, maintainAspectRatio: false, 
                 plugins: { legend: { display: showVs, position: 'top', align: 'end', labels: {boxWidth: 10, font: {size: 10}} }, datalabels: getLabelConfig('#0f172a', 'end', 'end', 4), 
-                    tooltip: { callbacks: { title: function(context) { if (context[0].datasetIndex === 1 && window.currentCompareDateRange) { return `VS Period: ${window.currentCompareDateRange.start} to ${window.currentCompareDateRange.end}`; } return context[0].label; },
-                            label: function(context) { let val = context.raw; let text = ` ${context.dataset.label}: Rp ${formatRp(val)}`; if (context.datasetIndex === 0 && showVs && window.currentCompareOutlet) { let l = context.label; let prevVal = 0; if (l === 'Others') { let allKeys = Object.keys(window.currentCompareOutlet); let topKeys = labels.slice(0, -1); prevVal = allKeys.filter(k => !topKeys.includes(k)).reduce((sum, k) => sum + window.currentCompareOutlet[k], 0); } else { prevVal = window.currentCompareOutlet[l] || 0; }
-                                if (prevVal > 0) { let pct = ((val - prevVal) / prevVal * 100); let sign = pct > 0 ? '+' : ''; text += ` (${sign}${pct.toFixed(1)}% vs prev)`; } } return text; } } } }, 
+                    tooltip: { callbacks: { title: function(context) { if (context[0].datasetIndex === 1 && window.currentCompareDateRange) { return `VS Period: ${window.currentCompareDateRange.start} to ${window.currentCompareDateRange.end}`; } return context[0].label; }, label: function(context) { let val = context.raw; let text = ` ${context.dataset.label}: Rp ${formatRp(val)}`; if (context.datasetIndex === 0 && showVs && window.currentCompareOutlet) { let l = context.label; let prevVal = 0; if (l === 'Others') { let allKeys = Object.keys(window.currentCompareOutlet); let topKeys = labels.slice(0, -1); prevVal = allKeys.filter(k => !topKeys.includes(k)).reduce((sum, k) => sum + window.currentCompareOutlet[k], 0); } else { prevVal = window.currentCompareOutlet[l] || 0; } if (prevVal > 0) { let pct = ((val - prevVal) / prevVal * 100); let sign = pct > 0 ? '+' : ''; text += ` (${sign}${pct.toFixed(1)}% vs prev)`; } } return text; } } } }, 
                 scales: { x: { grid: { display: false }, border: {display: false}, ticks: { font: {size: 10}, callback: function(value) { if(value >= 1000000) return (value/1000000) + 'M'; if(value >= 1000) return (value/1000) + 'K'; return value; } } }, y: { grid: { display: false, drawBorder: false }, ticks: {font: {size: 10}} } } } }); 
         } 
     }
     
     function drawDeptChart(data) { 
-        let arr = Object.keys(data).map(k=>({k,v:data[k]})).sort((a,b)=>b.v-a.v); 
-        let labels = arr.map(x=>x.k); let values = arr.map(x=>x.v); 
-        let showVs = document.getElementById('toggleVsLineCheckbox').checked; let vsData = null;
-        if (showVs && window.currentCompareDept) { vsData = labels.map(l => window.currentCompareDept[l] || 0); }
-        if(charts['deptChart']) charts['deptChart'].destroy(); 
+        let arr = Object.keys(data).map(k=>({k,v:data[k]})).sort((a,b)=>b.v-a.v); let labels = arr.map(x=>x.k); let values = arr.map(x=>x.v); let showVs = document.getElementById('toggleVsLineCheckbox').checked; let vsData = null; if (showVs && window.currentCompareDept) { vsData = labels.map(l => window.currentCompareDept[l] || 0); } if(charts['deptChart']) charts['deptChart'].destroy(); 
         
         if (deptChartType === 'doughnut') {
-            let colors = ['#002395', '#ED2939', '#1e40af', '#64748b', '#cbd5e1', '#f87171', '#3b82f6', '#fbbf24', '#10b981', '#8b5cf6'];
-            let datasets = [{ data: values, backgroundColor: colors, borderWidth: 1, borderColor: '#fff' }];
+            let colors = ['#002395', '#ED2939', '#1e40af', '#64748b', '#cbd5e1', '#f87171', '#3b82f6', '#fbbf24', '#10b981', '#8b5cf6']; let datasets = [{ data: values, backgroundColor: colors, borderWidth: 1, borderColor: '#fff' }];
             charts['deptChart'] = new Chart(document.getElementById('deptChart').getContext('2d'), { type:'doughnut', data: { labels: labels, datasets: datasets }, options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: {size: 10} } }, datalabels: getLabelConfig('#ffffff', 'center'), tooltip: { callbacks: { label: function(context) { let val = context.raw; let total = context.chart._metasets[context.datasetIndex].total; let pct = ((val/total) * 100).toFixed(1) + '%'; return ` ${context.label}: Rp ${formatRp(val)} (${pct})`; } } } } } }); 
         } else {
-            let colors = ['#002395', '#ED2939', '#1e40af', '#64748b', '#cbd5e1', '#f87171', '#3b82f6', '#fbbf24', '#10b981', '#8b5cf6'];
-            let datasets = [{ label: 'Net Sales', data: values, backgroundColor: labels.map((_, i) => colors[i % colors.length]), borderRadius: 3, barPercentage: 0.7 }];
-            if (vsData) { datasets.push({ label:'VS Net Sales', data: vsData, backgroundColor:'#e2e8f0', borderRadius: 3, barPercentage: 0.7 }); }
-            
+            let colors = ['#002395', '#ED2939', '#1e40af', '#64748b', '#cbd5e1', '#f87171', '#3b82f6', '#fbbf24', '#10b981', '#8b5cf6']; let datasets = [{ label: 'Net Sales', data: values, backgroundColor: labels.map((_, i) => colors[i % colors.length]), borderRadius: 3, barPercentage: 0.7 }]; if (vsData) { datasets.push({ label:'VS Net Sales', data: vsData, backgroundColor:'#e2e8f0', borderRadius: 3, barPercentage: 0.7 }); }
             charts['deptChart'] = new Chart(document.getElementById('deptChart').getContext('2d'), { type: 'bar', data: { labels: labels, datasets: datasets }, options: { layout: { padding: { right: 45 } }, indexAxis: 'y', responsive: true, maintainAspectRatio: false, 
                 plugins: { legend: { display: !!vsData, position: 'top', align: 'end', labels: {boxWidth: 10, font: {size: 10}} }, datalabels: getLabelConfig('#0f172a', 'end', 'end', 4), 
-                    tooltip: { callbacks: { title: function(context) { if (context[0].datasetIndex === 1 && window.currentCompareDateRange) { return `VS Period: ${window.currentCompareDateRange.start} to ${window.currentCompareDateRange.end}`; } return context[0].label; },
-                            label: function(context) { let val = context.raw; let text = ` ${context.dataset.label}: Rp ${formatRp(val)}`; if (context.datasetIndex === 0 && showVs && window.currentCompareDept) { let l = context.label; let prevVal = window.currentCompareDept[l] || 0; if (prevVal > 0) { let pct = ((val - prevVal) / prevVal * 100); let sign = pct > 0 ? '+' : ''; text += ` (${sign}${pct.toFixed(1)}% vs prev)`; } } return text; } } } }, 
+                    tooltip: { callbacks: { title: function(context) { if (context[0].datasetIndex === 1 && window.currentCompareDateRange) { return `VS Period: ${window.currentCompareDateRange.start} to ${window.currentCompareDateRange.end}`; } return context[0].label; }, label: function(context) { let val = context.raw; let text = ` ${context.dataset.label}: Rp ${formatRp(val)}`; if (context.datasetIndex === 0 && showVs && window.currentCompareDept) { let l = context.label; let prevVal = window.currentCompareDept[l] || 0; if (prevVal > 0) { let pct = ((val - prevVal) / prevVal * 100); let sign = pct > 0 ? '+' : ''; text += ` (${sign}${pct.toFixed(1)}% vs prev)`; } } return text; } } } }, 
                 scales: { x: { grid: { display: false }, border: {display: false}, ticks: { font: {size: 10}, callback: function(value) { if(value >= 1000000) return (value/1000000) + 'M'; if(value >= 1000) return (value/1000) + 'K'; return value; } } }, y: { grid: { display: false, drawBorder: false }, ticks: {font: {size: 10}} } } } }); 
         }
     }
     
     function drawHeatmap(matrix, maxVal) { 
-        const container = document.getElementById('heatmapContainer'); container.innerHTML = ''; const tooltip = els.tooltip; 
-        container.appendChild(document.createElement('div')); 
+        const container = document.getElementById('heatmapContainer'); container.innerHTML = ''; const tooltip = els.tooltip; container.appendChild(document.createElement('div')); 
         HOURS.forEach(h => { let d = document.createElement('div'); d.className = 'heatmap-label-x'; d.innerText = h + ":00"; container.appendChild(d); }); 
         DAYS.forEach((day, idx) => { 
             let lbl = document.createElement('div'); lbl.className = 'heatmap-label-y'; lbl.innerText = DAYS_ID[idx]; container.appendChild(lbl); 
             HOURS.forEach(hr => { 
-                let cell = document.createElement('div'); let val = matrix[day][hr]; let intensity = 0; if(val > 0) intensity = 0.2 + (val / maxVal) * 0.8; 
-                cell.className = 'heatmap-cell'; 
-                if (val === 0) { cell.style.backgroundColor = '#f8fafc'; cell.style.border = '1px solid #e2e8f0'; } 
-                else { cell.style.backgroundColor = `rgba(0, 35, 149, ${intensity})`; } 
+                let cell = document.createElement('div'); let val = matrix[day][hr]; let intensity = 0; if(val > 0) intensity = 0.2 + (val / maxVal) * 0.8; cell.className = 'heatmap-cell'; 
+                if (val === 0) { cell.style.backgroundColor = '#f8fafc'; cell.style.border = '1px solid #e2e8f0'; } else { cell.style.backgroundColor = `rgba(0, 35, 149, ${intensity})`; } 
                 cell.addEventListener('mouseenter', (e) => { tooltip.style.opacity = 1; tooltip.innerHTML = `${DAYS_ID[idx]} ${hr}:00<br/><strong>${formatRp(val)}</strong>`; }); 
                 cell.addEventListener('mousemove', (e) => { tooltip.style.left = e.pageX + 10 + 'px'; tooltip.style.top = e.pageY + 10 + 'px'; }); 
-                cell.addEventListener('mouseleave', () => { tooltip.style.opacity = 0; }); 
-                container.appendChild(cell); 
+                cell.addEventListener('mouseleave', () => { tooltip.style.opacity = 0; }); container.appendChild(cell); 
             }); 
         }); 
     }
@@ -1786,10 +1352,7 @@
             li.innerHTML = html;
             li.querySelector('input').addEventListener('change', (e) => { col.visible = e.target.checked; renderTablePage(); });
             li.addEventListener('dragstart', (e) => { dragStartIndex = +e.target.closest('li').dataset.idx; e.dataTransfer.effectAllowed = 'move'; setTimeout(() => e.target.classList.add('opacity-50'), 0); });
-            li.addEventListener('dragover', (e) => { e.preventDefault(); return false; });
-            li.addEventListener('dragenter', (e) => { e.preventDefault(); e.target.closest('li')?.classList.add('border-blue-400', 'border-t-2'); });
-            li.addEventListener('dragleave', (e) => { e.target.closest('li')?.classList.remove('border-blue-400', 'border-t-2'); });
-            li.addEventListener('dragend', (e) => { e.target.classList.remove('opacity-50'); });
+            li.addEventListener('dragover', (e) => { e.preventDefault(); return false; }); li.addEventListener('dragenter', (e) => { e.preventDefault(); e.target.closest('li')?.classList.add('border-blue-400', 'border-t-2'); }); li.addEventListener('dragleave', (e) => { e.target.closest('li')?.classList.remove('border-blue-400', 'border-t-2'); }); li.addEventListener('dragend', (e) => { e.target.classList.remove('opacity-50'); });
             li.addEventListener('drop', (e) => {
                 e.stopPropagation(); const targetLi = e.target.closest('li'); if(!targetLi) return false; targetLi.classList.remove('border-fr-blue', 'border-t-4'); const dragEndIndex = +targetLi.dataset.idx;
                 const item = colsConfig.splice(dragStartIndex, 1)[0]; colsConfig.splice(dragEndIndex, 0, item); initColumnSettings(); renderTablePage(); return false;
@@ -1798,14 +1361,11 @@
         });
     }
 
-    document.getElementById('colSettingsBtn').addEventListener('click', () => {
-        const menu = document.getElementById('colSettingsMenu'); menu.classList.toggle('hidden'); if(!menu.classList.contains('hidden')) initColumnSettings();
-    });
+    document.getElementById('colSettingsBtn').addEventListener('click', () => { const menu = document.getElementById('colSettingsMenu'); menu.classList.toggle('hidden'); if(!menu.classList.contains('hidden')) initColumnSettings(); });
     document.getElementById('closeColMenu').addEventListener('click', () => { document.getElementById('colSettingsMenu').classList.add('hidden'); });
     document.addEventListener('click', (e) => { if(!e.target.closest('#colSettingsMenu') && !e.target.closest('#colSettingsBtn')) { document.getElementById('colSettingsMenu').classList.add('hidden'); } });
 
     document.getElementById('rowSelect').addEventListener('change', (e) => { txRowsPerPage = parseInt(e.target.value); txCurrentPage = 1; renderTablePage(); });
-
     function sortTable(col) { if (txSortCol === col) { txSortAsc = !txSortAsc; } else { txSortCol = col; txSortAsc = true; } txCurrentPage = 1; applyTableSortAndRender(); }
     
     function applyTableSortAndRender() { 
@@ -1820,8 +1380,7 @@
         txSortedData = [...filteredData].sort((a, b) => { 
             let valA = getSortVal(a, txSortCol); let valB = getSortVal(b, txSortCol); 
             if (valA < valB) return txSortAsc ? -1 : 1; if (valA > valB) return txSortAsc ? 1 : -1; 
-            if (txSortCol === 'DateStr') { const ta = a.ExactTime || ''; const tb = b.ExactTime || ''; if (ta !== tb) return ta < tb ? -1 : 1;
-                const oa = (a.Outlet || '').toString().toLowerCase(); const ob = (b.Outlet || '').toString().toLowerCase(); if (oa !== ob) return oa < ob ? -1 : 1; }
+            if (txSortCol === 'DateStr') { const ta = a.ExactTime || ''; const tb = b.ExactTime || ''; if (ta !== tb) return ta < tb ? -1 : 1; const oa = (a.Outlet || '').toString().toLowerCase(); const ob = (b.Outlet || '').toString().toLowerCase(); if (oa !== ob) return oa < ob ? -1 : 1; }
             return 0; 
         }); 
         renderTablePage(); 
@@ -1830,34 +1389,21 @@
     function renderTablePage() { 
         const headRow = document.getElementById('txTableHeadRow'); headRow.innerHTML = '';
         colsConfig.forEach(col => {
-            if(!col.visible) return;
-            let th = document.createElement('th'); th.className = `py-2.5 px-3 cursor-pointer hover:bg-gray-200 select-none transition-colors ${col.align === 'right' ? 'text-right' : ''}`; th.onclick = () => sortTable(col.id);
-            let sortIcon = txSortCol === col.id ? (txSortAsc ? '▲' : '▼') : ''; th.innerHTML = `${col.label} <span class="sort-icon ml-1 text-fr-blue" id="sort-icon-${col.id}">${sortIcon}</span>`; headRow.appendChild(th);
+            if(!col.visible) return; let th = document.createElement('th'); th.className = `py-2.5 px-3 cursor-pointer hover:bg-gray-200 select-none transition-colors ${col.align === 'right' ? 'text-right' : ''}`; th.onclick = () => sortTable(col.id); let sortIcon = txSortCol === col.id ? (txSortAsc ? '▲' : '▼') : ''; th.innerHTML = `${col.label} <span class="sort-icon ml-1 text-fr-blue" id="sort-icon-${col.id}">${sortIcon}</span>`; headRow.appendChild(th);
         });
-
         const tbody = document.getElementById('txTableBody'); if(!tbody) return; tbody.innerHTML = ''; 
         let totalPages = Math.ceil(txSortedData.length / txRowsPerPage) || 1; if (txCurrentPage > totalPages) txCurrentPage = totalPages; 
         document.getElementById('pageJumpInput').value = txCurrentPage; document.getElementById('totalPagesText').innerText = `/ ${totalPages}`; 
-        document.getElementById('prevPageBtn').disabled = txCurrentPage === 1; document.getElementById('firstPageBtn').disabled = txCurrentPage === 1; 
-        document.getElementById('nextPageBtn').disabled = txCurrentPage === totalPages; document.getElementById('lastPageBtn').disabled = txCurrentPage === totalPages; 
-        
+        document.getElementById('prevPageBtn').disabled = txCurrentPage === 1; document.getElementById('firstPageBtn').disabled = txCurrentPage === 1; document.getElementById('nextPageBtn').disabled = txCurrentPage === totalPages; document.getElementById('lastPageBtn').disabled = txCurrentPage === totalPages; 
         let startIdx = (txCurrentPage - 1) * txRowsPerPage; let endIdx = Math.min(startIdx + txRowsPerPage, txSortedData.length); 
         for (let i = startIdx; i < endIdx; i++) { 
             let r = txSortedData[i]; let no = i + 1; let tr = document.createElement('tr'); tr.className = "hover:bg-gray-100 transition-colors border-b border-gray-100 last:border-0"; 
             colsConfig.forEach(col => {
                 if(!col.visible) return; let td = document.createElement('td'); td.className = `py-2 px-3 ${col.align === 'right' ? 'text-right' : ''}`;
-                if (col.id === 'index') td.innerHTML = `<span class="text-gray-500 font-medium">${no}</span>`;
-                else if (col.id === 'DateStr') td.innerHTML = `<span class="whitespace-nowrap">${r['FormattedDate'] || r['DateStr'] || '-'}</span>`;
-                else if (col.id === 'ExactTime') td.innerText = r['ExactTime'] || '-';
-                else if (col.id === 'Items') { td.className += " truncate max-w-[200px]"; td.title = r['Items']||'-'; td.innerText = r['Items']||'-'; }
-                else if (col.id === 'Payment Method') td.innerHTML = `<span class="bg-gray-100 border border-gray-200 px-2 py-0.5 rounded">${r['Payment Method'] || '-'}</span>`;
-                else if (col.id === 'Receipt Number') { td.className += " font-medium text-fr-blue"; td.innerText = r['Receipt Number'] || '-'; }
-                else if (col.id === 'Total Collected') { let tc = getCleanNum(r, 'Total Collected Exc Rounding') || getCleanNum(r, 'Total Collected') || (getCleanNum(r, 'Net Sales') + getCleanNum(r, 'Tax')); td.innerText = formatRp(tc); }
-                else if (col.isNum) {
-                    let val = Math.abs(getCleanNum(r, col.id) || 0);
-                    if (col.isNeg) { if(val > 0) td.className += " text-fr-red"; td.innerText = val > 0 ? '-'+ (col.isRp ? formatRp(val) : formatNum(val)) : '0'; } 
-                    else { if (col.id === 'Net Sales') td.className += " font-semibold text-gray-800"; td.innerText = col.isRp ? formatRp(val) : formatNum(val); }
-                }
+                if (col.id === 'index') td.innerHTML = `<span class="text-gray-500 font-medium">${no}</span>`; else if (col.id === 'DateStr') td.innerHTML = `<span class="whitespace-nowrap">${r['FormattedDate'] || r['DateStr'] || '-'}</span>`; else if (col.id === 'ExactTime') td.innerText = r['ExactTime'] || '-';
+                else if (col.id === 'Items') { td.className += " truncate max-w-[200px]"; td.title = r['Items']||'-'; td.innerText = r['Items']||'-'; } else if (col.id === 'Payment Method') td.innerHTML = `<span class="bg-gray-100 border border-gray-200 px-2 py-0.5 rounded">${r['Payment Method'] || '-'}</span>`;
+                else if (col.id === 'Receipt Number') { td.className += " font-medium text-fr-blue"; td.innerText = r['Receipt Number'] || '-'; } else if (col.id === 'Total Collected') { let tc = getCleanNum(r, 'Total Collected Exc Rounding') || getCleanNum(r, 'Total Collected') || (getCleanNum(r, 'Net Sales') + getCleanNum(r, 'Tax')); td.innerText = formatRp(tc); }
+                else if (col.isNum) { let val = Math.abs(getCleanNum(r, col.id) || 0); if (col.isNeg) { if(val > 0) td.className += " text-fr-red"; td.innerText = val > 0 ? '-'+ (col.isRp ? formatRp(val) : formatNum(val)) : '0'; } else { if (col.id === 'Net Sales') td.className += " font-semibold text-gray-800"; td.innerText = col.isRp ? formatRp(val) : formatNum(val); } }
                 else { td.innerText = r[col.id] || '-'; }
                 tr.appendChild(td);
             });
@@ -1869,41 +1415,21 @@
     document.getElementById('prevPageBtn').addEventListener('click', () => { if (txCurrentPage > 1) { txCurrentPage--; renderTablePage(); } }); 
     document.getElementById('nextPageBtn').addEventListener('click', () => { let totalPages = Math.ceil(txSortedData.length / txRowsPerPage) || 1; if (txCurrentPage < totalPages) { txCurrentPage++; renderTablePage(); } });
     document.getElementById('lastPageBtn').addEventListener('click', () => { let totalPages = Math.ceil(txSortedData.length / txRowsPerPage) || 1; if (txCurrentPage < totalPages) { txCurrentPage = totalPages; renderTablePage(); } });
-    document.getElementById('pageJumpInput').addEventListener('change', (e) => {
-        let totalPages = Math.ceil(txSortedData.length / txRowsPerPage) || 1; let val = parseInt(e.target.value);
-        if (val >= 1 && val <= totalPages) { txCurrentPage = val; renderTablePage(); } else { e.target.value = txCurrentPage; }
-    });
+    document.getElementById('pageJumpInput').addEventListener('change', (e) => { let totalPages = Math.ceil(txSortedData.length / txRowsPerPage) || 1; let val = parseInt(e.target.value); if (val >= 1 && val <= totalPages) { txCurrentPage = val; renderTablePage(); } else { e.target.value = txCurrentPage; } });
 
     document.getElementById('globalClearBtn').addEventListener('click', () => { document.getElementById('clearAllFiltersBtn').click(); });
     document.getElementById('clearAllFiltersBtn').addEventListener('click', () => { selectedItemsSet.clear(); updateSelectedItemsUI(); renderItemDropdown(''); selectedOutletsSet.clear(); updateSelectedOutletsUI(); renderOutletDropdown(); selectedAreasSet.clear(); updateSelectedAreasUI(); renderAreaDropdown(''); selectedDiscountsSet.clear(); updateSelectedDiscountsUI(); renderDiscountDropdown(); filters.dept.value = 'ALL'; filters.eventType.value = 'ALL'; if(rawData.length > 0) setupDatePickers(); executeFilterAndRender(); showToast('Semua filter telah di-reset'); });
 
     function drawItemsTable(data) { 
-        let arr = Object.keys(data).map(k=>({k,...data[k]}));
-        if(rankSortBy === 'qty') { arr.sort((a,b)=> rankMode === 'top' ? b.q-a.q : a.q-b.q); } 
-        else { arr.sort((a,b)=> rankMode === 'top' ? b.n-a.n : a.n-b.n); }
-        arr = arr.slice(0, 20); let tb = document.getElementById('topItemsTableBody'); tb.innerHTML = ''; 
+        let arr = Object.keys(data).map(k=>({k,...data[k]})); if(rankSortBy === 'qty') { arr.sort((a,b)=> rankMode === 'top' ? b.q-a.q : a.q-b.q); } else { arr.sort((a,b)=> rankMode === 'top' ? b.n-a.n : a.n-b.n); } arr = arr.slice(0, 20); let tb = document.getElementById('topItemsTableBody'); tb.innerHTML = ''; 
         arr.forEach((x,i) => { tb.innerHTML += ` <tr class="hover:bg-gray-50 transition-colors"> <td class="py-2.5 px-2"> <span class="text-fr-muted text-[10px] mr-2 w-3 inline-block">${i+1}.</span> <span class="font-medium">${x.k}</span> </td> <td class="py-2.5 px-2 text-right">${formatNum(x.q)}</td> <td class="py-2.5 px-2 text-right font-medium">${formatRp(x.n)}</td> </tr>`; }); 
     }
 
     let vsDimConfig = [
-        { id: 'date', key: 'DateStr', label: 'Trend (Date)', visible: true, filterType: 'none' },
-        { id: 'category', key: 'Category', label: 'Category', visible: false, filterType: 'search' },
-        { id: 'outlet', key: 'Outlet', label: 'Outlet', visible: false, filterType: 'search' },
-        { id: 'area', key: 'AREA', label: 'Area', visible: false, filterType: 'search' },
-        { id: 'item', key: 'Items', label: 'Item', visible: false, filterType: 'search' },
-        { id: 'dept', key: 'DEPT', label: 'Dept', visible: false, filterType: 'search' },
-        { id: 'disc', key: 'Discount Applied', label: 'Discount Applied', visible: false, filterType: 'search' }
+        { id: 'date', key: 'DateStr', label: 'Trend (Date)', visible: true, filterType: 'none' }, { id: 'category', key: 'Category', label: 'Category', visible: false, filterType: 'search' }, { id: 'outlet', key: 'Outlet', label: 'Outlet', visible: false, filterType: 'search' }, { id: 'area', key: 'AREA', label: 'Area', visible: false, filterType: 'search' }, { id: 'item', key: 'Items', label: 'Item', visible: false, filterType: 'search' }, { id: 'dept', key: 'DEPT', label: 'Dept', visible: false, filterType: 'search' }, { id: 'disc', key: 'Discount Applied', label: 'Discount Applied', visible: false, filterType: 'search' }
     ];
     let vsMetricConfig = [
-        { id: 'net', label: 'Net Sales', visible: true, isRp: true },
-        { id: 'gross', label: 'Gross Sales', visible: false, isRp: true },
-        { id: 'qty', label: 'Quantity', visible: false, isRp: false },
-        { id: 'coll', label: 'Total Collected', visible: false, isRp: true },
-        { id: 'tax', label: 'Tax', visible: false, isRp: true },
-        { id: 'grat', label: 'Gratuity', visible: false, isRp: true },
-        { id: 'disc', label: 'Discount', visible: false, isRp: true },
-        { id: 'ref', label: 'Refund', visible: false, isRp: true },
-        { id: 'tx', label: 'Total Transaksi', visible: false, isRp: false }
+        { id: 'net', label: 'Net Sales', visible: true, isRp: true }, { id: 'gross', label: 'Gross Sales', visible: false, isRp: true }, { id: 'qty', label: 'Quantity', visible: false, isRp: false }, { id: 'coll', label: 'Total Collected', visible: false, isRp: true }, { id: 'tax', label: 'Tax', visible: false, isRp: true }, { id: 'grat', label: 'Gratuity', visible: false, isRp: true }, { id: 'disc', label: 'Discount', visible: false, isRp: true }, { id: 'ref', label: 'Refund', visible: false, isRp: true }, { id: 'tx', label: 'Total Transaksi', visible: false, isRp: false }
     ];
     
     let vsDimFilters = {}; let vsCacheMainAgg = null; let vsCacheVsAgg = null; let vsRenderDebounce = null; let dragVsDimIdx = -1; let dragVsMetIdx = -1;
@@ -1916,14 +1442,8 @@
                 li.innerHTML = `<div class="flex items-center gap-2 w-full pointer-events-none"><span class="text-gray-400 cursor-move tracking-tighter">⋮⋮</span><input type="checkbox" class="pointer-events-auto rounded text-fr-blue w-3 h-3 cursor-pointer focus:ring-0" ${item.visible ? 'checked' : ''}><span class="font-medium text-gray-700">${item.label}</span></div>`;
                 li.querySelector('input').addEventListener('change', (e) => { item.visible = e.target.checked; if (!item.visible && vsDimFilters[item.id]) delete vsDimFilters[item.id]; renderVsDimFilterPanel(); scheduleRenderVsTable(); });
                 li.addEventListener('dragstart', (e) => { window[dragVarName] = +e.target.closest('li').dataset.idx; e.dataTransfer.effectAllowed = 'move'; setTimeout(() => e.target.classList.add('opacity-50'), 0); });
-                li.addEventListener('dragover', (e) => { e.preventDefault(); return false; });
-                li.addEventListener('dragenter', (e) => { e.preventDefault(); e.target.closest('li')?.classList.add('border-blue-400', 'border-t-2'); });
-                li.addEventListener('dragleave', (e) => { e.target.closest('li')?.classList.remove('border-blue-400', 'border-t-2'); });
-                li.addEventListener('dragend', (e) => { e.target.classList.remove('opacity-50'); });
-                li.addEventListener('drop', (e) => {
-                    e.stopPropagation(); const targetLi = e.target.closest('li'); if(!targetLi) return false; targetLi.classList.remove('border-blue-400', 'border-t-2'); const dropIdx = +targetLi.dataset.idx;
-                    const draggedItem = config.splice(window[dragVarName], 1)[0]; config.splice(dropIdx, 0, draggedItem); callback(); scheduleRenderVsTable(); return false;
-                });
+                li.addEventListener('dragover', (e) => { e.preventDefault(); return false; }); li.addEventListener('dragenter', (e) => { e.preventDefault(); e.target.closest('li')?.classList.add('border-blue-400', 'border-t-2'); }); li.addEventListener('dragleave', (e) => { e.target.closest('li')?.classList.remove('border-blue-400', 'border-t-2'); }); li.addEventListener('dragend', (e) => { e.target.classList.remove('opacity-50'); });
+                li.addEventListener('drop', (e) => { e.stopPropagation(); const targetLi = e.target.closest('li'); if(!targetLi) return false; targetLi.classList.remove('border-blue-400', 'border-t-2'); const dropIdx = +targetLi.dataset.idx; const draggedItem = config.splice(window[dragVarName], 1)[0]; config.splice(dropIdx, 0, draggedItem); callback(); scheduleRenderVsTable(); return false; });
                 list.appendChild(li);
             });
         };
@@ -1939,9 +1459,7 @@
     document.getElementById('openVsTableBtn').addEventListener('click', () => {
         if(rawData.length === 0) { showToast('Tidak ada data, upload file terlebih dahulu', 'error'); return; }
         document.getElementById('vsModalMainStart').value = filters.dStart.value; document.getElementById('vsModalMainEnd').value = filters.dEnd.value; document.getElementById('vsModalCompareMode').value = compareSelect.value; document.getElementById('vsModalVsStart').value = document.getElementById('compareDateStart').value; document.getElementById('vsModalVsEnd').value = document.getElementById('compareDateEnd').value;
-        if(compareSelect.value === 'custom') { document.getElementById('vsModalCustomDateWrapper').classList.remove('hidden'); document.getElementById('vsModalCustomDateWrapper').classList.add('flex'); } 
-        else { document.getElementById('vsModalCustomDateWrapper').classList.remove('flex'); document.getElementById('vsModalCustomDateWrapper').classList.add('hidden'); }
-        
+        if(compareSelect.value === 'custom') { document.getElementById('vsModalCustomDateWrapper').classList.remove('hidden'); document.getElementById('vsModalCustomDateWrapper').classList.add('flex'); } else { document.getElementById('vsModalCustomDateWrapper').classList.remove('flex'); document.getElementById('vsModalCustomDateWrapper').classList.add('hidden'); }
         vsTableModal.classList.remove('hidden'); renderVsDimFilterPanel(); renderVsTable();
         let activeF = []; if(filters.dStart.value) activeF.push(`Date: ${filters.dStart.value}`); if(filters.dept.value !== 'ALL') activeF.push(`Dept: ${filters.dept.value}`); if(filters.eventType.value !== 'ALL') activeF.push(`Event: ${filters.eventType.value}`); if(selectedItemsSet.size > 0) activeF.push(`${searchMode.value}: ${selectedItemsSet.size} terpilih`); if(selectedOutletsSet.size > 0) activeF.push(`Outlet: ${selectedOutletsSet.size} terpilih`); if(selectedAreasSet.size > 0) activeF.push(`Area: ${selectedAreasSet.size} terpilih`); if(selectedDiscountsSet.size > 0) activeF.push(`Disc: ${selectedDiscountsSet.size} terpilih`);
         let msg = "VS Table disinkronisasi. Filter: " + (activeF.length > 0 ? activeF.join(', ') : 'Semua Data'); showToast(msg, 'info');
@@ -1951,8 +1469,7 @@
     
     const autoRefreshVsTable = () => {
         filters.dStart.value = document.getElementById('vsModalMainStart').value; filters.dEnd.value = document.getElementById('vsModalMainEnd').value; compareSelect.value = document.getElementById('vsModalCompareMode').value; document.getElementById('compareDateStart').value = document.getElementById('vsModalVsStart').value; document.getElementById('compareDateEnd').value = document.getElementById('vsModalVsEnd').value;
-        if(compareSelect.value === 'custom') { document.getElementById('vsModalCustomDateWrapper').classList.remove('hidden'); document.getElementById('vsModalCustomDateWrapper').classList.add('flex'); document.getElementById('customCompareWrapper').classList.remove('hidden'); document.getElementById('customCompareWrapper').classList.add('flex'); } 
-        else { document.getElementById('vsModalCustomDateWrapper').classList.add('hidden'); document.getElementById('vsModalCustomDateWrapper').classList.remove('flex'); document.getElementById('customCompareWrapper').classList.add('hidden'); document.getElementById('customCompareWrapper').classList.remove('flex'); }
+        if(compareSelect.value === 'custom') { document.getElementById('vsModalCustomDateWrapper').classList.remove('hidden'); document.getElementById('vsModalCustomDateWrapper').classList.add('flex'); document.getElementById('customCompareWrapper').classList.remove('hidden'); document.getElementById('customCompareWrapper').classList.add('flex'); } else { document.getElementById('vsModalCustomDateWrapper').classList.add('hidden'); document.getElementById('vsModalCustomDateWrapper').classList.remove('flex'); document.getElementById('customCompareWrapper').classList.add('hidden'); document.getElementById('customCompareWrapper').classList.remove('flex'); }
         executeFilterAndRender(); scheduleRenderVsTable();
     };
 
@@ -1961,49 +1478,29 @@
     
     function renderVsDimFilterPanel() {
         const panel = document.getElementById('vsDimFilterPanel'); panel.innerHTML = '';
-        let filterableDims = vsDimConfig.filter(d => d.visible && d.filterType === 'search');
-        if (filterableDims.length === 0) { panel.classList.add('hidden'); return; } panel.classList.remove('hidden');
+        let filterableDims = vsDimConfig.filter(d => d.visible && d.filterType === 'search'); if (filterableDims.length === 0) { panel.classList.add('hidden'); return; } panel.classList.remove('hidden');
         let header = document.createElement('div'); header.className = 'flex items-center gap-2 mr-2'; header.innerHTML = `<span class="text-[10px] font-bold text-gray-600 uppercase">Filter by Dimension:</span>`; panel.appendChild(header);
-        
         filterableDims.forEach(dim => {
-            let uniqVals = Array.from(new Set(rawData.map(r => (r[dim.key] || '').toString().trim()).filter(x => x && x !== 'Unknown' && x !== '-'))).sort();
-            if (!vsDimFilters[dim.id]) vsDimFilters[dim.id] = new Set(); let selectedSet = vsDimFilters[dim.id];
+            let uniqVals = Array.from(new Set(rawData.map(r => (r[dim.key] || '').toString().trim()).filter(x => x && x !== 'Unknown' && x !== '-'))).sort(); if (!vsDimFilters[dim.id]) vsDimFilters[dim.id] = new Set(); let selectedSet = vsDimFilters[dim.id];
             let wrapper = document.createElement('div'); wrapper.className = 'flex flex-col shrink-0 relative'; wrapper.dataset.dimId = dim.id;
             let labelText = selectedSet.size === 0 ? '' : (selectedSet.size === 1 ? Array.from(selectedSet)[0] : `${selectedSet.size} terpilih`); let placeholder = `All ${dim.label}...`;
-            
-            wrapper.innerHTML = `
-                <label class="text-[9px] font-bold text-gray-500 uppercase tracking-wider mb-0.5">${dim.label}</label>
-                <div class="relative" style="width:100%; min-width:150px;">
-                    <input type="text" data-vsdim-input="${dim.id}" class="pro-input text-[11px] p-1.5 w-full cursor-pointer pr-7" placeholder="${placeholder}" value="${labelText}" autocomplete="off">
-                    <button data-vsdim-clear="${dim.id}" class="absolute right-1.5 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-fr-red text-sm font-bold hidden" title="Clear">&times;</button>
-                </div>
-                <div data-vsdim-menu="${dim.id}" class="hidden absolute top-full left-0 mt-1 w-full min-w-[220px] max-h-56 overflow-y-auto bg-white border border-gray-200 shadow-2xl z-[80] rounded">
-                    <div data-vsdim-options="${dim.id}" class="p-0"></div>
-                </div>
-            `; panel.appendChild(wrapper);
-            
+            wrapper.innerHTML = ` <label class="text-[9px] font-bold text-gray-500 uppercase tracking-wider mb-0.5">${dim.label}</label> <div class="relative" style="width:100%; min-width:150px;"> <input type="text" data-vsdim-input="${dim.id}" class="pro-input text-[11px] p-1.5 w-full cursor-pointer pr-7" placeholder="${placeholder}" value="${labelText}" autocomplete="off"> <button data-vsdim-clear="${dim.id}" class="absolute right-1.5 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-fr-red text-sm font-bold hidden" title="Clear">&times;</button> </div> <div data-vsdim-menu="${dim.id}" class="hidden absolute top-full left-0 mt-1 w-full min-w-[220px] max-h-56 overflow-y-auto bg-white border border-gray-200 shadow-2xl z-[80] rounded"> <div data-vsdim-options="${dim.id}" class="p-0"></div> </div> `; panel.appendChild(wrapper);
             let inputEl = wrapper.querySelector(`[data-vsdim-input="${dim.id}"]`); let menuEl = wrapper.querySelector(`[data-vsdim-menu="${dim.id}"]`); let optionsEl = wrapper.querySelector(`[data-vsdim-options="${dim.id}"]`); let clearBtn = wrapper.querySelector(`[data-vsdim-clear="${dim.id}"]`);
             let updateClearBtn = () => { if (selectedSet.size > 0) clearBtn.classList.remove('hidden'); else clearBtn.classList.add('hidden'); }; updateClearBtn();
-            
             let renderOptions = (search = '') => {
                 optionsEl.innerHTML = ''; let filtered = uniqVals.filter(v => v.toLowerCase().includes(search.toLowerCase())).slice(0, 200);
                 if (selectedSet.size > 0) { let clearRow = document.createElement('div'); clearRow.className = 'px-3 py-2 bg-red-50 border-b border-red-100 text-fr-red text-[11px] font-bold cursor-pointer hover:bg-red-100 flex justify-between items-center sticky top-0 z-10 transition-colors'; clearRow.innerHTML = `<span>${selectedSet.size} terpilih</span><span>Clear &times;</span>`; clearRow.onclick = (e) => { e.stopPropagation(); selectedSet.clear(); updateInputVal(); updateClearBtn(); renderOptions(''); scheduleRenderVsTable(); }; optionsEl.appendChild(clearRow); }
-                if (filtered.length === 0) { optionsEl.innerHTML += `<div class="px-3 py-2 text-[11px] text-gray-500 italic">Tidak ditemukan</div>`; } 
-                else {
+                if (filtered.length === 0) { optionsEl.innerHTML += `<div class="px-3 py-2 text-[11px] text-gray-500 italic">Tidak ditemukan</div>`; } else {
                     filtered.forEach(val => {
-                        let div = document.createElement('div'); div.className = 'px-3 py-2 hover:bg-gray-50 flex items-start gap-2 cursor-pointer border-b border-gray-50 last:border-0';
-                        let cb = document.createElement('input'); cb.type = 'checkbox'; cb.className = 'mt-0.5 cursor-pointer rounded text-fr-blue focus:ring-fr-blue h-3 w-3 shrink-0'; cb.checked = selectedSet.has(val);
+                        let div = document.createElement('div'); div.className = 'px-3 py-2 hover:bg-gray-50 flex items-start gap-2 cursor-pointer border-b border-gray-50 last:border-0'; let cb = document.createElement('input'); cb.type = 'checkbox'; cb.className = 'mt-0.5 cursor-pointer rounded text-fr-blue focus:ring-fr-blue h-3 w-3 shrink-0'; cb.checked = selectedSet.has(val);
                         let span = document.createElement('span'); span.className = 'text-[11px] font-medium text-gray-700 leading-tight'; span.innerText = val;
                         div.onmousedown = (e) => e.preventDefault(); div.onclick = (e) => { e.stopPropagation(); if (e.target !== cb) cb.checked = !cb.checked; if (cb.checked) selectedSet.add(val); else selectedSet.delete(val); updateInputVal(); updateClearBtn(); renderOptions(inputEl.value.startsWith('All') || /\d+ terpilih/.test(inputEl.value) ? '' : inputEl.value); scheduleRenderVsTable(); };
                         div.appendChild(cb); div.appendChild(span); optionsEl.appendChild(div);
                     });
                 }
             };
-            
             let updateInputVal = () => { if (selectedSet.size === 0) { inputEl.value = ''; inputEl.placeholder = `All ${dim.label}...`; } else if (selectedSet.size === 1) { inputEl.value = Array.from(selectedSet)[0]; inputEl.placeholder = `All ${dim.label}...`; } else { inputEl.value = `${selectedSet.size} terpilih`; inputEl.placeholder = `All ${dim.label}...`; } };
-            inputEl.addEventListener('focus', () => { inputEl.value = ''; menuEl.classList.remove('hidden'); renderOptions(''); }); inputEl.addEventListener('input', (e) => { renderOptions(e.target.value); });
-            inputEl.addEventListener('blur', () => { setTimeout(() => { menuEl.classList.add('hidden'); updateInputVal(); }, 250); });
-            clearBtn.addEventListener('click', (e) => { e.stopPropagation(); selectedSet.clear(); updateInputVal(); updateClearBtn(); scheduleRenderVsTable(); });
+            inputEl.addEventListener('focus', () => { inputEl.value = ''; menuEl.classList.remove('hidden'); renderOptions(''); }); inputEl.addEventListener('input', (e) => { renderOptions(e.target.value); }); inputEl.addEventListener('blur', () => { setTimeout(() => { menuEl.classList.add('hidden'); updateInputVal(); }, 250); }); clearBtn.addEventListener('click', (e) => { e.stopPropagation(); selectedSet.clear(); updateInputVal(); updateClearBtn(); scheduleRenderVsTable(); });
         });
     }
 
@@ -2017,21 +1514,17 @@
     function renderVsTable() {
         let isDistinctTx = document.getElementById('vsDistinctTxCb').checked; let tooltipEl = document.getElementById('vsPeriodTooltip');
         if(tooltipEl) { let mStart = document.getElementById('vsModalMainStart').value || '-'; let mEnd = document.getElementById('vsModalMainEnd').value || '-'; let vStart = '-'; let vEnd = '-'; if (window.currentCompareDateRange) { vStart = window.currentCompareDateRange.start || '-'; vEnd = window.currentCompareDateRange.end || '-'; } tooltipEl.innerHTML = `<strong>Main Period:</strong> ${mStart} s/d ${mEnd}<br/><strong>Compare VS:</strong> ${vStart} s/d ${vEnd}`; }
-        let activeDims = vsDimConfig.filter(d => d.visible); let activeMets = vsMetricConfig.filter(m => m.visible);
-        let thead = document.getElementById('vsTableHead'); let tbody = document.getElementById('vsTableBody');
-        
+        let activeDims = vsDimConfig.filter(d => d.visible); let activeMets = vsMetricConfig.filter(m => m.visible); let thead = document.getElementById('vsTableHead'); let tbody = document.getElementById('vsTableBody');
         if (activeDims.length === 0 || activeMets.length === 0) { thead.innerHTML = ''; tbody.innerHTML = '<tr><td class="text-center py-4 text-gray-500 text-[11px]">Pilih minimal 1 Dimensi dan 1 Metric di menu Setup Table (⚙️)</td></tr>'; return; }
 
         function aggData(data) {
             let agg = {};
             data.forEach(r => {
                 let dimVals = activeDims.map(d => { let k = d.key; let val = r[k] || 'Unknown'; if (k === 'DateStr' && r['FormattedDate']) val = r['FormattedDate']; return val; });
-                let flatKey = JSON.stringify(dimVals);
-                if(!agg[flatKey]) { agg[flatKey] = { dims: dimVals, metrics: {} }; activeMets.forEach(m => { if(m.id === 'tx') { if (isDistinctTx) agg[flatKey].metrics.txSet = new Set(); else agg[flatKey].metrics.txCount = 0; } else agg[flatKey].metrics[m.id] = 0; }); }
+                let flatKey = JSON.stringify(dimVals); if(!agg[flatKey]) { agg[flatKey] = { dims: dimVals, metrics: {} }; activeMets.forEach(m => { if(m.id === 'tx') { if (isDistinctTx) agg[flatKey].metrics.txSet = new Set(); else agg[flatKey].metrics.txCount = 0; } else agg[flatKey].metrics[m.id] = 0; }); }
                 activeMets.forEach(m => {
                     if (m.id === 'tx') { if (isDistinctTx) { if(r['Receipt Number']) agg[flatKey].metrics.txSet.add(r['Receipt Number']); } else { agg[flatKey].metrics.txCount++; } }
-                    else if (m.id === 'qty') { agg[flatKey].metrics.qty += getCleanNum(r, 'Quantity'); } else if (m.id === 'disc') { agg[flatKey].metrics.disc += getDiscountValue(r); } else if (m.id === 'ref') { agg[flatKey].metrics.ref += Math.abs(getCleanNum(r, 'Refunds') || 0); } else if (m.id === 'coll') { agg[flatKey].metrics.coll += getCleanNum(r, 'Total Collected Exc Rounding') || getCleanNum(r, 'Total Collected') || (getCleanNum(r, 'Net Sales') + getCleanNum(r, 'Tax')); } 
-                    else { let cMap = { 'net': 'Net Sales', 'gross': 'Gross Sales', 'tax': 'Tax', 'grat': 'Gratuity' }; agg[flatKey].metrics[m.id] += getCleanNum(r, cMap[m.id]); }
+                    else if (m.id === 'qty') { agg[flatKey].metrics.qty += getCleanNum(r, 'Quantity'); } else if (m.id === 'disc') { agg[flatKey].metrics.disc += getDiscountValue(r); } else if (m.id === 'ref') { agg[flatKey].metrics.ref += Math.abs(getCleanNum(r, 'Refunds') || 0); } else if (m.id === 'coll') { agg[flatKey].metrics.coll += getCleanNum(r, 'Total Collected Exc Rounding') || getCleanNum(r, 'Total Collected') || (getCleanNum(r, 'Net Sales') + getCleanNum(r, 'Tax')); } else { let cMap = { 'net': 'Net Sales', 'gross': 'Gross Sales', 'tax': 'Tax', 'grat': 'Gratuity' }; agg[flatKey].metrics[m.id] += getCleanNum(r, cMap[m.id]); }
                 });
             });
             Object.values(agg).forEach(obj => { if(obj.metrics.txSet) { obj.metrics.tx = obj.metrics.txSet.size; delete obj.metrics.txSet; } else if(obj.metrics.txCount !== undefined) { obj.metrics.tx = obj.metrics.txCount; delete obj.metrics.txCount; } });
@@ -2040,20 +1533,14 @@
 
         let aggKey = JSON.stringify({ dims: activeDims.map(d => d.id), mets: activeMets.map(m => m.id), filtKey: getActiveVsDimFilterKey(), distinct: isDistinctTx, mainDate: filters.dStart.value + '|' + filters.dEnd.value, vsDate: (window.currentCompareDateRange ? window.currentCompareDateRange.start + '|' + window.currentCompareDateRange.end : ''), filterDataHash: filteredData.length });
         let filteredMain = applyVsDimFilters(filteredData); let filteredVs = applyVsDimFilters(window.prevDataExport || []);
-        
-        let mainAgg, vsAgg;
-        if (aggKey === vsLastAggKey && vsCacheMainAgg && vsCacheVsAgg) { mainAgg = vsCacheMainAgg; vsAgg = vsCacheVsAgg; } 
-        else { mainAgg = aggData(filteredMain); vsAgg = aggData(filteredVs); vsCacheMainAgg = mainAgg; vsCacheVsAgg = vsAgg; vsLastAggKey = aggKey; }
-        
+        let mainAgg, vsAgg; if (aggKey === vsLastAggKey && vsCacheMainAgg && vsCacheVsAgg) { mainAgg = vsCacheMainAgg; vsAgg = vsCacheVsAgg; } else { mainAgg = aggData(filteredMain); vsAgg = aggData(filteredVs); vsCacheMainAgg = mainAgg; vsCacheVsAgg = vsAgg; vsLastAggKey = aggKey; }
         let allKeys = Array.from(new Set([...Object.keys(mainAgg), ...Object.keys(vsAgg)])).sort();
         let combinedData = allKeys.map(k => { let dims = JSON.parse(k); let main = mainAgg[k] ? mainAgg[k].metrics : {}; let vs = vsAgg[k] ? vsAgg[k].metrics : {}; activeMets.forEach(m => { if(main[m.id] === undefined) main[m.id] = 0; if(vs[m.id] === undefined) vs[m.id] = 0; }); return { dims, main, vs }; });
 
         let tree = {}; let grandTotals = { main: {}, vs: {} }; activeMets.forEach(m => { grandTotals.main[m.id] = 0; grandTotals.vs[m.id] = 0; });
         function initMetricsZero() { let m = { main:{}, vs:{} }; activeMets.forEach(me => { m.main[me.id] = 0; m.vs[me.id] = 0; }); return m; }
-        
         combinedData.forEach(row => {
-            let curr = tree;
-            activeMets.forEach(m => { grandTotals.main[m.id] += row.main[m.id]; grandTotals.vs[m.id] += row.vs[m.id]; });
+            let curr = tree; activeMets.forEach(m => { grandTotals.main[m.id] += row.main[m.id]; grandTotals.vs[m.id] += row.vs[m.id]; });
             row.dims.forEach((d, i) => { if(!curr[d]) curr[d] = { _totals: initMetricsZero(), _children: {} }; activeMets.forEach(me => { curr[d]._totals.main[me.id] += row.main[me.id]; curr[d]._totals.vs[me.id] += row.vs[me.id]; }); curr = curr[d]._children; });
         });
 
@@ -2063,11 +1550,7 @@
             return keys.sort((a, b) => {
                 let nA = node[a]; let nB = node[b]; let valA, valB;
                 if (vsSortState.col.startsWith('dim_')) { let dimIdx = parseInt(vsSortState.col.split('_')[1]); if (dimIdx === level) { valA = a; valB = b; } else { return 0; } } 
-                else {
-                    let parts = vsSortState.col.split('_'); let type = parts[0]; let met = parts[1]; let mA = nA._totals.main[met] || 0; let vA = nA._totals.vs[met] || 0; let mB = nB._totals.main[met] || 0; let vB = nB._totals.vs[met] || 0;
-                    if (type === 'growth') { valA = vA > 0 ? (mA - vA)/vA : (mA > 0 ? 1 : 0); valB = vB > 0 ? (mB - vB)/vB : (mB > 0 ? 1 : 0); } 
-                    else if (type === 'main') { valA = mA; valB = mB; } else { valA = vA; valB = vB; }
-                }
+                else { let parts = vsSortState.col.split('_'); let type = parts[0]; let met = parts[1]; let mA = nA._totals.main[met] || 0; let vA = nA._totals.vs[met] || 0; let mB = nB._totals.main[met] || 0; let vB = nB._totals.vs[met] || 0; if (type === 'growth') { valA = vA > 0 ? (mA - vA)/vA : (mA > 0 ? 1 : 0); valB = vB > 0 ? (mB - vB)/vB : (mB > 0 ? 1 : 0); } else if (type === 'main') { valA = mA; valB = mB; } else { valA = vA; valB = vB; } }
                 if (valA < valB) return vsSortState.asc ? -1 : 1; if (valA > valB) return vsSortState.asc ? 1 : -1; return 0;
             });
         }
@@ -2076,11 +1559,7 @@
             let keys = sortNodeKeys(node, currentPath.length);
             keys.forEach(k => {
                 let child = node[k]; let path = [...currentPath, k]; let isLeaf = Object.keys(child._children).length === 0;
-                if (isLeaf) { vsFinalRows.push({ type: 'data', dims: path, main: child._totals.main, vs: child._totals.vs }); } 
-                else {
-                    traverse(child._children, path);
-                    if (activeDims.length > 1) { let subDims = [...path]; while(subDims.length < activeDims.length) { if(subDims.length === path.length) subDims.push('Total ' + path[path.length-1]); else subDims.push(''); } vsFinalRows.push({ type: 'subtotal', level: path.length, dims: subDims, main: child._totals.main, vs: child._totals.vs }); }
-                }
+                if (isLeaf) { vsFinalRows.push({ type: 'data', dims: path, main: child._totals.main, vs: child._totals.vs }); } else { traverse(child._children, path); if (activeDims.length > 1) { let subDims = [...path]; while(subDims.length < activeDims.length) { if(subDims.length === path.length) subDims.push('Total ' + path[path.length-1]); else subDims.push(''); } vsFinalRows.push({ type: 'subtotal', level: path.length, dims: subDims, main: child._totals.main, vs: child._totals.vs }); } }
             });
         }
         traverse(tree, []);
@@ -2088,15 +1567,10 @@
 
         let tr1 = document.createElement('tr'); let tr2 = document.createElement('tr');
         const getSortIcon = (colId) => { if(vsSortState.col !== colId) return '<span class="text-gray-300 opacity-50 ml-1 hover:text-gray-500">↕</span>'; return vsSortState.asc ? '<span class="text-fr-blue ml-1">▲</span>' : '<span class="text-fr-blue ml-1">▼</span>'; };
-
-        activeDims.forEach((d, idx) => {
-            let th = document.createElement('th'); th.rowSpan = 2; th.className = "py-2 px-3 text-[11px] text-gray-700 align-middle text-center border border-gray-200 bg-gray-50 z-30 sticky top-0 cursor-pointer hover:bg-gray-200 select-none"; th.innerHTML = d.label.toUpperCase() + getSortIcon('dim_' + idx); th.onclick = () => window.handleVsSort('dim_' + idx); tr1.appendChild(th);
-        });
-        
+        activeDims.forEach((d, idx) => { let th = document.createElement('th'); th.rowSpan = 2; th.className = "py-2 px-3 text-[11px] text-gray-700 align-middle text-center border border-gray-200 bg-gray-50 z-30 sticky top-0 cursor-pointer hover:bg-gray-200 select-none"; th.innerHTML = d.label.toUpperCase() + getSortIcon('dim_' + idx); th.onclick = () => window.handleVsSort('dim_' + idx); tr1.appendChild(th); });
         activeMets.forEach((m) => {
             let thG = document.createElement('th'); thG.colSpan = 3; thG.className = "py-1.5 px-3 text-center align-middle text-[11px] text-gray-700 border border-gray-200 bg-gray-50 z-30 sticky top-0"; thG.innerText = m.label.toUpperCase(); tr1.appendChild(thG);
-            let subClasses = "py-1.5 px-3 text-center align-middle text-[10px] text-gray-500 border border-gray-200 bg-gray-50 z-30 sticky top-[30px] cursor-pointer hover:bg-gray-200 select-none";
-            let colTypes = [{k:'vs', lbl:'VS'}, {k:'main', lbl:'MAIN'}, {k:'growth', lbl:'GROWTH'}];
+            let subClasses = "py-1.5 px-3 text-center align-middle text-[10px] text-gray-500 border border-gray-200 bg-gray-50 z-30 sticky top-[30px] cursor-pointer hover:bg-gray-200 select-none"; let colTypes = [{k:'vs', lbl:'VS'}, {k:'main', lbl:'MAIN'}, {k:'growth', lbl:'GROWTH'}];
             colTypes.forEach(c => { let thS = document.createElement('th'); thS.className = subClasses; let colId = c.k + '_' + m.id; thS.innerHTML = c.lbl + getSortIcon(colId); thS.onclick = () => window.handleVsSort(colId); tr2.appendChild(thS); });
         });
         thead.innerHTML = ''; thead.appendChild(tr1); thead.appendChild(tr2);
@@ -2120,11 +1594,7 @@
         if(vsFinalRows.length === 0) { showToast('Tidak ada data untuk di-export', 'error'); return; }
         let activeDims = vsDimConfig.filter(d => d.visible); let activeMets = vsMetricConfig.filter(m => m.visible); let wsData = [];
         let r1 = []; activeDims.forEach(d => r1.push(d.label.toUpperCase())); activeMets.forEach(m => { r1.push(m.label.toUpperCase() + ' VS'); r1.push(m.label.toUpperCase() + ' MAIN'); r1.push(m.label.toUpperCase() + ' GROWTH'); }); wsData.push(r1);
-        vsFinalRows.forEach(r => {
-            let rowObj = []; activeDims.forEach((d, i) => { rowObj.push(r.dims[i] !== undefined ? r.dims[i] : ''); });
-            activeMets.forEach(m => { let mVal = r.main[m.id] || 0; let vVal = r.vs[m.id] || 0; rowObj.push(vVal); rowObj.push(mVal); let pct = vVal > 0 ? ((mVal - vVal) / vVal) : (mVal > 0 ? 1 : 0); if (vVal === 0 && mVal === 0) pct = 0; rowObj.push((pct * 100).toFixed(2) + '%'); });
-            wsData.push(rowObj);
-        });
+        vsFinalRows.forEach(r => { let rowObj = []; activeDims.forEach((d, i) => { rowObj.push(r.dims[i] !== undefined ? r.dims[i] : ''); }); activeMets.forEach(m => { let mVal = r.main[m.id] || 0; let vVal = r.vs[m.id] || 0; rowObj.push(vVal); rowObj.push(mVal); let pct = vVal > 0 ? ((mVal - vVal) / vVal) : (mVal > 0 ? 1 : 0); if (vVal === 0 && mVal === 0) pct = 0; rowObj.push((pct * 100).toFixed(2) + '%'); }); wsData.push(rowObj); });
         let csv = wsData.map(row => row.map(cell => { let s = String(cell === null || cell === undefined ? '' : cell); if (s.includes(',') || s.includes('"') || s.includes('\n')) { return '"' + s.replace(/"/g, '""') + '"'; } return s; }).join(',')).join('\r\n');
         let blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' }); let url = URL.createObjectURL(blob); let a = document.createElement('a'); a.href = url; a.download = `Comparison_Data_${new Date().getTime()}.csv`; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url); showToast("Tabel VS berhasil diexport ke CSV!");
     });
@@ -2135,30 +1605,20 @@
     document.querySelectorAll('.export-cb').forEach(cb => { cb.addEventListener('change', () => { const allChecked = Array.from(document.querySelectorAll('.export-cb')).every(c => c.checked); document.getElementById('exportAllCb').checked = allChecked; }); });
 
     document.getElementById('exportTxBtn').addEventListener('click', () => { if (!filteredData || filteredData.length === 0) { showToast("Tidak ada data untuk diekspor", "error"); return; } exportModal.classList.remove('hidden'); });
-    
     document.getElementById('proceedExportBtn').addEventListener('click', () => {
         closeExportModal(); let withTx = document.getElementById('exportTxCb').checked; let withVs = document.getElementById('exportVsCb').checked; let withDate = document.getElementById('exportDateColsCb').checked;
-        if(!withTx && !withVs) { showToast("Pilih minimal 1 data untuk diexport", "error"); return; }
-        showToast("Menyiapkan file CSV... mohon tunggu sebentar", "info");
-        
+        if(!withTx && !withVs) { showToast("Pilih minimal 1 data untuk diexport", "error"); return; } showToast("Menyiapkan file CSV... mohon tunggu sebentar", "info");
         setTimeout(() => {
             try {
                 const escapeCsv = (val) => { let s = String(val === null || val === undefined ? '' : val); if (s.includes(',') || s.includes('"') || s.includes('\n') || s.includes('\r')) { return '"' + s.replace(/"/g, '""') + '"'; } return s; };
-                const arrayToCsv = (arr) => arr.map(row => row.map(escapeCsv).join(',')).join('\r\n');
-                const visibleCols = colsConfig.filter(c => c.visible && c.id !== 'index'); const visibleColLabels = visibleCols.map(c => c.label); const numericCols = {}; visibleCols.forEach(c => { if (c.isNum) numericCols[c.id] = { isRp: c.isRp, isNeg: c.isNeg }; });
-                
+                const arrayToCsv = (arr) => arr.map(row => row.map(escapeCsv).join(',')).join('\r\n'); const visibleCols = colsConfig.filter(c => c.visible && c.id !== 'index'); const visibleColLabels = visibleCols.map(c => c.label); const numericCols = {}; visibleCols.forEach(c => { if (c.isNum) numericCols[c.id] = { isRp: c.isRp, isNeg: c.isNeg }; });
                 const sortForExport = (dataArr) => { return [...dataArr].sort((a, b) => { const da = a.DateStr || ''; const db = b.DateStr || ''; if (da !== db) return da < db ? -1 : 1; const ta = a.ExactTime || ''; const tb = b.ExactTime || ''; if (ta !== tb) return ta < tb ? -1 : 1; const oa = (a.Outlet || '').toString().toLowerCase(); const ob = (b.Outlet || '').toString().toLowerCase(); if (oa !== ob) return oa < ob ? -1 : 1; return 0; }); };
                 const formatData = (dataArr) => {
                     const header = [...visibleColLabels]; if (withDate) header.push('Year', 'Month', 'Day'); const rows = [header]; const numCols = visibleCols.length;
                     for (let i = 0; i < dataArr.length; i++) {
                         const r = dataArr[i]; const row = new Array(numCols + (withDate ? 3 : 0)); let colIdx = 0;
                         for (let j = 0; j < numCols; j++) {
-                            const col = visibleCols[j]; const id = col.id; let val;
-                            if (id === 'Total Collected') { val = getCleanNum(r, 'Total Collected Exc Rounding') || getCleanNum(r, 'Total Collected') || (getCleanNum(r, 'Net Sales') + getCleanNum(r, 'Tax')); } 
-                            else if (numericCols[id]) { const raw = getCleanNum(r, id) || 0; val = (numericCols[id].isNeg ? -1 : 1) * Math.abs(raw); } 
-                            else if (id === 'DateStr') { val = r['FormattedDate'] || r['DateStr'] || ''; } 
-                            else if (id === 'ExactTime') { val = r['ExactTime'] || ''; } 
-                            else { val = r[id] || ''; }
+                            const col = visibleCols[j]; const id = col.id; let val; if (id === 'Total Collected') { val = getCleanNum(r, 'Total Collected Exc Rounding') || getCleanNum(r, 'Total Collected') || (getCleanNum(r, 'Net Sales') + getCleanNum(r, 'Tax')); } else if (numericCols[id]) { const raw = getCleanNum(r, id) || 0; val = (numericCols[id].isNeg ? -1 : 1) * Math.abs(raw); } else if (id === 'DateStr') { val = r['FormattedDate'] || r['DateStr'] || ''; } else if (id === 'ExactTime') { val = r['ExactTime'] || ''; } else { val = r[id] || ''; }
                             row[colIdx++] = val;
                         }
                         if (withDate) { const dStr = r.DateStr; if (dStr) { const p1 = dStr.indexOf('-'); const p2 = dStr.indexOf('-', p1 + 1); row[colIdx++] = +dStr.substring(0, p1); row[colIdx++] = +dStr.substring(p1 + 1, p2); row[colIdx++] = +dStr.substring(p2 + 1); } else { row[colIdx++] = ''; row[colIdx++] = ''; row[colIdx++] = ''; } }
@@ -2166,7 +1626,6 @@
                     }
                     return rows;
                 };
-                
                 let csvParts = []; let filterRows = [];
                 filterRows.push(['=== APPLIED FILTERS ===']); filterRows.push(['Filter', 'Value']); filterRows.push(['Date Range', `${filters.dStart.value} to ${filters.dEnd.value}`]); filterRows.push(['Compare Vs', compareSelect.value === 'custom' ? `${document.getElementById('compareDateStart').value} to ${document.getElementById('compareDateEnd').value}` : compareSelect.options[compareSelect.selectedIndex].text]);
                 filterRows.push(['Search Type', searchMode.value === 'item' ? 'Items' : 'Receipts']); filterRows.push(['Search Query', selectedItemsSet.size > 0 ? Array.from(selectedItemsSet).join('; ') : 'All']); filterRows.push(['Outlet', selectedOutletsSet.size > 0 ? Array.from(selectedOutletsSet).join('; ') : 'All']);
@@ -2189,31 +1648,15 @@
     
     let advGroups = []; let advGroupCounter = 0; let lastAdvResults = []; let advAllItems = []; let advAllDiscounts = []; let advAllOutlets = []; let advAllAreas = []; let advAllDepts = []; let advAllEventTypes = [];
 
-    function populateAdvGlobalLists() {
-        if(rawData.length === 0) return;
-        advAllItems = Array.from(new Set(rawData.map(r => r['Items']).filter(x => x && x !== 'Unknown' && x !== '-'))).sort(); advAllDiscounts = Array.from(new Set(rawData.map(r => r['Discount Applied']).filter(x => x && x !== 'Unknown' && x !== '-'))).sort(); advAllOutlets = Array.from(new Set(rawData.map(r => r['Outlet']).filter(x => x && x !== 'Unknown' && x !== '-'))).sort(); advAllAreas = Array.from(new Set(rawData.map(r => r['AREA']).filter(x => x && x !== 'Unknown' && x !== '-'))).sort(); advAllDepts = Array.from(new Set(rawData.map(r => r['DEPT']).filter(x => x && x !== 'Unknown' && x !== '-'))).sort(); advAllEventTypes = Array.from(new Set(rawData.map(r => r['Event Type']).filter(x => x && x !== 'Unknown' && x !== '-'))).sort();
-    }
+    function populateAdvGlobalLists() { if(rawData.length === 0) return; advAllItems = Array.from(new Set(rawData.map(r => r['Items']).filter(x => x && x !== 'Unknown' && x !== '-'))).sort(); advAllDiscounts = Array.from(new Set(rawData.map(r => r['Discount Applied']).filter(x => x && x !== 'Unknown' && x !== '-'))).sort(); advAllOutlets = Array.from(new Set(rawData.map(r => r['Outlet']).filter(x => x && x !== 'Unknown' && x !== '-'))).sort(); advAllAreas = Array.from(new Set(rawData.map(r => r['AREA']).filter(x => x && x !== 'Unknown' && x !== '-'))).sort(); advAllDepts = Array.from(new Set(rawData.map(r => r['DEPT']).filter(x => x && x !== 'Unknown' && x !== '-'))).sort(); advAllEventTypes = Array.from(new Set(rawData.map(r => r['Event Type']).filter(x => x && x !== 'Unknown' && x !== '-'))).sort(); }
 
-    function getAdvAvailableItems(group) {
-        if(!group) return []; let tempFiltered = rawData.filter(r => { const sv = (v) => v ? v.toString().trim() : ''; if(group.start && (!r.DateStr || r.DateStr < group.start)) return false; if(group.end && (!r.DateStr || r.DateStr > group.end)) return false; if(group.eventType !== 'ALL' && sv(r['Event Type']) !== group.eventType) return false; if(group.discounts.size > 0 && !group.discounts.has(sv(r['Discount Applied']))) return false; if(group.outlets.size > 0 && !group.outlets.has(sv(r['Outlet']))) return false; if(group.areas.size > 0 && !group.areas.has(sv(r['AREA']))) return false; if(group.dept !== 'ALL' && sv(r['DEPT']) !== group.dept) return false; return true; });
-        return Array.from(new Set(tempFiltered.map(r => r['Items']).filter(x => x && x !== 'Unknown' && x !== '-'))).sort();
-    }
-    function getAdvAvailableDiscounts(group) {
-        if(!group) return []; let tempFiltered = rawData.filter(r => { const sv = (v) => v ? v.toString().trim() : ''; if(group.start && (!r.DateStr || r.DateStr < group.start)) return false; if(group.end && (!r.DateStr || r.DateStr > group.end)) return false; if(group.eventType !== 'ALL' && sv(r['Event Type']) !== group.eventType) return false; if(group.items.size > 0 && !group.items.has(sv(r['Items']))) return false; if(group.outlets.size > 0 && !group.outlets.has(sv(r['Outlet']))) return false; if(group.areas.size > 0 && !group.areas.has(sv(r['AREA']))) return false; if(group.dept !== 'ALL' && sv(r['DEPT']) !== group.dept) return false; return true; });
-        return Array.from(new Set(tempFiltered.map(r => r['Discount Applied']).filter(x => x && x !== 'Unknown' && x !== '-'))).sort();
-    }
-    function getAdvAvailableOutlets(group) {
-        if(!group) return []; let tempFiltered = rawData.filter(r => { const sv = (v) => v ? v.toString().trim() : ''; if(group.start && (!r.DateStr || r.DateStr < group.start)) return false; if(group.end && (!r.DateStr || r.DateStr > group.end)) return false; if(group.eventType !== 'ALL' && sv(r['Event Type']) !== group.eventType) return false; if(group.items.size > 0 && !group.items.has(sv(r['Items']))) return false; if(group.discounts.size > 0 && !group.discounts.has(sv(r['Discount Applied']))) return false; if(group.areas.size > 0 && !group.areas.has(sv(r['AREA']))) return false; if(group.dept !== 'ALL' && sv(r['DEPT']) !== group.dept) return false; return true; });
-        return Array.from(new Set(tempFiltered.map(r => r['Outlet']).filter(x => x && x !== 'Unknown' && x !== '-'))).sort();
-    }
-    function getAdvAvailableAreas(group) {
-        if(!group) return []; let tempFiltered = rawData.filter(r => { const sv = (v) => v ? v.toString().trim() : ''; if(group.start && (!r.DateStr || r.DateStr < group.start)) return false; if(group.end && (!r.DateStr || r.DateStr > group.end)) return false; if(group.eventType !== 'ALL' && sv(r['Event Type']) !== group.eventType) return false; if(group.items.size > 0 && !group.items.has(sv(r['Items']))) return false; if(group.discounts.size > 0 && !group.discounts.has(sv(r['Discount Applied']))) return false; if(group.outlets.size > 0 && !group.outlets.has(sv(r['Outlet']))) return false; if(group.dept !== 'ALL' && sv(r['DEPT']) !== group.dept) return false; return true; });
-        return Array.from(new Set(tempFiltered.map(r => r['AREA']).filter(x => x && x !== 'Unknown' && x !== '-'))).sort();
-    }
+    function getAdvAvailableItems(group) { if(!group) return []; let tempFiltered = rawData.filter(r => { const sv = (v) => v ? v.toString().trim() : ''; if(group.start && (!r.DateStr || r.DateStr < group.start)) return false; if(group.end && (!r.DateStr || r.DateStr > group.end)) return false; if(group.eventType !== 'ALL' && sv(r['Event Type']) !== group.eventType) return false; if(group.discounts.size > 0 && !group.discounts.has(sv(r['Discount Applied']))) return false; if(group.outlets.size > 0 && !group.outlets.has(sv(r['Outlet']))) return false; if(group.areas.size > 0 && !group.areas.has(sv(r['AREA']))) return false; if(group.dept !== 'ALL' && sv(r['DEPT']) !== group.dept) return false; return true; }); return Array.from(new Set(tempFiltered.map(r => r['Items']).filter(x => x && x !== 'Unknown' && x !== '-'))).sort(); }
+    function getAdvAvailableDiscounts(group) { if(!group) return []; let tempFiltered = rawData.filter(r => { const sv = (v) => v ? v.toString().trim() : ''; if(group.start && (!r.DateStr || r.DateStr < group.start)) return false; if(group.end && (!r.DateStr || r.DateStr > group.end)) return false; if(group.eventType !== 'ALL' && sv(r['Event Type']) !== group.eventType) return false; if(group.items.size > 0 && !group.items.has(sv(r['Items']))) return false; if(group.outlets.size > 0 && !group.outlets.has(sv(r['Outlet']))) return false; if(group.areas.size > 0 && !group.areas.has(sv(r['AREA']))) return false; if(group.dept !== 'ALL' && sv(r['DEPT']) !== group.dept) return false; return true; }); return Array.from(new Set(tempFiltered.map(r => r['Discount Applied']).filter(x => x && x !== 'Unknown' && x !== '-'))).sort(); }
+    function getAdvAvailableOutlets(group) { if(!group) return []; let tempFiltered = rawData.filter(r => { const sv = (v) => v ? v.toString().trim() : ''; if(group.start && (!r.DateStr || r.DateStr < group.start)) return false; if(group.end && (!r.DateStr || r.DateStr > group.end)) return false; if(group.eventType !== 'ALL' && sv(r['Event Type']) !== group.eventType) return false; if(group.items.size > 0 && !group.items.has(sv(r['Items']))) return false; if(group.discounts.size > 0 && !group.discounts.has(sv(r['Discount Applied']))) return false; if(group.areas.size > 0 && !group.areas.has(sv(r['AREA']))) return false; if(group.dept !== 'ALL' && sv(r['DEPT']) !== group.dept) return false; return true; }); return Array.from(new Set(tempFiltered.map(r => r['Outlet']).filter(x => x && x !== 'Unknown' && x !== '-'))).sort(); }
+    function getAdvAvailableAreas(group) { if(!group) return []; let tempFiltered = rawData.filter(r => { const sv = (v) => v ? v.toString().trim() : ''; if(group.start && (!r.DateStr || r.DateStr < group.start)) return false; if(group.end && (!r.DateStr || r.DateStr > group.end)) return false; if(group.eventType !== 'ALL' && sv(r['Event Type']) !== group.eventType) return false; if(group.items.size > 0 && !group.items.has(sv(r['Items']))) return false; if(group.discounts.size > 0 && !group.discounts.has(sv(r['Discount Applied']))) return false; if(group.outlets.size > 0 && !group.outlets.has(sv(r['Outlet']))) return false; if(group.dept !== 'ALL' && sv(r['DEPT']) !== group.dept) return false; return true; }); return Array.from(new Set(tempFiltered.map(r => r['AREA']).filter(x => x && x !== 'Unknown' && x !== '-'))).sort(); }
 
     document.getElementById('openAdvCompareBtn').addEventListener('click', () => { if(rawData.length === 0) { showToast('Upload data terlebih dahulu', 'error'); return; } populateAdvGlobalLists(); document.getElementById('advCompareModal').classList.remove('hidden'); if(advGroups.length === 0) { addAdvGroup(); addAdvGroup(); } });
-    document.getElementById('closeAdvCompareBtn').addEventListener('click', () => { document.getElementById('advCompareModal').classList.add('hidden'); });
-    document.getElementById('addAdvGroupBtn').addEventListener('click', addAdvGroup);
+    document.getElementById('closeAdvCompareBtn').addEventListener('click', () => { document.getElementById('advCompareModal').classList.add('hidden'); }); document.getElementById('addAdvGroupBtn').addEventListener('click', addAdvGroup);
 
     function addAdvGroup() {
         advGroupCounter++; let groupId = 'adv_g_' + advGroupCounter;
@@ -2262,10 +1705,7 @@
             li.querySelector('input').addEventListener('change', (e) => { f.visible = e.target.checked; let popoverId = `adv-filter-settings-${groupId}`; let popoverWasOpen = !document.getElementById(popoverId).classList.contains('hidden'); renderAdvGroups(); if(popoverWasOpen) { let newPopover = document.getElementById(popoverId); if(newPopover) newPopover.classList.remove('hidden'); } });
             li.addEventListener('dragstart', (e) => { dragStartIdx = +e.target.closest('li').dataset.idx; e.dataTransfer.effectAllowed = 'move'; setTimeout(() => e.target.classList.add('opacity-50'), 0); });
             li.addEventListener('dragover', (e) => { e.preventDefault(); return false; }); li.addEventListener('dragenter', (e) => { e.preventDefault(); e.target.closest('li')?.classList.add('border-blue-400', 'border-t-2'); }); li.addEventListener('dragleave', (e) => { e.target.closest('li')?.classList.remove('border-blue-400', 'border-t-2'); }); li.addEventListener('dragend', (e) => { e.target.classList.remove('opacity-50'); });
-            li.addEventListener('drop', (e) => {
-                e.stopPropagation(); const targetLi = e.target.closest('li'); if(!targetLi) return false; targetLi.classList.remove('border-blue-400', 'border-t-2'); const dragEndIndex = +targetLi.dataset.idx;
-                const item = g.filterConfig.splice(dragStartIdx, 1)[0]; g.filterConfig.splice(dragEndIndex, 0, item); let popoverId = `adv-filter-settings-${groupId}`; let popoverWasOpen = !document.getElementById(popoverId).classList.contains('hidden'); renderAdvGroups(); if(popoverWasOpen) { let newPopover = document.getElementById(popoverId); if(newPopover) newPopover.classList.remove('hidden'); } return false;
-            });
+            li.addEventListener('drop', (e) => { e.stopPropagation(); const targetLi = e.target.closest('li'); if(!targetLi) return false; targetLi.classList.remove('border-blue-400', 'border-t-2'); const dragEndIndex = +targetLi.dataset.idx; const item = g.filterConfig.splice(dragStartIdx, 1)[0]; g.filterConfig.splice(dragEndIndex, 0, item); let popoverId = `adv-filter-settings-${groupId}`; let popoverWasOpen = !document.getElementById(popoverId).classList.contains('hidden'); renderAdvGroups(); if(popoverWasOpen) { let newPopover = document.getElementById(popoverId); if(newPopover) newPopover.classList.remove('hidden'); } return false; });
             list.appendChild(li);
         });
     }
@@ -2279,8 +1719,7 @@
         let list, set; if(type === 'item') { list = getAdvAvailableItems(g); set = g.items; } else if(type === 'disc') { list = getAdvAvailableDiscounts(g); set = g.discounts; } else if(type === 'outlet') { list = getAdvAvailableOutlets(g); set = g.outlets; } else if(type === 'area') { list = getAdvAvailableAreas(g); set = g.areas; } else return;
         let filtered = list.filter(x => x.toLowerCase().includes(searchStr.toLowerCase())); let html = '';
         if (set.size > 0) { html += `<div class="px-2 py-1.5 bg-red-50 border-b border-red-100 text-fr-red text-[10px] font-bold cursor-pointer hover:bg-red-100 flex justify-between items-center sticky top-0 z-10" onclick="clearAdvSet('${type}', '${groupId}')"><span>${set.size} terpilih</span> <span>Clear &times;</span></div>`; }
-        if (filtered.length === 0) { html += `<div class="p-2 text-[10px] text-gray-500 italic">Tidak ditemukan</div>`; } 
-        else { html += filtered.slice(0, 100).map(val => { let checked = set.has(val) ? 'checked' : ''; let safeVal = val.replace(/'/g, "\\'").replace(/"/g, '&quot;'); return `<div class="px-2 py-1.5 hover:bg-gray-50 flex items-start gap-2 cursor-pointer border-b border-gray-50 last:border-0" onclick="event.stopPropagation(); toggleAdvSetItem('${type}', '${groupId}', '${safeVal}')"> <input type="checkbox" class="mt-0.5 cursor-pointer rounded text-fr-blue focus:ring-fr-blue h-3 w-3 shrink-0" ${checked} onclick="event.stopPropagation(); toggleAdvSetItem('${type}', '${groupId}', '${safeVal}')"> <span class="text-[10px] font-medium text-gray-700 leading-tight pointer-events-none">${val}</span> </div>`; }).join(''); }
+        if (filtered.length === 0) { html += `<div class="p-2 text-[10px] text-gray-500 italic">Tidak ditemukan</div>`; } else { html += filtered.slice(0, 100).map(val => { let checked = set.has(val) ? 'checked' : ''; let safeVal = val.replace(/'/g, "\\'").replace(/"/g, '&quot;'); return `<div class="px-2 py-1.5 hover:bg-gray-50 flex items-start gap-2 cursor-pointer border-b border-gray-50 last:border-0" onclick="event.stopPropagation(); toggleAdvSetItem('${type}', '${groupId}', '${safeVal}')"> <input type="checkbox" class="mt-0.5 cursor-pointer rounded text-fr-blue focus:ring-fr-blue h-3 w-3 shrink-0" ${checked} onclick="event.stopPropagation(); toggleAdvSetItem('${type}', '${groupId}', '${safeVal}')"> <span class="text-[10px] font-medium text-gray-700 leading-tight pointer-events-none">${val}</span> </div>`; }).join(''); }
         menu.innerHTML = html;
     }
 
@@ -2303,7 +1742,6 @@
                 if (g.items.size > 0 && !g.items.has(sv(r['Items']))) match = false; if (g.discounts.size > 0 && !g.discounts.has(sv(r['Discount Applied']))) match = false; if (g.outlets.size > 0 && !g.outlets.has(sv(r['Outlet']))) match = false; if (g.areas.size > 0 && !g.areas.has(sv(r['AREA']))) match = false; if (g.dept !== 'ALL' && sv(r['DEPT']) !== g.dept) match = false; if (g.eventType !== 'ALL' && sv(r['Event Type']) !== g.eventType) match = false;
                 return match;
             });
-
             let net = 0, gross = 0, qty = 0, txSet = new Set(), disc = 0, ref = 0, tax = 0, grat = 0, coll = 0;
             filtered.forEach(r => { net += getCleanNum(r, 'Net Sales'); gross += getCleanNum(r, 'Gross Sales'); qty += getCleanNum(r, 'Quantity'); tax += getCleanNum(r, 'Tax'); coll += getCleanNum(r, 'Total Collected Exc Rounding') || getCleanNum(r, 'Total Collected') || (getCleanNum(r, 'Net Sales') + getCleanNum(r, 'Tax')); disc += getDiscountValue(r); grat += getGratuityValue(r); ref += Math.abs(getCleanNum(r, 'Refunds') || 0); if(r['Receipt Number']) txSet.add(r['Receipt Number']); });
             return { name: g.name, start: g.start, end: g.end, items: g.items, discounts: g.discounts, outlets: g.outlets, areas: g.areas, dept: g.dept, eventType: g.eventType, net, gross, qty, tx: txSet.size, disc, ref, tax, grat, coll, avgTx: txSet.size > 0 ? net / txSet.size : 0 };
@@ -2314,7 +1752,6 @@
     function renderAdvCompareTable(results) {
         lastAdvResults = results; const thead = document.getElementById('advCompareHead'); const tbody = document.getElementById('advCompareBody'); document.getElementById('exportAdvCompareBtn').classList.remove('hidden');
         let trHead = document.createElement('tr'); trHead.innerHTML = `<th class="py-2.5 px-3 text-xs bg-gray-100 border border-gray-200 text-gray-700 shadow-sm z-10 sticky left-0 text-center align-middle">METRIC</th>`;
-        
         results.forEach((res, idx) => {
             let periodStr = (!res.start && !res.end) ? 'Seluruh Waktu' : `${res.start || '...'} s/d ${res.end || '...'}`; let isBaseline = idx === 0 ? '<span class="px-1.5 py-0.5 bg-gray-200 text-gray-700 rounded text-[8px] ml-1 font-bold">BASELINE</span>' : '';
             let itemStr = res.items.size === 0 ? 'All' : (res.items.size === 1 ? Array.from(res.items)[0] : `${res.items.size} Selected`); let itemFull = res.items.size > 0 ? Array.from(res.items).join(', ') : 'All';
@@ -2335,10 +1772,8 @@
             results.forEach((res, i) => {
                 let val = m.calc ? m.calc(res) : res[m.id]; let str = m.isRp ? 'Rp ' + formatRp(val) : formatNum(val);
                 if (i > 0) {
-                    if (baseVal > 0) {
-                        let pct = ((val - baseVal) / baseVal) * 100; let isPos = pct > 0; let color = isPos ? 'text-green-600' : 'text-red-500'; if (m.isNeg) color = isPos ? 'text-red-500' : 'text-green-600'; let icon = isPos ? '▲' : '▼';
-                        str += ` <span class="text-[10px] ${color} ml-1.5 font-bold whitespace-nowrap bg-${isPos?'green':'red'}-50 px-1 py-0.5 rounded">${icon}${Math.abs(pct).toFixed(1)}%</span>`;
-                    } else if (baseVal === 0 && val > 0) { let color = m.isNeg ? 'text-red-500' : 'text-green-600'; str += ` <span class="text-[10px] ${color} ml-1.5 font-bold whitespace-nowrap bg-green-50 px-1 py-0.5 rounded">▲100%</span>`; }
+                    if (baseVal > 0) { let pct = ((val - baseVal) / baseVal) * 100; let isPos = pct > 0; let color = isPos ? 'text-green-600' : 'text-red-500'; if (m.isNeg) color = isPos ? 'text-red-500' : 'text-green-600'; let icon = isPos ? '▲' : '▼'; str += ` <span class="text-[10px] ${color} ml-1.5 font-bold whitespace-nowrap bg-${isPos?'green':'red'}-50 px-1 py-0.5 rounded">${icon}${Math.abs(pct).toFixed(1)}%</span>`; } 
+                    else if (baseVal === 0 && val > 0) { let color = m.isNeg ? 'text-red-500' : 'text-green-600'; str += ` <span class="text-[10px] ${color} ml-1.5 font-bold whitespace-nowrap bg-green-50 px-1 py-0.5 rounded">▲100%</span>`; }
                 } else { str += ` <span class="text-[10px] text-gray-400 ml-1.5 font-bold">—</span>`; }
                 tr.innerHTML += `<td class="py-2 px-3 text-right text-[12px] font-medium border border-gray-200 text-gray-800">${str}</td>`;
             });
@@ -2350,7 +1785,6 @@
         if(lastAdvResults.length === 0) return;
         const escapeCsv = (val) => { let s = String(val === null || val === undefined ? '' : val); if (s.includes(',') || s.includes('"') || s.includes('\n') || s.includes('\r')) { return '"' + s.replace(/"/g, '""') + '"'; } return s; };
         const headerRow = ['Metric']; const subHeaderRow = ['']; const itemRow = ['']; const discRow = ['']; const otherRow = [''];
-        
         lastAdvResults.forEach((r, idx) => {
             let baselineStr = idx === 0 ? " (BASELINE)" : ""; headerRow.push(r.name + baselineStr + ' - Value'); subHeaderRow.push(r.start || r.end ? `${r.start||'All'} to ${r.end||'All'}` : 'Seluruh Waktu'); itemRow.push(`Item: ${r.items.size > 0 ? Array.from(r.items).join('; ') : 'All'}`); discRow.push(`Disc: ${r.discounts.size > 0 ? Array.from(r.discounts).join('; ') : 'All'}`);
             let otherFilters = []; if(r.outlets.size > 0) otherFilters.push(`Outlet: ${Array.from(r.outlets).join('; ')}`); if(r.areas.size > 0) otherFilters.push(`Area: ${Array.from(r.areas).join('; ')}`); if(r.dept !== 'ALL') otherFilters.push(`Dept: ${r.dept}`); if(r.eventType !== 'ALL') otherFilters.push(`Event: ${r.eventType}`); otherRow.push(otherFilters.length > 0 ? otherFilters.join(' | ') : '-');
@@ -2359,9 +1793,7 @@
         let wsData = [headerRow, subHeaderRow, itemRow, discRow, otherRow, []];
         const baseResult = lastAdvResults[0];
         const metrics = [ { id: 'net', label: 'Net Sales' }, { id: 'gross', label: 'Gross Sales' }, { id: 'coll', label: 'Total Collected' }, { id: 'disc', label: 'Total Discounts' }, { id: 'ref', label: 'Refunds' }, { id: 'tax', label: 'Total Tax' }, { id: 'grat', label: 'Total Gratuity' }, { id: 'qty', label: 'Quantity Sold' }, { id: 'tx', label: 'Transactions' }, { id: 'avgTx', label: 'Avg Transaction Value', calc: (r) => r.tx > 0 ? (r.net / r.tx) : 0 } ];
-        
         metrics.forEach(m => { let row = [m.label]; lastAdvResults.forEach((res, idx) => { let val = m.calc ? m.calc(res) : res[m.id]; row.push(val); if (idx > 0) { let baseVal = m.calc ? m.calc(baseResult) : baseResult[m.id]; row.push(baseVal > 0 ? ((val - baseVal) / baseVal * 100).toFixed(2) + '%' : ''); } }); wsData.push(row); });
-        
         let csv = wsData.map(row => row.map(escapeCsv).join(',')).join('\r\n'); let blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' }); let url = URL.createObjectURL(blob); let a = document.createElement('a'); a.href = url; a.download = `Adv_Compare_${new Date().getTime()}.csv`; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url); showToast("Advanced Comparison berhasil diexport ke CSV!");
     });
 
