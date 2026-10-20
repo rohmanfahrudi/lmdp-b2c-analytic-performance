@@ -1845,7 +1845,7 @@
                 populateDropdowns();
                 populateItemDropdown();
                 
-                // 1. TAMPILKAN KONTEN UTAMA DAN SEMBUNYIKAN LOADING DULU
+                // PAKSA TAMPILKAN DASHBOARD SEBELUM RENDER
                 els.loadUI.classList.remove('active'); 
                 els.main.classList.remove('hidden'); 
                 els.content.classList.remove('hidden');
@@ -1853,18 +1853,16 @@
                 const navCtrl = document.getElementById('navDashboardControls');
                 if (navCtrl) { navCtrl.classList.remove('hidden'); navCtrl.classList.add('flex'); }
 
-                // 2. BERI JEDA 0.5 DETIK AGAR BROWSER BERNapas
+                // RENDER GRAFIK DENGAN PEMBUNGKUS TRY-CATCH AGAR JIKA ERROR TIDAK MEMBUAT STUCK
                 setTimeout(async () => {
                     try {
-                        // 3. BARU GAMBAR GRAFIK DAN TABELNYA
                         await executeFilterAndRender();
-                        setLoadingProgress(100, 'Selesai!');
-                        showToast(`Berhasil memuat ${formatNum(rawData.length)} baris dari ${fileList.length} file.`);
+                        showToast(`Berhasil memuat ${formatNum(rawData.length)} baris.`);
                     } catch (e) {
-                        console.error("Gagal merender dashboard:", e);
-                        showToast("Data dimuat, tapi beberapa grafik gagal dirender karena data terlalu besar.", "error");
+                        console.error("Render Error:", e);
+                        showToast("Gagal menggambar beberapa grafik.", "error");
                     }
-                }, 500);  else {
+                }, 1000); // Jeda 1 detik else {
                 showToast('Tidak ada data valid. Periksa format CSV.', 'error');
             }
         } catch (err) {
