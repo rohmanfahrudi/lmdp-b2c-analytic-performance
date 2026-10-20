@@ -203,7 +203,7 @@
     </nav>
     
     <!-- MAIN CONTENT DISEMBUNYIKAN SEJAK AWAL MENGGUNAKAN INLINE CSS -->
-    <main style="display: none;" id="mainContent" class="flex-grow max-w-[1500px] mx-auto w-full px-2 sm:px-4 lg:px-8 py-4 space-y-4">
+    <main id="mainContent" class="hidden flex-grow max-w-[1500px] mx-auto w-full px-2 sm:px-4 lg:px-8 py-4 space-y-4">
         <div id="dashboardContent" class="hidden space-y-4">
             <!-- GLOBAL FILTERS -->
             <div class="panel p-3 mb-2">
@@ -1850,7 +1850,7 @@
                 populateItemDropdown();
                 
                 // TAMPILKAN KONTEN UTAMA SETELAH DATA SIAP
-                els.main.style.display = 'block'; 
+                els.main.classList.remove('hidden');
                 els.content.classList.remove('hidden');
                 
                 const navCtrl = document.getElementById('navDashboardControls');
