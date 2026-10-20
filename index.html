@@ -201,7 +201,8 @@
         </div>
     </nav>
     
-    <main class="flex-grow max-w-[1500px] mx-auto w-full px-2 sm:px-4 lg:px-8 py-4 space-y-4">
+    <!-- MAIN CONTENT DISEMBUNYIKAN SEJAK AWAL MENGGUNAKAN INLINE CSS -->
+    <main style="display: none;" id="mainContent" class="flex-grow max-w-[1500px] mx-auto w-full px-2 sm:px-4 lg:px-8 py-4 space-y-4">
         <div id="dashboardContent" class="hidden space-y-4">
             <!-- GLOBAL FILTERS -->
             <div class="panel p-3 mb-2">
@@ -590,7 +591,7 @@
             try { return n.toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0, useGrouping: true }); } catch (e) { return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "."); }
         };
         
-        const els = { file: document.getElementById('fileInput'), folder: document.getElementById('folderInput'), content: document.getElementById('dashboardContent'), loadUI: document.getElementById('loadingOverlay'), tooltip: document.getElementById('customTooltip') };
+        const els = { file: document.getElementById('fileInput'), folder: document.getElementById('folderInput'), content: document.getElementById('dashboardContent'), main: document.getElementById('mainContent'), loadUI: document.getElementById('loadingOverlay'), tooltip: document.getElementById('customTooltip') };
         const filters = { quick: document.getElementById('quickDateSelect'), dStart: document.getElementById('filterDateStart'), dEnd: document.getElementById('filterDateEnd'), dept: document.getElementById('filterDept'), eventType: document.getElementById('filterEventType') };
         
         document.getElementById('toggleLabelsCheckbox').addEventListener('change', (e) => { showChartLabels = e.target.checked; refreshAllCharts(); });
