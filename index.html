@@ -58,10 +58,10 @@
 <body class="antialiased min-h-screen flex flex-col">
     <div id="toastContainer" class="fixed top-2 right-4 z-[10000] flex flex-col gap-1.5 pointer-events-none"></div>
     
-    <!-- Loading Overlay - Langsung Tampil di Awal -->
+    <!-- Loading Overlay - Tampil Full Screen -->
     <div id="loadingOverlay">
         <h2 class="text-base font-semibold text-fr-text" id="loadingText">Processing Data...</h2>
-        <p class="text-xs text-fr-muted mt-1.5 font-medium" id="loadingSubText">Mengunggah file...</p>
+        <p class="text-xs text-fr-muted mt-1.5 font-medium" id="loadingSubText">Memuat data dari server...</p>
         <div class="progress-bar-wrap"><div class="progress-bar-fill" id="loadingProgressBar"></div></div>
     </div>
     
@@ -201,7 +201,8 @@
         </div>
     </nav>
     
-    <main class="flex-grow max-w-[1500px] mx-auto w-full px-2 sm:px-4 lg:px-8 py-4 space-y-4">
+    <!-- MAIN CONTENT DISEMBUNYIKAN SEJAK AWAL MENGGUNAKAN INLINE CSS -->
+    <main style="display: none;" id="mainContent" class="flex-grow max-w-[1500px] mx-auto w-full px-2 sm:px-4 lg:px-8 py-4 space-y-4">
         <div id="dashboardContent" class="hidden space-y-4">
             <!-- GLOBAL FILTERS -->
             <div class="panel p-3 mb-2">
@@ -590,7 +591,7 @@
             try { return n.toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0, useGrouping: true }); } catch (e) { return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "."); }
         };
         
-        const els = { file: document.getElementById('fileInput'), folder: document.getElementById('folderInput'), content: document.getElementById('dashboardContent'), loadUI: document.getElementById('loadingOverlay'), tooltip: document.getElementById('customTooltip') };
+        const els = { file: document.getElementById('fileInput'), folder: document.getElementById('folderInput'), content: document.getElementById('dashboardContent'), main: document.getElementById('mainContent'), loadUI: document.getElementById('loadingOverlay'), tooltip: document.getElementById('customTooltip') };
         const filters = { quick: document.getElementById('quickDateSelect'), dStart: document.getElementById('filterDateStart'), dEnd: document.getElementById('filterDateEnd'), dept: document.getElementById('filterDept'), eventType: document.getElementById('filterEventType') };
         
         document.getElementById('toggleLabelsCheckbox').addEventListener('change', (e) => { showChartLabels = e.target.checked; refreshAllCharts(); });
@@ -821,9 +822,21 @@
                 } 
                 setLoadingProgress(95, 'Menyiapkan dasbor...'); await yieldToMain(); 
                 if (rawData.length > 0) { 
-                    setupDatePickers(); populateDropdowns(); populateItemDropdown(); els.content.classList.remove('hidden'); 
+                    setupDatePickers(); populateDropdowns(); populateItemDropdown(); 
+                    
+                    // SEMBUNYIKAN LOADING DAN TAMPILKAN DASHBOARD DULU
+                    els.loadUI.classList.remove('active'); 
+                    els.main.classList.remove('hidden'); 
+                    els.content.classList.remove('hidden');
+                    
                     const navCtrl = document.getElementById('navDashboardControls'); navCtrl.classList.remove('hidden'); navCtrl.classList.add('flex');
-                    await executeFilterAndRender(); setLoadingProgress(100, 'Selesai!'); showToast(`Berhasil memuat ${formatNum(rawData.length)} baris data.`); 
+                    
+                    // BERI JEDA 1 DETIK SEBELUM MENGGAMBAR GRAFIK
+                    setTimeout(async () => {
+                        try {
+                            await executeFilterAndRender(); setLoadingProgress(100, 'Selesai!'); showToast(`Berhasil memuat ${formatNum(rawData.length)} baris data.`); 
+                        } catch(e) { console.error(e); }
+                    }, 1000);
                 } else { showToast("Data tidak valid, tidak dapat menemukan header yang tepat.", "error"); } 
             } catch (err) { showToast("Error membaca file excel.", "error"); console.error(err); } finally { els.loadUI.classList.remove('active'); setLoadingProgress(0, ''); } 
         }
@@ -1839,35 +1852,39 @@
                 }
             }
 
-                        setLoadingProgress(95, 'Menyiapkan dasbor...');
+            setLoadingProgress(95, 'Menyiapkan dasbor...');
             if (rawData.length > 0) {
                 setupDatePickers();
                 populateDropdowns();
                 populateItemDropdown();
                 
-                // PAKSA TAMPILKAN DASHBOARD SEBELUM RENDER
-                els.loadUI.classList.remove('active'); 
+                // TAMPILKAN KONTEN UTAMA SETELAH DATA SIAP
                 els.main.classList.remove('hidden'); 
                 els.content.classList.remove('hidden');
                 
                 const navCtrl = document.getElementById('navDashboardControls');
                 if (navCtrl) { navCtrl.classList.remove('hidden'); navCtrl.classList.add('flex'); }
-
-                // RENDER GRAFIK DENGAN PEMBUNGKUS TRY-CATCH AGAR JIKA ERROR TIDAK MEMBUAT STUCK
+                
+                // BERI JEDA SEBELUM MENGGAMBAR GRAFIK
                 setTimeout(async () => {
                     try {
                         await executeFilterAndRender();
-                        showToast(`Berhasil memuat ${formatNum(rawData.length)} baris.`);
-                    } catch (e) {
-                        console.error("Render Error:", e);
-                        showToast("Gagal menggambar beberapa grafik.", "error");
+                        setLoadingProgress(100, 'Selesai!');
+                        showToast(`Berhasil memuat ${formatNum(rawData.length)} baris dari ${fileList.length} file.`);
+                    } catch(e) { 
+                        console.error(e); 
+                        showToast('Sebagian grafik gagal dirender karena data terlalu besar.', 'error');
                     }
-                }, 1000); // Jeda 1 detik else {
+                }, 500);
+
+            } else {
                 showToast('Tidak ada data valid. Periksa format CSV.', 'error');
+                els.main.classList.remove('hidden');
             }
         } catch (err) {
             console.error(err);
             showToast('Gagal memuat data: ' + err.message, 'error');
+            els.main.classList.remove('hidden');
         } finally {
             els.loadUI.classList.remove('active');
             setLoadingProgress(0, '');
