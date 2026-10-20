@@ -94,7 +94,7 @@
     
     <!-- VS Table Modal -->
     <div id="vsTableModal" class="fixed inset-0 bg-slate-900 bg-opacity-50 z-[9999] hidden flex items-center justify-center p-2 sm:p-4">
-        <div class="bg-white rounded shadow-xl w-full max-w-6xl flex flex-col max-h-[95vh]">
+        <div id="vsTableModalContent" class="bg-white rounded shadow-xl w-full max-w-6xl flex flex-col max-h-[95vh] transition-all duration-300">
             <div class="px-3 sm:px-5 py-3 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-gray-50 rounded-t gap-2 sm:gap-0">
                 <div class="flex items-center gap-3">
                     <h3 class="font-bold text-fr-text text-sm">Comparison Data Table</h3>
@@ -108,19 +108,46 @@
                         <input type="checkbox" id="vsDistinctTxCb" class="w-3.5 h-3.5 text-fr-blue rounded focus:ring-fr-blue cursor-pointer" checked> Distinct Tx
                     </label>
                     <div class="flex gap-2">
+                        <button id="fullscreenVsBtn" class="px-2 py-1.5 bg-white border border-gray-300 text-gray-700 hover:bg-gray-100 rounded text-[10px] sm:text-[11px] font-bold shadow-sm flex items-center gap-1 transition-colors" title="Toggle Fullscreen">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
+                        </button>
                         <button id="vsTableSettingsBtn" class="px-2 py-1.5 bg-white border border-gray-300 text-gray-700 hover:bg-gray-100 rounded text-[10px] sm:text-[11px] font-bold shadow-sm flex items-center gap-1 transition-colors">⚙️ Setup</button>
                         <button id="exportVsTableBtn" class="px-2 py-1.5 bg-fr-blue border border-fr-blue text-white hover:bg-blue-800 rounded text-[10px] sm:text-[11px] font-bold shadow-sm flex items-center gap-1 transition-colors"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> Export</button>
                         <button id="closeVsTableBtn" class="text-gray-400 hover:text-gray-600 text-lg leading-none px-1">&times;</button>
                     </div>
                     
-                    <div id="vsSettingsMenu" class="hidden absolute top-full right-0 sm:right-[100px] mt-1 w-[300px] sm:w-[440px] bg-white border border-gray-200 shadow-2xl rounded z-[60] text-[11px] flex flex-col sm:flex-row items-start">
-                        <div class="w-full sm:w-1/2 border-b sm:border-b-0 sm:border-r border-gray-200 flex flex-col max-h-60 sm:max-h-80">
-                            <div class="p-2 border-b border-gray-200 bg-gray-100 font-bold text-center">Dimensions (Drag & Drop)</div>
+                    <div id="vsSettingsMenu" class="hidden absolute top-full right-0 sm:right-[100px] mt-1 w-[300px] sm:w-[480px] bg-white border border-gray-200 shadow-2xl rounded z-[60] text-[11px] flex flex-col sm:flex-row items-start">
+                        <div class="w-full sm:w-1/3 border-b sm:border-b-0 sm:border-r border-gray-200 flex flex-col max-h-60 sm:max-h-80">
+                            <div class="p-2 border-b border-gray-200 bg-gray-100 font-bold text-center">Dimensions</div>
                             <ul id="vsDimList" class="overflow-y-auto p-1 bg-gray-50 flex-grow"></ul>
                         </div>
-                        <div class="w-full sm:w-1/2 flex flex-col max-h-60 sm:max-h-80">
-                            <div class="p-2 border-b border-gray-200 bg-gray-100 font-bold text-center">Metrics (Drag to Reorder)</div>
+                        <div class="w-full sm:w-1/3 border-b sm:border-b-0 sm:border-r border-gray-200 flex flex-col max-h-60 sm:max-h-80">
+                            <div class="p-2 border-b border-gray-200 bg-gray-100 font-bold text-center">Metrics</div>
                             <ul id="vsMetricList" class="overflow-y-auto p-1 bg-gray-50 flex-grow"></ul>
+                        </div>
+                        <div class="w-full sm:w-1/3 flex flex-col">
+                            <div class="p-2 border-b border-gray-200 bg-gray-100 font-bold text-center">Pivot Options</div>
+                            <div class="p-3 bg-gray-50 flex-grow flex flex-col gap-3">
+                                <label class="flex items-center gap-2 cursor-pointer font-medium text-gray-700 hover:text-fr-blue">
+                                    <input type="checkbox" id="vsRepeatLabelsCb" class="w-3.5 h-3.5 rounded text-fr-blue focus:ring-fr-blue cursor-pointer"> 
+                                    Repeat All Items Label
+                                </label>
+                                <div class="flex flex-col gap-1">
+                                    <span class="font-bold text-gray-600 text-[10px] uppercase tracking-wider mb-1">Total Display</span>
+                                    <label class="flex items-center gap-2 cursor-pointer text-gray-700 hover:text-fr-blue">
+                                        <input type="radio" name="vsTotalMode" value="both" class="w-3.5 h-3.5 text-fr-blue focus:ring-fr-blue cursor-pointer" checked> 
+                                        Subtotal & Grand Total
+                                    </label>
+                                    <label class="flex items-center gap-2 cursor-pointer text-gray-700 hover:text-fr-blue">
+                                        <input type="radio" name="vsTotalMode" value="grand" class="w-3.5 h-3.5 text-fr-blue focus:ring-fr-blue cursor-pointer"> 
+                                        Grand Total Only
+                                    </label>
+                                    <label class="flex items-center gap-2 cursor-pointer text-gray-700 hover:text-fr-blue">
+                                        <input type="radio" name="vsTotalMode" value="none" class="w-3.5 h-3.5 text-fr-blue focus:ring-fr-blue cursor-pointer"> 
+                                        Hide Totals
+                                    </label>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -833,7 +860,7 @@
                     
                     const navCtrl = document.getElementById('navDashboardControls'); navCtrl.classList.remove('hidden'); navCtrl.classList.add('flex');
                     
-                    // JEDA 100MS SEBELUM MENGGAMBAR GRAFIK
+                    // JEDA 100MS SEBELUM MENGGAMBAR GRAFIK AGAR BROWSER BERNAFAS
                     setTimeout(async () => {
                         try {
                             await executeFilterAndRender(); setLoadingProgress(100, 'Selesai!'); showToast(`Berhasil memuat ${formatNum(rawData.length)} baris data.`); 
@@ -1441,7 +1468,7 @@
     ];
     
     let vsDimFilters = {}; let vsCacheMainAgg = null; let vsCacheVsAgg = null; let vsRenderDebounce = null; let dragVsDimIdx = -1; let dragVsMetIdx = -1;
-    
+
     function initVsSettings() {
         const buildList = (config, listId, dragVarName, callback) => {
             const list = document.getElementById(listId); list.innerHTML = '';
@@ -1483,8 +1510,8 @@
 
     ['vsModalMainStart', 'vsModalMainEnd', 'vsModalVsStart', 'vsModalVsEnd'].forEach(id => { document.getElementById(id).addEventListener('change', autoRefreshVsTable); document.getElementById(id).addEventListener('input', autoRefreshVsTable); });
     document.getElementById('vsModalCompareMode').addEventListener('change', (e) => { const wrap = document.getElementById('vsModalCustomDateWrapper'); if(e.target.value === 'custom') { wrap.classList.remove('hidden'); wrap.classList.add('flex'); } else { wrap.classList.add('hidden'); wrap.classList.remove('flex'); } autoRefreshVsTable(); });
-    
-    // FUNGSI RENDER FILTER DIMENSI (DIPERBARUI DENGAN CHECKBOX TAMPILKAN DI TABEL)
+
+    // FUNGSI RENDER FILTER DIMENSI (DIPERBARUI)
     function renderVsDimFilterPanel() {
         const panel = document.getElementById('vsDimFilterPanel'); panel.innerHTML = '';
         let filterableDims = vsDimConfig.filter(d => d.visible && d.filterType === 'search'); 
@@ -1508,31 +1535,9 @@
             let labelText = selectedSet.size === 0 ? '' : (selectedSet.size === 1 ? Array.from(selectedSet)[0] : `${selectedSet.size} terpilih`); 
             let placeholder = `All ${dim.label}...`;
             
-            // Checkbox untuk Show In Table
-            let showInTableCheckbox = document.createElement('input');
-            showInTableCheckbox.type = 'checkbox';
-            showInTableCheckbox.checked = true; // Defaultnya tampil di tabel
-            showInTableCheckbox.className = 'w-3 h-3 rounded text-fr-blue focus:ring-fr-blue cursor-pointer mb-1';
-            showInTableCheckbox.title = "Tampilkan kolom ini di tabel";
-            showInTableCheckbox.onchange = (e) => {
-                // Kita perlu mengubah status visibilitas dimensi di vsDimConfig
-                let targetDim = vsDimConfig.find(d => d.id === dim.id);
-                if(targetDim) {
-                    // Kita menggunakan properti 'visible' sebagai penanda tampil di tabel
-                    // Tapi kita tidak ingin menghilangkannya dari panel filter
-                    // Solusi: Kita buat properti baru 'showInTable' atau kita akali dengan menyembunyikan kolomnya
-                    // Mari kita buat properti baru di objek untuk kontrol tabel
-                    targetDim.showInTable = e.target.checked;
-                    scheduleRenderVsTable();
-                }
-            };
-            // Set nilai awal berdasarkan config (menggunakan properti showInTable jika ada, atau visible)
-            let configDim = vsDimConfig.find(d => d.id === dim.id);
-            showInTableCheckbox.checked = configDim.showInTable !== undefined ? configDim.showInTable : true;
-
             wrapper.innerHTML = ` 
                 <label class="text-[9px] font-bold text-gray-500 uppercase tracking-wider mb-0.5 flex items-center gap-1">
-                    <input type="checkbox" class="w-3 h-3 rounded text-fr-blue focus:ring-fr-blue cursor-pointer" ${showInTableCheckbox.checked ? 'checked' : ''} onchange="toggleDimTableVisibility('${dim.id}', this.checked)"> 
+                    <input type="checkbox" class="w-3 h-3 rounded text-fr-blue focus:ring-fr-blue cursor-pointer" ${dim.showInTable !== false ? 'checked' : ''} onchange="toggleDimTableVisibility('${dim.id}', this.checked)"> 
                     ${dim.label}
                 </label>
                 <div class="relative" style="width:100%; min-width:150px;"> 
@@ -1571,7 +1576,6 @@
         });
     }
 
-    // FUNGSI BARU UNTUK TOGGLE VISIBILITAS KOLOM DI TABEL VS
     window.toggleDimTableVisibility = function(dimId, isChecked) {
         let dim = vsDimConfig.find(d => d.id === dimId);
         if(dim) {
@@ -1587,7 +1591,7 @@
 
     let vsFinalRows = []; let vsLastAggKey = '';
     
-    // FUNGSI RENDER TABEL VS (DIPERBARUI UNTUK MENDukung SHOW IN TABLE)
+    // FUNGSI RENDER TABEL VS (DIPERBARUI DENGAN ROW SPANNING & TOTAL OPTIONS)
     function renderVsTable() {
         let isDistinctTx = document.getElementById('vsDistinctTxCb').checked; 
         let tooltipEl = document.getElementById('vsPeriodTooltip');
@@ -1600,11 +1604,13 @@
             tooltipEl.innerHTML = `<strong>Main Period:</strong> ${mStart} s/d ${mEnd}<br/><strong>Compare VS:</strong> ${vStart} s/d ${vEnd}`; 
         }
         
-        // Filter dimensi yang visible (untuk panel filter) DAN yang showInTable (untuk kolom tabel)
-        let activeDims = vsDimConfig.filter(d => d.visible); // Untuk panel filter
-        let tableDims = vsDimConfig.filter(d => d.visible && (d.showInTable !== undefined ? d.showInTable : true)); // Untuk kolom tabel
+        let activeDims = vsDimConfig.filter(d => d.visible); 
+        let tableDims = vsDimConfig.filter(d => d.visible && (d.showInTable !== undefined ? d.showInTable : true)); 
         let activeMets = vsMetricConfig.filter(m => m.visible); 
         
+        let repeatLabels = document.getElementById('vsRepeatLabelsCb')?.checked || false;
+        let totalMode = document.querySelector('input[name="vsTotalMode"]:checked')?.value || 'both';
+
         let thead = document.getElementById('vsTableHead'); 
         let tbody = document.getElementById('vsTableBody');
         
@@ -1628,7 +1634,7 @@
             return agg;
         }
 
-        let aggKey = JSON.stringify({ dims: activeDims.map(d => d.id), mets: activeMets.map(m => m.id), filtKey: getActiveVsDimFilterKey(), distinct: isDistinctTx, mainDate: filters.dStart.value + '|' + filters.dEnd.value, vsDate: (window.currentCompareDateRange ? window.currentCompareDateRange.start + '|' + window.currentCompareDateRange.end : ''), filterDataHash: filteredData.length });
+        let aggKey = JSON.stringify({ dims: activeDims.map(d => d.id), mets: activeMets.map(m => m.id), filtKey: getActiveVsDimFilterKey(), distinct: isDistinctTx, mainDate: filters.dStart.value + '|' + filters.dEnd.value, vsDate: (window.currentCompareDateRange ? window.currentCompareDateRange.start + '|' + window.currentCompareDateRange.end : ''), filterDataHash: filteredData.length, repeat: repeatLabels, total: totalMode });
         let filteredMain = applyVsDimFilters(filteredData); let filteredVs = applyVsDimFilters(window.prevDataExport || []);
         let mainAgg, vsAgg; if (aggKey === vsLastAggKey && vsCacheMainAgg && vsCacheVsAgg) { mainAgg = vsCacheMainAgg; vsAgg = vsCacheVsAgg; } else { mainAgg = aggData(filteredMain); vsAgg = aggData(filteredVs); vsCacheMainAgg = mainAgg; vsCacheVsAgg = vsAgg; vsLastAggKey = aggKey; }
         let allKeys = Array.from(new Set([...Object.keys(mainAgg), ...Object.keys(vsAgg)])).sort();
@@ -1656,19 +1662,33 @@
             let keys = sortNodeKeys(node, currentPath.length);
             keys.forEach(k => {
                 let child = node[k]; let path = [...currentPath, k]; let isLeaf = Object.keys(child._children).length === 0;
-                if (isLeaf) { vsFinalRows.push({ type: 'data', dims: path, main: child._totals.main, vs: child._totals.vs }); } else { traverse(child._children, path); if (activeDims.length > 1) { let subDims = [...path]; while(subDims.length < activeDims.length) { if(subDims.length === path.length) subDims.push('Total ' + path[path.length-1]); else subDims.push(''); } vsFinalRows.push({ type: 'subtotal', level: path.length, dims: subDims, main: child._totals.main, vs: child._totals.vs }); } }
+                if (isLeaf) { vsFinalRows.push({ type: 'data', dims: path, main: child._totals.main, vs: child._totals.vs }); } 
+                else { 
+                    traverse(child._children, path); 
+                    if (totalMode === 'both' && activeDims.length > 1) { 
+                        let subDims = [...path]; 
+                        while(subDims.length < activeDims.length) { 
+                            if(subDims.length === path.length) subDims.push('Total ' + path[path.length-1]); 
+                            else subDims.push(''); 
+                        } 
+                        vsFinalRows.push({ type: 'subtotal', level: path.length, dims: subDims, main: child._totals.main, vs: child._totals.vs }); 
+                    } 
+                }
             });
         }
         traverse(tree, []);
-        let gtDims = activeDims.map((d, i) => i === 0 ? 'GRAND TOTAL' : ''); vsFinalRows.push({ type: 'grandtotal', level: 0, dims: gtDims, main: grandTotals.main, vs: grandTotals.vs });
+        
+        if (totalMode !== 'none') {
+            let gtDims = activeDims.map((d, i) => i === 0 ? 'GRAND TOTAL' : ''); 
+            vsFinalRows.push({ type: 'grandtotal', level: 0, dims: gtDims, main: grandTotals.main, vs: grandTotals.vs });
+        }
 
         let tr1 = document.createElement('tr'); let tr2 = document.createElement('tr');
         const getSortIcon = (colId) => { if(vsSortState.col !== colId) return '<span class="text-gray-300 opacity-50 ml-1 hover:text-gray-500">↕</span>'; return vsSortState.asc ? '<span class="text-fr-blue ml-1">▲</span>' : '<span class="text-fr-blue ml-1">▼</span>'; };
         
-        // HEADER TABEL: Hanya render dimensi yang showInTable
         tableDims.forEach((d) => { 
             let originalIndex = activeDims.findIndex(ad => ad.id === d.id);
-            if(originalIndex === -1) return; // Skip jika tidak ada di activeDims (mungkin filter panel)
+            if(originalIndex === -1) return; 
             let th = document.createElement('th'); 
             th.rowSpan = 2; 
             th.className = "py-2 px-3 text-[11px] text-gray-700 align-middle text-center border border-gray-200 bg-gray-50 z-30 sticky top-0 cursor-pointer hover:bg-gray-200 select-none"; 
@@ -1685,19 +1705,70 @@
         thead.innerHTML = ''; thead.appendChild(tr1); thead.appendChild(tr2);
 
         tbody.innerHTML = '';
-        vsFinalRows.forEach(r => {
+        
+        let rowSpans = {}; 
+        if (!repeatLabels) {
+            tableDims.forEach(d => {
+                let origIdx = activeDims.findIndex(ad => ad.id === d.id);
+                if(origIdx === -1) return;
+                let currentVal = null; let spanCount = 0; let startRowIdx = -1;
+                for(let i = 0; i < vsFinalRows.length; i++) {
+                    let r = vsFinalRows[i];
+                    if(r.type === 'grandtotal') continue; 
+                    let val = r.dims[origIdx];
+                    if (val !== currentVal) {
+                        if (spanCount > 1 && startRowIdx !== -1) {
+                            if(!rowSpans[startRowIdx]) rowSpans[startRowIdx] = {};
+                            rowSpans[startRowIdx][d.id] = spanCount;
+                        }
+                        currentVal = val; spanCount = 1; startRowIdx = i;
+                    } else {
+                        spanCount++;
+                    }
+                }
+                if (spanCount > 1 && startRowIdx !== -1) {
+                    if(!rowSpans[startRowIdx]) rowSpans[startRowIdx] = {};
+                    rowSpans[startRowIdx][d.id] = spanCount;
+                }
+            });
+        }
+
+        vsFinalRows.forEach((r, rowIdx) => {
             let tr = document.createElement('tr'); tr.className = "hover:bg-blue-50 transition-colors border-b border-gray-100 last:border-0 "; if(r.type === 'subtotal') tr.className += "bg-indigo-50/40 font-bold"; if(r.type === 'grandtotal') tr.className += "bg-blue-100 font-bold border-t-2 border-blue-200";
             
-            // BODY TABEL: Hanya render dimensi yang showInTable, tapi ambil nilai dari array dims penuh
             tableDims.forEach((d) => {
                 let originalIndex = activeDims.findIndex(ad => ad.id === d.id);
                 if(originalIndex === -1) return;
-                let dVal = r.dims[originalIndex]; 
-                let td = document.createElement('td'); 
-                td.className = "py-2 px-3 text-[11px] text-gray-800 border border-gray-200 whitespace-nowrap "; 
-                if((r.type === 'subtotal' && originalIndex === r.level) || r.type === 'grandtotal') td.className += 'text-indigo-700 font-bold'; 
-                td.innerText = dVal; 
-                tr.appendChild(td); 
+                
+                if (rowSpans[rowIdx] && rowSpans[rowIdx][d.id] !== undefined) {
+                    let td = document.createElement('td'); 
+                    td.rowSpan = rowSpans[rowIdx][d.id];
+                    td.className = "py-2 px-3 text-[11px] text-gray-800 border border-gray-200 whitespace-nowrap align-top "; 
+                    td.innerText = r.dims[originalIndex];
+                    tr.appendChild(td);
+                } else if (rowSpans[rowIdx] && rowSpans[rowIdx][d.id] === 0) {
+                    // skip
+                } else {
+                    let isCovered = false;
+                    for(let prevIdx = rowIdx - 1; prevIdx >= 0; prevIdx--) {
+                        if (rowSpans[prevIdx] && rowSpans[prevIdx][d.id] !== undefined) {
+                            let span = rowSpans[prevIdx][d.id];
+                            if (rowIdx < prevIdx + span) {
+                                isCovered = true;
+                                if(!rowSpans[rowIdx]) rowSpans[rowIdx] = {};
+                                rowSpans[rowIdx][d.id] = 0; 
+                            }
+                            break; 
+                        }
+                    }
+                    if (!isCovered) {
+                        let td = document.createElement('td'); 
+                        td.className = "py-2 px-3 text-[11px] text-gray-800 border border-gray-200 whitespace-nowrap "; 
+                        if((r.type === 'subtotal' && originalIndex === r.level) || r.type === 'grandtotal') td.className += 'text-indigo-700 font-bold'; 
+                        td.innerText = r.dims[originalIndex]; 
+                        tr.appendChild(td); 
+                    }
+                }
             });
 
             activeMets.forEach(m => {
@@ -1710,6 +1781,21 @@
             tbody.appendChild(tr);
         });
     }
+
+    // FUNGSI FULLSCREEN
+    const fullscreenBtn = document.getElementById('fullscreenVsBtn');
+    const vsTableModalContent = document.getElementById('vsTableModalContent');
+    fullscreenBtn.addEventListener('click', () => {
+        if (!document.fullscreenElement) {
+            vsTableModalContent.requestFullscreen().catch(err => {
+                showToast(`Error attempting to enable full-screen mode: ${err.message}`, 'error');
+            });
+            fullscreenBtn.innerHTML = `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 11l3-3m0 0l3 3m-3-3v8m0-13a9 9 0 110 18 9 9 0 010-18z"></path></svg>`;
+        } else {
+            document.exitFullscreen();
+            fullscreenBtn.innerHTML = `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>`;
+        }
+    });
 
     document.getElementById('exportVsTableBtn').addEventListener('click', () => {
         if(vsFinalRows.length === 0) { showToast('Tidak ada data untuk di-export', 'error'); return; }
