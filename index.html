@@ -30,9 +30,7 @@
         .pro-select { background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2364748b' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e"); background-position: right 0.5rem center; background-repeat: no-repeat; background-size: 1.2em 1.2em; padding-right: 28px; }
         .pro-input:focus, .pro-select:focus { border-color: #002395; box-shadow: 0 0 0 1px #002395; }
         .tooltip { position: absolute; background: #0f172a; color: white; padding: 6px 10px; border-radius: 4px; font-size: 11px; pointer-events: none; opacity: 0; transition: opacity 0.15s; white-space: nowrap; z-index: 50; border: 1px solid #334155; }
-        
-        /* Loading Overlay default HILANG, muncul hanya saat dipanggil */
-        #loadingOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #f1f5f9; z-index: 9999; display: none; flex-direction: column; justify-content: center; align-items: center; }
+        #loadingOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #f1f5f9; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
         #loadingOverlay.active { display: flex; }
         
         .progress-bar-wrap { width: 280px; height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden; margin-top: 16px; }
@@ -55,21 +53,29 @@
         /* Custom Scrollbar for mobile responsiveness */
         .overflow-x-auto::-webkit-scrollbar { height: 6px; }
         .overflow-x-auto::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 3px; }
+        
+        /* Pivot Drag Drop Area */
+        .pivot-drop-zone { min-height: 40px; border: 2px dashed #cbd5e1; border-radius: 4px; background-color: #f8fafc; display: flex; align-items: center; padding: 4px; gap: 4px; flex-wrap: wrap; transition: all 0.2s; }
+        .pivot-drop-zone.drag-over { border-color: #002395; background-color: #eff6ff; }
+        .pivot-pill { background-color: #e0e7ff; color: #3730a3; border: 1px solid #c7d2fe; border-radius: 12px; padding: 2px 8px; font-size: 10px; font-weight: 600; display: flex; align-items: center; gap: 4px; cursor: grab; }
+        .pivot-pill:active { cursor: grabbing; }
+        .pivot-pill .remove-btn { color: #6366f1; cursor: pointer; font-weight: bold; font-size: 12px; line-height: 1; }
+        .pivot-pill .remove-btn:hover { color: #dc2626; }
     </style>
 </head>
 <body class="antialiased min-h-screen flex flex-col">
     <div id="toastContainer" class="fixed top-2 right-4 z-[10000] flex flex-col gap-1.5 pointer-events-none"></div>
     
-    <!-- Loading Overlay - Tampil saat proses -->
+    <!-- Loading Overlay - Tampil Full Screen -->
     <div id="loadingOverlay">
         <h2 class="text-base font-semibold text-fr-text" id="loadingText">Processing Data...</h2>
-        <p class="text-xs text-fr-muted mt-1.5 font-medium" id="loadingSubText">Mengunggah file...</p>
+        <p class="text-xs text-fr-muted mt-1.5 font-medium" id="loadingSubText">Memuat data dari server...</p>
         <div class="progress-bar-wrap"><div class="progress-bar-fill" id="loadingProgressBar"></div></div>
     </div>
     
     <div id="customTooltip" class="tooltip"></div>
     
-    <!-- File Selection Modal (Untuk jaga-jaga jika ada fitur upload manual di masa depan) -->
+    <!-- File Selection Modal -->
     <div id="fileSelectModal" class="fixed inset-0 bg-slate-900 bg-opacity-50 z-[9999] hidden flex items-center justify-center p-4">
         <div class="bg-white rounded shadow-xl w-full max-w-2xl flex flex-col max-h-[80vh]">
             <div class="px-5 py-4 border-b border-gray-200 flex justify-between items-center">
@@ -146,8 +152,15 @@
                 </div>
             </div>
             
-            <!-- Filter panel untuk dimension terpilih -->
-            <div id="vsDimFilterPanel" class="px-3 sm:px-5 py-3 border-b border-gray-200 bg-blue-50/30 flex flex-wrap items-end gap-3"></div>
+            <!-- FILTER / DROP ZONE (PIVOT) -->
+            <div class="px-3 sm:px-5 py-3 border-b border-gray-200 bg-white flex flex-col gap-2">
+                <div class="flex items-center gap-2">
+                    <span class="text-[10px] font-bold text-gray-600 uppercase tracking-wider shrink-0">Filters / Drop Zone</span>
+                    <div id="pivotFilterZone" class="pivot-drop-zone flex-grow">
+                        <span class="text-[10px] text-gray-400 italic px-2">Tarik field dari ⚙️ Setup ke sini untuk memfilter</span>
+                    </div>
+                </div>
+            </div>
             
             <div class="overflow-y-auto overflow-x-auto flex-grow flex flex-col relative border border-gray-200 rounded mx-2 sm:mx-5 mb-2 sm:mb-5 mt-2 sm:mt-4">
                 <table class="min-w-full text-left whitespace-nowrap border-collapse" id="vsDataTable">
@@ -187,7 +200,7 @@
                 </div>
             </div>
             
-            <!-- Nav Controls (Tombol Upload Manual Dihilangkan) -->
+            <!-- Nav Controls (Upload manual dihapus) -->
             <div class="flex items-center gap-1.5 whitespace-nowrap overflow-x-auto w-full md:w-auto pb-1 md:pb-0 justify-start md:justify-end">
                 <div id="navDashboardControls" class="hidden items-center gap-1.5 whitespace-nowrap">
                     <label class="flex items-center gap-1.5 cursor-pointer bg-blue-50 text-fr-blue border border-blue-200 px-2 py-1.5 rounded transition-colors text-[10px] sm:text-[11px] font-semibold whitespace-nowrap shrink-0"><input type="checkbox" id="toggleLabelsCheckbox" class="w-3.5 h-3.5 text-fr-blue rounded focus:ring-fr-blue cursor-pointer">Show Values</label>
@@ -200,7 +213,7 @@
         </div>
     </nav>
     
-    <!-- MAIN CONTENT DISEMBUNYIKAN SEJAK AWAL MENGGUNAKAN INLINE CSS -->
+    <!-- MAIN CONTENT -->
     <main style="display: none;" id="mainContent" class="flex-grow max-w-[1500px] mx-auto w-full px-2 sm:px-4 lg:px-8 py-4 space-y-4">
         <div id="dashboardContent" class="hidden space-y-4">
             <!-- GLOBAL FILTERS -->
@@ -830,12 +843,8 @@
                     
                     const navCtrl = document.getElementById('navDashboardControls'); navCtrl.classList.remove('hidden'); navCtrl.classList.add('flex');
                     
-                    // BERI JEDA 1 DETIK SEBELUM MENGGAMBAR GRAFIK
-                    setTimeout(async () => {
-                        try {
-                            await executeFilterAndRender(); setLoadingProgress(100, 'Selesai!'); showToast(`Berhasil memuat ${formatNum(rawData.length)} baris data.`); 
-                        } catch(e) { console.error(e); }
-                    }, 1000);
+                    // LANGSUNG RENDER TANPA JEDA
+                    await executeFilterAndRender(); setLoadingProgress(100, 'Selesai!'); showToast(`Berhasil memuat ${formatNum(rawData.length)} baris data.`); 
                 } else { showToast("Data tidak valid, tidak dapat menemukan header yang tepat.", "error"); } 
             } catch (err) { showToast("Error membaca file excel.", "error"); console.error(err); } finally { els.loadUI.classList.remove('active'); setLoadingProgress(0, ''); } 
         }
@@ -1481,6 +1490,27 @@
     ['vsModalMainStart', 'vsModalMainEnd', 'vsModalVsStart', 'vsModalVsEnd'].forEach(id => { document.getElementById(id).addEventListener('change', autoRefreshVsTable); document.getElementById(id).addEventListener('input', autoRefreshVsTable); });
     document.getElementById('vsModalCompareMode').addEventListener('change', (e) => { const wrap = document.getElementById('vsModalCustomDateWrapper'); if(e.target.value === 'custom') { wrap.classList.remove('hidden'); wrap.classList.add('flex'); } else { wrap.classList.add('hidden'); wrap.classList.remove('flex'); } autoRefreshVsTable(); });
     
+    // DRAG AND DROP PIVOT ZONE
+    const pivotFilterZone = document.getElementById('pivotFilterZone');
+    pivotFilterZone.addEventListener('dragover', (e) => { e.preventDefault(); pivotFilterZone.classList.add('drag-over'); });
+    pivotFilterZone.addEventListener('dragleave', () => { pivotFilterZone.classList.remove('drag-over'); });
+    pivotFilterZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        pivotFilterZone.classList.remove('drag-over');
+        const dimId = e.dataTransfer.getData('text/plain');
+        if(dimId) {
+            let dim = vsDimConfig.find(d => d.id === dimId);
+            if(dim) {
+                dim.visible = true;
+                if(!vsDimFilters[dim.id]) vsDimFilters[dim.id] = new Set();
+                renderVsDimFilterPanel();
+                scheduleRenderVsTable();
+                showToast(`Dimension ${dim.label} ditambahkan ke filter`);
+                initVsSettings();
+            }
+        }
+    });
+
     function renderVsDimFilterPanel() {
         const panel = document.getElementById('vsDimFilterPanel'); panel.innerHTML = '';
         let filterableDims = vsDimConfig.filter(d => d.visible && d.filterType === 'search'); if (filterableDims.length === 0) { panel.classList.add('hidden'); return; } panel.classList.remove('hidden');
@@ -1864,16 +1894,9 @@
                 
                 const navCtrl = document.getElementById('navDashboardControls'); navCtrl.classList.remove('hidden'); navCtrl.classList.add('flex');
                 
-                // BERI JEDA 500MS SEBELUM MENGGAMBAR GRAFIK AGAR BROWSER BERNapas
-                setTimeout(async () => {
-                    try {
-                        await executeFilterAndRender(); 
-                        showToast(`Berhasil memuat ${formatNum(rawData.length)} baris.`); 
-                    } catch(e) { 
-                        console.error(e); 
-                        showToast('Sebagian grafik gagal dirender karena data terlalu besar.', 'error');
-                    }
-                }, 500);
+                // RENDER LANGSUNG TANPA JEDA
+                await executeFilterAndRender(); 
+                showToast(`Berhasil memuat ${formatNum(rawData.length)} baris.`); 
 
             } else {
                 showToast('Tidak ada data valid. Periksa format CSV.', 'error');
