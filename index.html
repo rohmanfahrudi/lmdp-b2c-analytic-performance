@@ -30,7 +30,9 @@
         .pro-select { background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2364748b' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e"); background-position: right 0.5rem center; background-repeat: no-repeat; background-size: 1.2em 1.2em; padding-right: 28px; }
         .pro-input:focus, .pro-select:focus { border-color: #002395; box-shadow: 0 0 0 1px #002395; }
         .tooltip { position: absolute; background: #0f172a; color: white; padding: 6px 10px; border-radius: 4px; font-size: 11px; pointer-events: none; opacity: 0; transition: opacity 0.15s; white-space: nowrap; z-index: 50; border: 1px solid #334155; }
-        #loadingOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #f1f5f9; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        
+        /* Loading Overlay default HILANG, muncul hanya saat dipanggil */
+        #loadingOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #f1f5f9; z-index: 9999; display: none; flex-direction: column; justify-content: center; align-items: center; }
         #loadingOverlay.active { display: flex; }
         
         .progress-bar-wrap { width: 280px; height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden; margin-top: 16px; }
@@ -54,28 +56,24 @@
         .overflow-x-auto::-webkit-scrollbar { height: 6px; }
         .overflow-x-auto::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 3px; }
         
-        /* Pivot Drag Drop Area */
-        .pivot-drop-zone { min-height: 40px; border: 2px dashed #cbd5e1; border-radius: 4px; background-color: #f8fafc; display: flex; align-items: center; padding: 4px; gap: 4px; flex-wrap: wrap; transition: all 0.2s; }
-        .pivot-drop-zone.drag-over { border-color: #002395; background-color: #eff6ff; }
-        .pivot-pill { background-color: #e0e7ff; color: #3730a3; border: 1px solid #c7d2fe; border-radius: 12px; padding: 2px 8px; font-size: 10px; font-weight: 600; display: flex; align-items: center; gap: 4px; cursor: grab; }
-        .pivot-pill:active { cursor: grabbing; }
-        .pivot-pill .remove-btn { color: #6366f1; cursor: pointer; font-weight: bold; font-size: 12px; line-height: 1; }
-        .pivot-pill .remove-btn:hover { color: #dc2626; }
+        /* Custom Tooltip Global */
+        #customMultiTooltip { position: absolute; background: #1e293b; color: white; padding: 8px 12px; border-radius: 6px; font-size: 11px; pointer-events: none; opacity: 0; transition: opacity 0.15s; z-index: 9999; border: 1px solid #334155; max-height: 250px; overflow-y: auto; width: max-content; max-width: 300px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
     </style>
 </head>
 <body class="antialiased min-h-screen flex flex-col">
     <div id="toastContainer" class="fixed top-2 right-4 z-[10000] flex flex-col gap-1.5 pointer-events-none"></div>
     
-    <!-- Loading Overlay - Tampil Full Screen -->
+    <!-- Loading Overlay - Tampil saat proses -->
     <div id="loadingOverlay">
         <h2 class="text-base font-semibold text-fr-text" id="loadingText">Processing Data...</h2>
-        <p class="text-xs text-fr-muted mt-1.5 font-medium" id="loadingSubText">Memuat data dari server...</p>
+        <p class="text-xs text-fr-muted mt-1.5 font-medium" id="loadingSubText">Mengunggah file...</p>
         <div class="progress-bar-wrap"><div class="progress-bar-fill" id="loadingProgressBar"></div></div>
     </div>
     
     <div id="customTooltip" class="tooltip"></div>
+    <div id="customMultiTooltip" class="hidden absolute bg-slate-800 text-white p-2.5 rounded-md shadow-xl border border-slate-700 z-[9999] max-h-64 overflow-y-auto w-max min-w-[200px] pointer-events-none opacity-0 transition-opacity duration-200"></div>
     
-    <!-- File Selection Modal -->
+    <!-- File Selection Modal (Hidden, hanya untuk fallback) -->
     <div id="fileSelectModal" class="fixed inset-0 bg-slate-900 bg-opacity-50 z-[9999] hidden flex items-center justify-center p-4">
         <div class="bg-white rounded shadow-xl w-full max-w-2xl flex flex-col max-h-[80vh]">
             <div class="px-5 py-4 border-b border-gray-200 flex justify-between items-center">
@@ -117,7 +115,7 @@
                     
                     <div id="vsSettingsMenu" class="hidden absolute top-full right-0 sm:right-[100px] mt-1 w-[300px] sm:w-[440px] bg-white border border-gray-200 shadow-2xl rounded z-[60] text-[11px] flex flex-col sm:flex-row items-start">
                         <div class="w-full sm:w-1/2 border-b sm:border-b-0 sm:border-r border-gray-200 flex flex-col max-h-60 sm:max-h-80">
-                            <div class="p-2 border-b border-gray-200 bg-gray-100 font-bold text-center">Dimensions (Drag to Reorder)</div>
+                            <div class="p-2 border-b border-gray-200 bg-gray-100 font-bold text-center">Dimensions (Drag & Drop)</div>
                             <ul id="vsDimList" class="overflow-y-auto p-1 bg-gray-50 flex-grow"></ul>
                         </div>
                         <div class="w-full sm:w-1/2 flex flex-col max-h-60 sm:max-h-80">
@@ -152,15 +150,8 @@
                 </div>
             </div>
             
-            <!-- FILTER / DROP ZONE (PIVOT) -->
-            <div class="px-3 sm:px-5 py-3 border-b border-gray-200 bg-white flex flex-col gap-2">
-                <div class="flex items-center gap-2">
-                    <span class="text-[10px] font-bold text-gray-600 uppercase tracking-wider shrink-0">Filters / Drop Zone</span>
-                    <div id="pivotFilterZone" class="pivot-drop-zone flex-grow">
-                        <span class="text-[10px] text-gray-400 italic px-2">Tarik field dari ⚙️ Setup ke sini untuk memfilter</span>
-                    </div>
-                </div>
-            </div>
+            <!-- Filter panel untuk dimension terpilih -->
+            <div id="vsDimFilterPanel" class="px-3 sm:px-5 py-3 border-b border-gray-200 bg-blue-50/30 flex flex-wrap items-end gap-3"></div>
             
             <div class="overflow-y-auto overflow-x-auto flex-grow flex flex-col relative border border-gray-200 rounded mx-2 sm:mx-5 mb-2 sm:mb-5 mt-2 sm:mt-4">
                 <table class="min-w-full text-left whitespace-nowrap border-collapse" id="vsDataTable">
@@ -200,7 +191,7 @@
                 </div>
             </div>
             
-            <!-- Nav Controls (Upload manual dihapus) -->
+            <!-- Nav Controls (Tombol Upload Manual Dihilangkan) -->
             <div class="flex items-center gap-1.5 whitespace-nowrap overflow-x-auto w-full md:w-auto pb-1 md:pb-0 justify-start md:justify-end">
                 <div id="navDashboardControls" class="hidden items-center gap-1.5 whitespace-nowrap">
                     <label class="flex items-center gap-1.5 cursor-pointer bg-blue-50 text-fr-blue border border-blue-200 px-2 py-1.5 rounded transition-colors text-[10px] sm:text-[11px] font-semibold whitespace-nowrap shrink-0"><input type="checkbox" id="toggleLabelsCheckbox" class="w-3.5 h-3.5 text-fr-blue rounded focus:ring-fr-blue cursor-pointer">Show Values</label>
@@ -213,7 +204,7 @@
         </div>
     </nav>
     
-    <!-- MAIN CONTENT -->
+    <!-- MAIN CONTENT DISEMBUNYIKAN SEJAK AWAL MENGGUNAKAN INLINE CSS -->
     <main style="display: none;" id="mainContent" class="flex-grow max-w-[1500px] mx-auto w-full px-2 sm:px-4 lg:px-8 py-4 space-y-4">
         <div id="dashboardContent" class="hidden space-y-4">
             <!-- GLOBAL FILTERS -->
@@ -603,7 +594,7 @@
             try { return n.toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0, useGrouping: true }); } catch (e) { return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "."); }
         };
         
-        const els = { file: document.getElementById('fileInput'), folder: document.getElementById('folderInput'), content: document.getElementById('dashboardContent'), main: document.getElementById('mainContent'), loadUI: document.getElementById('loadingOverlay'), tooltip: document.getElementById('customTooltip') };
+        const els = { content: document.getElementById('dashboardContent'), main: document.getElementById('mainContent'), loadUI: document.getElementById('loadingOverlay'), tooltip: document.getElementById('customTooltip') };
         const filters = { quick: document.getElementById('quickDateSelect'), dStart: document.getElementById('filterDateStart'), dEnd: document.getElementById('filterDateEnd'), dept: document.getElementById('filterDept'), eventType: document.getElementById('filterEventType') };
         
         document.getElementById('toggleLabelsCheckbox').addEventListener('change', (e) => { showChartLabels = e.target.checked; refreshAllCharts(); });
@@ -654,7 +645,6 @@
         monthSubmenu.addEventListener('mouseenter', () => monthSubmenu.classList.add('show'));
         document.addEventListener('click', (e) => { if(!dateRangeContainer.contains(e.target) && !monthSubmenu.contains(e.target)) monthSubmenu.classList.remove('show'); });
 
-        els.file.addEventListener('change', promptFileSelection); els.folder.addEventListener('change', promptFileSelection);
         Object.keys(filters).forEach(key => { if(key === 'quick') { /* handled above */ } else { filters[key].addEventListener('change', executeFilterAndRender); } });
 
         const resetTrendButtons = () => { ['trendNetBtn', 'trendQtyBtn', 'trendTxBtn'].forEach(id => { document.getElementById(id).className = "px-2 sm:px-3 py-1 text-[10px] font-bold rounded text-gray-500 hover:text-gray-700 transition-all"; }); };
@@ -812,7 +802,7 @@
             document.getElementById('fileSelectModal').classList.remove('hidden'); 
         }
         document.getElementById('selectAllFilesCb').addEventListener('change', (e) => { document.querySelectorAll('.file-item-cb').forEach(cb => cb.checked = e.target.checked); }); 
-        const closeModal = () => { document.getElementById('fileSelectModal').classList.add('hidden'); els.file.value = ''; els.folder.value = ''; }; 
+        const closeModal = () => { document.getElementById('fileSelectModal').classList.add('hidden'); }; 
         document.getElementById('closeFileModalBtn').addEventListener('click', closeModal); document.getElementById('cancelFileModalBtn').addEventListener('click', closeModal);
         document.getElementById('processFilesBtn').addEventListener('click', () => { 
             const selectedIndexes = Array.from(document.querySelectorAll('.file-item-cb:checked')).map(cb => parseInt(cb.dataset.idx)); 
@@ -843,8 +833,12 @@
                     
                     const navCtrl = document.getElementById('navDashboardControls'); navCtrl.classList.remove('hidden'); navCtrl.classList.add('flex');
                     
-                    // LANGSUNG RENDER TANPA JEDA
-                    await executeFilterAndRender(); setLoadingProgress(100, 'Selesai!'); showToast(`Berhasil memuat ${formatNum(rawData.length)} baris data.`); 
+                    // JEDA 100MS SEBELUM MENGGAMBAR GRAFIK
+                    setTimeout(async () => {
+                        try {
+                            await executeFilterAndRender(); setLoadingProgress(100, 'Selesai!'); showToast(`Berhasil memuat ${formatNum(rawData.length)} baris data.`); 
+                        } catch(e) { console.error(e); }
+                    }, 100);
                 } else { showToast("Data tidak valid, tidak dapat menemukan header yang tepat.", "error"); } 
             } catch (err) { showToast("Error membaca file excel.", "error"); console.error(err); } finally { els.loadUI.classList.remove('active'); setLoadingProgress(0, ''); } 
         }
@@ -1490,41 +1484,79 @@
     ['vsModalMainStart', 'vsModalMainEnd', 'vsModalVsStart', 'vsModalVsEnd'].forEach(id => { document.getElementById(id).addEventListener('change', autoRefreshVsTable); document.getElementById(id).addEventListener('input', autoRefreshVsTable); });
     document.getElementById('vsModalCompareMode').addEventListener('change', (e) => { const wrap = document.getElementById('vsModalCustomDateWrapper'); if(e.target.value === 'custom') { wrap.classList.remove('hidden'); wrap.classList.add('flex'); } else { wrap.classList.add('hidden'); wrap.classList.remove('flex'); } autoRefreshVsTable(); });
     
-    // DRAG AND DROP PIVOT ZONE
-    const pivotFilterZone = document.getElementById('pivotFilterZone');
-    pivotFilterZone.addEventListener('dragover', (e) => { e.preventDefault(); pivotFilterZone.classList.add('drag-over'); });
-    pivotFilterZone.addEventListener('dragleave', () => { pivotFilterZone.classList.remove('drag-over'); });
-    pivotFilterZone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        pivotFilterZone.classList.remove('drag-over');
-        const dimId = e.dataTransfer.getData('text/plain');
-        if(dimId) {
-            let dim = vsDimConfig.find(d => d.id === dimId);
-            if(dim) {
-                dim.visible = true;
-                if(!vsDimFilters[dim.id]) vsDimFilters[dim.id] = new Set();
-                renderVsDimFilterPanel();
-                scheduleRenderVsTable();
-                showToast(`Dimension ${dim.label} ditambahkan ke filter`);
-                initVsSettings();
-            }
-        }
-    });
-
+    // FUNGSI RENDER FILTER DIMENSI (DIPERBARUI DENGAN CHECKBOX TAMPILKAN DI TABEL)
     function renderVsDimFilterPanel() {
         const panel = document.getElementById('vsDimFilterPanel'); panel.innerHTML = '';
-        let filterableDims = vsDimConfig.filter(d => d.visible && d.filterType === 'search'); if (filterableDims.length === 0) { panel.classList.add('hidden'); return; } panel.classList.remove('hidden');
-        let header = document.createElement('div'); header.className = 'flex items-center gap-2 mr-2'; header.innerHTML = `<span class="text-[10px] font-bold text-gray-600 uppercase">Filter by Dimension:</span>`; panel.appendChild(header);
+        let filterableDims = vsDimConfig.filter(d => d.visible && d.filterType === 'search'); 
+        if (filterableDims.length === 0) { panel.classList.add('hidden'); return; } 
+        panel.classList.remove('hidden');
+        
+        let header = document.createElement('div'); 
+        header.className = 'flex items-center gap-2 mr-2 text-[10px] font-bold text-gray-600 uppercase'; 
+        header.innerText = 'Filter by Dimension:'; 
+        panel.appendChild(header);
+
         filterableDims.forEach(dim => {
-            let uniqVals = Array.from(new Set(rawData.map(r => (r[dim.key] || '').toString().trim()).filter(x => x && x !== 'Unknown' && x !== '-'))).sort(); if (!vsDimFilters[dim.id]) vsDimFilters[dim.id] = new Set(); let selectedSet = vsDimFilters[dim.id];
-            let wrapper = document.createElement('div'); wrapper.className = 'flex flex-col shrink-0 relative'; wrapper.dataset.dimId = dim.id;
-            let labelText = selectedSet.size === 0 ? '' : (selectedSet.size === 1 ? Array.from(selectedSet)[0] : `${selectedSet.size} terpilih`); let placeholder = `All ${dim.label}...`;
-            wrapper.innerHTML = ` <label class="text-[9px] font-bold text-gray-500 uppercase tracking-wider mb-0.5">${dim.label}</label> <div class="relative" style="width:100%; min-width:150px;"> <input type="text" data-vsdim-input="${dim.id}" class="pro-input text-[11px] p-1.5 w-full cursor-pointer pr-7" placeholder="${placeholder}" value="${labelText}" autocomplete="off"> <button data-vsdim-clear="${dim.id}" class="absolute right-1.5 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-fr-red text-sm font-bold hidden" title="Clear">&times;</button> </div> <div data-vsdim-menu="${dim.id}" class="hidden absolute top-full left-0 mt-1 w-full min-w-[220px] max-h-56 overflow-y-auto bg-white border border-gray-200 shadow-2xl z-[80] rounded"> <div data-vsdim-options="${dim.id}" class="p-0"></div> </div> `; panel.appendChild(wrapper);
-            let inputEl = wrapper.querySelector(`[data-vsdim-input="${dim.id}"]`); let menuEl = wrapper.querySelector(`[data-vsdim-menu="${dim.id}"]`); let optionsEl = wrapper.querySelector(`[data-vsdim-options="${dim.id}"]`); let clearBtn = wrapper.querySelector(`[data-vsdim-clear="${dim.id}"]`);
+            let uniqVals = Array.from(new Set(rawData.map(r => (r[dim.key] || '').toString().trim()).filter(x => x && x !== 'Unknown' && x !== '-'))).sort(); 
+            if (!vsDimFilters[dim.id]) vsDimFilters[dim.id] = new Set(); 
+            let selectedSet = vsDimFilters[dim.id];
+
+            let wrapper = document.createElement('div'); 
+            wrapper.className = 'flex flex-col shrink-0 relative'; 
+            wrapper.dataset.dimId = dim.id;
+            
+            let labelText = selectedSet.size === 0 ? '' : (selectedSet.size === 1 ? Array.from(selectedSet)[0] : `${selectedSet.size} terpilih`); 
+            let placeholder = `All ${dim.label}...`;
+            
+            // Checkbox untuk Show In Table
+            let showInTableCheckbox = document.createElement('input');
+            showInTableCheckbox.type = 'checkbox';
+            showInTableCheckbox.checked = true; // Defaultnya tampil di tabel
+            showInTableCheckbox.className = 'w-3 h-3 rounded text-fr-blue focus:ring-fr-blue cursor-pointer mb-1';
+            showInTableCheckbox.title = "Tampilkan kolom ini di tabel";
+            showInTableCheckbox.onchange = (e) => {
+                // Kita perlu mengubah status visibilitas dimensi di vsDimConfig
+                let targetDim = vsDimConfig.find(d => d.id === dim.id);
+                if(targetDim) {
+                    // Kita menggunakan properti 'visible' sebagai penanda tampil di tabel
+                    // Tapi kita tidak ingin menghilangkannya dari panel filter
+                    // Solusi: Kita buat properti baru 'showInTable' atau kita akali dengan menyembunyikan kolomnya
+                    // Mari kita buat properti baru di objek untuk kontrol tabel
+                    targetDim.showInTable = e.target.checked;
+                    scheduleRenderVsTable();
+                }
+            };
+            // Set nilai awal berdasarkan config (menggunakan properti showInTable jika ada, atau visible)
+            let configDim = vsDimConfig.find(d => d.id === dim.id);
+            showInTableCheckbox.checked = configDim.showInTable !== undefined ? configDim.showInTable : true;
+
+            wrapper.innerHTML = ` 
+                <label class="text-[9px] font-bold text-gray-500 uppercase tracking-wider mb-0.5 flex items-center gap-1">
+                    <input type="checkbox" class="w-3 h-3 rounded text-fr-blue focus:ring-fr-blue cursor-pointer" ${showInTableCheckbox.checked ? 'checked' : ''} onchange="toggleDimTableVisibility('${dim.id}', this.checked)"> 
+                    ${dim.label}
+                </label>
+                <div class="relative" style="width:100%; min-width:150px;"> 
+                    <input type="text" data-vsdim-input="${dim.id}" class="pro-input text-[11px] p-1.5 w-full cursor-pointer pr-7" placeholder="${placeholder}" value="${labelText}" autocomplete="off"> 
+                    <button data-vsdim-clear="${dim.id}" class="absolute right-1.5 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-fr-red text-sm font-bold hidden" title="Clear">&times;</button> 
+                </div> 
+                <div data-vsdim-menu="${dim.id}" class="hidden absolute top-full left-0 mt-1 w-full min-w-[220px] max-h-56 overflow-y-auto bg-white border border-gray-200 shadow-2xl z-[80] rounded"> 
+                    <div data-vsdim-options="${dim.id}" class="p-0"></div> 
+                </div> 
+            `; 
+            panel.appendChild(wrapper);
+            
+            let inputEl = wrapper.querySelector(`[data-vsdim-input="${dim.id}"]`); 
+            let menuEl = wrapper.querySelector(`[data-vsdim-menu="${dim.id}"]`); 
+            let optionsEl = wrapper.querySelector(`[data-vsdim-options="${dim.id}"]`); 
+            let clearBtn = wrapper.querySelector(`[data-vsdim-clear="${dim.id}"]`);
+            
             let updateClearBtn = () => { if (selectedSet.size > 0) clearBtn.classList.remove('hidden'); else clearBtn.classList.add('hidden'); }; updateClearBtn();
+            
             let renderOptions = (search = '') => {
                 optionsEl.innerHTML = ''; let filtered = uniqVals.filter(v => v.toLowerCase().includes(search.toLowerCase())).slice(0, 200);
-                if (selectedSet.size > 0) { let clearRow = document.createElement('div'); clearRow.className = 'px-3 py-2 bg-red-50 border-b border-red-100 text-fr-red text-[11px] font-bold cursor-pointer hover:bg-red-100 flex justify-between items-center sticky top-0 z-10 transition-colors'; clearRow.innerHTML = `<span>${selectedSet.size} terpilih</span><span>Clear &times;</span>`; clearRow.onclick = (e) => { e.stopPropagation(); selectedSet.clear(); updateInputVal(); updateClearBtn(); renderOptions(''); scheduleRenderVsTable(); }; optionsEl.appendChild(clearRow); }
+                if (selectedSet.size > 0) { 
+                    let clearRow = document.createElement('div'); clearRow.className = 'px-3 py-2 bg-red-50 border-b border-red-100 text-fr-red text-[11px] font-bold cursor-pointer hover:bg-red-100 flex justify-between items-center sticky top-0 z-10 transition-colors'; clearRow.innerHTML = `<span>${selectedSet.size} terpilih</span><span>Clear &times;</span>`; clearRow.onclick = (e) => { e.stopPropagation(); selectedSet.clear(); updateInputVal(); updateClearBtn(); renderOptions(''); scheduleRenderVsTable(); }; optionsEl.appendChild(clearRow); 
+                }
                 if (filtered.length === 0) { optionsEl.innerHTML += `<div class="px-3 py-2 text-[11px] text-gray-500 italic">Tidak ditemukan</div>`; } else {
                     filtered.forEach(val => {
                         let div = document.createElement('div'); div.className = 'px-3 py-2 hover:bg-gray-50 flex items-start gap-2 cursor-pointer border-b border-gray-50 last:border-0'; let cb = document.createElement('input'); cb.type = 'checkbox'; cb.className = 'mt-0.5 cursor-pointer rounded text-fr-blue focus:ring-fr-blue h-3 w-3 shrink-0'; cb.checked = selectedSet.has(val);
@@ -1539,6 +1571,15 @@
         });
     }
 
+    // FUNGSI BARU UNTUK TOGGLE VISIBILITAS KOLOM DI TABEL VS
+    window.toggleDimTableVisibility = function(dimId, isChecked) {
+        let dim = vsDimConfig.find(d => d.id === dimId);
+        if(dim) {
+            dim.showInTable = isChecked;
+            scheduleRenderVsTable();
+        }
+    };
+
     function getActiveVsDimFilterKey() { let activeFilters = Object.keys(vsDimFilters).filter(id => vsDimFilters[id].size > 0); if (activeFilters.length === 0) return ''; return activeFilters.map(id => { return id + ':' + Array.from(vsDimFilters[id]).sort().join('|'); }).join(';'); }
     function applyVsDimFilters(data) { let activeFilters = Object.keys(vsDimFilters).filter(id => vsDimFilters[id].size > 0); if (activeFilters.length === 0) return data; return data.filter(r => { for (let dimId of activeFilters) { let dim = vsDimConfig.find(d => d.id === dimId); if (!dim) continue; let val = (r[dim.key] || '').toString().trim(); if (!vsDimFilters[dimId].has(val)) return false; } return true; }); }
 
@@ -1546,11 +1587,32 @@
 
     let vsFinalRows = []; let vsLastAggKey = '';
     
+    // FUNGSI RENDER TABEL VS (DIPERBARUI UNTUK MENDukung SHOW IN TABLE)
     function renderVsTable() {
-        let isDistinctTx = document.getElementById('vsDistinctTxCb').checked; let tooltipEl = document.getElementById('vsPeriodTooltip');
-        if(tooltipEl) { let mStart = document.getElementById('vsModalMainStart').value || '-'; let mEnd = document.getElementById('vsModalMainEnd').value || '-'; let vStart = '-'; let vEnd = '-'; if (window.currentCompareDateRange) { vStart = window.currentCompareDateRange.start || '-'; vEnd = window.currentCompareDateRange.end || '-'; } tooltipEl.innerHTML = `<strong>Main Period:</strong> ${mStart} s/d ${mEnd}<br/><strong>Compare VS:</strong> ${vStart} s/d ${vEnd}`; }
-        let activeDims = vsDimConfig.filter(d => d.visible); let activeMets = vsMetricConfig.filter(m => m.visible); let thead = document.getElementById('vsTableHead'); let tbody = document.getElementById('vsTableBody');
-        if (activeDims.length === 0 || activeMets.length === 0) { thead.innerHTML = ''; tbody.innerHTML = '<tr><td class="text-center py-4 text-gray-500 text-[11px]">Pilih minimal 1 Dimensi dan 1 Metric di menu Setup Table (⚙️)</td></tr>'; return; }
+        let isDistinctTx = document.getElementById('vsDistinctTxCb').checked; 
+        let tooltipEl = document.getElementById('vsPeriodTooltip');
+        if(tooltipEl) { 
+            let mStart = document.getElementById('vsModalMainStart').value || '-'; 
+            let mEnd = document.getElementById('vsModalMainEnd').value || '-'; 
+            let vStart = '-'; 
+            let vEnd = '-'; 
+            if (window.currentCompareDateRange) { vStart = window.currentCompareDateRange.start || '-'; vEnd = window.currentCompareDateRange.end || '-'; } 
+            tooltipEl.innerHTML = `<strong>Main Period:</strong> ${mStart} s/d ${mEnd}<br/><strong>Compare VS:</strong> ${vStart} s/d ${vEnd}`; 
+        }
+        
+        // Filter dimensi yang visible (untuk panel filter) DAN yang showInTable (untuk kolom tabel)
+        let activeDims = vsDimConfig.filter(d => d.visible); // Untuk panel filter
+        let tableDims = vsDimConfig.filter(d => d.visible && (d.showInTable !== undefined ? d.showInTable : true)); // Untuk kolom tabel
+        let activeMets = vsMetricConfig.filter(m => m.visible); 
+        
+        let thead = document.getElementById('vsTableHead'); 
+        let tbody = document.getElementById('vsTableBody');
+        
+        if (activeDims.length === 0 || activeMets.length === 0) { 
+            thead.innerHTML = ''; 
+            tbody.innerHTML = '<tr><td class="text-center py-4 text-gray-500 text-[11px]">Pilih minimal 1 Dimensi dan 1 Metric di menu Setup Table (⚙️)</td></tr>'; 
+            return; 
+        }
 
         function aggData(data) {
             let agg = {};
@@ -1602,7 +1664,19 @@
 
         let tr1 = document.createElement('tr'); let tr2 = document.createElement('tr');
         const getSortIcon = (colId) => { if(vsSortState.col !== colId) return '<span class="text-gray-300 opacity-50 ml-1 hover:text-gray-500">↕</span>'; return vsSortState.asc ? '<span class="text-fr-blue ml-1">▲</span>' : '<span class="text-fr-blue ml-1">▼</span>'; };
-        activeDims.forEach((d, idx) => { let th = document.createElement('th'); th.rowSpan = 2; th.className = "py-2 px-3 text-[11px] text-gray-700 align-middle text-center border border-gray-200 bg-gray-50 z-30 sticky top-0 cursor-pointer hover:bg-gray-200 select-none"; th.innerHTML = d.label.toUpperCase() + getSortIcon('dim_' + idx); th.onclick = () => window.handleVsSort('dim_' + idx); tr1.appendChild(th); });
+        
+        // HEADER TABEL: Hanya render dimensi yang showInTable
+        tableDims.forEach((d) => { 
+            let originalIndex = activeDims.findIndex(ad => ad.id === d.id);
+            if(originalIndex === -1) return; // Skip jika tidak ada di activeDims (mungkin filter panel)
+            let th = document.createElement('th'); 
+            th.rowSpan = 2; 
+            th.className = "py-2 px-3 text-[11px] text-gray-700 align-middle text-center border border-gray-200 bg-gray-50 z-30 sticky top-0 cursor-pointer hover:bg-gray-200 select-none"; 
+            th.innerHTML = d.label.toUpperCase() + getSortIcon('dim_' + originalIndex); 
+            th.onclick = () => window.handleVsSort('dim_' + originalIndex); 
+            tr1.appendChild(th); 
+        });
+        
         activeMets.forEach((m) => {
             let thG = document.createElement('th'); thG.colSpan = 3; thG.className = "py-1.5 px-3 text-center align-middle text-[11px] text-gray-700 border border-gray-200 bg-gray-50 z-30 sticky top-0"; thG.innerText = m.label.toUpperCase(); tr1.appendChild(thG);
             let subClasses = "py-1.5 px-3 text-center align-middle text-[10px] text-gray-500 border border-gray-200 bg-gray-50 z-30 sticky top-[30px] cursor-pointer hover:bg-gray-200 select-none"; let colTypes = [{k:'vs', lbl:'VS'}, {k:'main', lbl:'MAIN'}, {k:'growth', lbl:'GROWTH'}];
@@ -1613,7 +1687,19 @@
         tbody.innerHTML = '';
         vsFinalRows.forEach(r => {
             let tr = document.createElement('tr'); tr.className = "hover:bg-blue-50 transition-colors border-b border-gray-100 last:border-0 "; if(r.type === 'subtotal') tr.className += "bg-indigo-50/40 font-bold"; if(r.type === 'grandtotal') tr.className += "bg-blue-100 font-bold border-t-2 border-blue-200";
-            r.dims.forEach((dVal, i) => { let td = document.createElement('td'); td.className = "py-2 px-3 text-[11px] text-gray-800 border border-gray-200 whitespace-nowrap "; if((r.type === 'subtotal' && i === r.level) || r.type === 'grandtotal') td.className += 'text-indigo-700 font-bold'; td.innerText = dVal; tr.appendChild(td); });
+            
+            // BODY TABEL: Hanya render dimensi yang showInTable, tapi ambil nilai dari array dims penuh
+            tableDims.forEach((d) => {
+                let originalIndex = activeDims.findIndex(ad => ad.id === d.id);
+                if(originalIndex === -1) return;
+                let dVal = r.dims[originalIndex]; 
+                let td = document.createElement('td'); 
+                td.className = "py-2 px-3 text-[11px] text-gray-800 border border-gray-200 whitespace-nowrap "; 
+                if((r.type === 'subtotal' && originalIndex === r.level) || r.type === 'grandtotal') td.className += 'text-indigo-700 font-bold'; 
+                td.innerText = dVal; 
+                tr.appendChild(td); 
+            });
+
             activeMets.forEach(m => {
                 let mVal = r.main[m.id] || 0; let vVal = r.vs[m.id] || 0; let mainStr = m.isRp ? formatRp(mVal) : formatNum(mVal); let vsStr = m.isRp ? formatRp(vVal) : formatNum(vVal);
                 let pct = vVal > 0 ? ((mVal - vVal) / vVal * 100) : (mVal > 0 ? 100 : 0); let isPos = pct > 0; let isNeg = pct < 0; let colorClass = 'text-gray-500';
@@ -1627,9 +1713,32 @@
 
     document.getElementById('exportVsTableBtn').addEventListener('click', () => {
         if(vsFinalRows.length === 0) { showToast('Tidak ada data untuk di-export', 'error'); return; }
-        let activeDims = vsDimConfig.filter(d => d.visible); let activeMets = vsMetricConfig.filter(m => m.visible); let wsData = [];
-        let r1 = []; activeDims.forEach(d => r1.push(d.label.toUpperCase())); activeMets.forEach(m => { r1.push(m.label.toUpperCase() + ' VS'); r1.push(m.label.toUpperCase() + ' MAIN'); r1.push(m.label.toUpperCase() + ' GROWTH'); }); wsData.push(r1);
-        vsFinalRows.forEach(r => { let rowObj = []; activeDims.forEach((d, i) => { rowObj.push(r.dims[i] !== undefined ? r.dims[i] : ''); }); activeMets.forEach(m => { let mVal = r.main[m.id] || 0; let vVal = r.vs[m.id] || 0; rowObj.push(vVal); rowObj.push(mVal); let pct = vVal > 0 ? ((mVal - vVal) / vVal) : (mVal > 0 ? 1 : 0); if (vVal === 0 && mVal === 0) pct = 0; rowObj.push((pct * 100).toFixed(2) + '%'); }); wsData.push(rowObj); });
+        let activeDims = vsDimConfig.filter(d => d.visible); 
+        let tableDims = vsDimConfig.filter(d => d.visible && (d.showInTable !== undefined ? d.showInTable : true)); 
+        let activeMets = vsMetricConfig.filter(m => m.visible); 
+        let wsData = [];
+        let r1 = []; 
+        tableDims.forEach(d => r1.push(d.label.toUpperCase())); 
+        activeMets.forEach(m => { r1.push(m.label.toUpperCase() + ' VS'); r1.push(m.label.toUpperCase() + ' MAIN'); r1.push(m.label.toUpperCase() + ' GROWTH'); }); 
+        wsData.push(r1);
+        
+        vsFinalRows.forEach(r => { 
+            let rowObj = []; 
+            tableDims.forEach((d, i) => { 
+                let originalIndex = activeDims.findIndex(ad => ad.id === d.id);
+                if(originalIndex === -1) return;
+                rowObj.push(r.dims[originalIndex] !== undefined ? r.dims[originalIndex] : ''); 
+            }); 
+            activeMets.forEach(m => { 
+                let mVal = r.main[m.id] || 0; let vVal = r.vs[m.id] || 0; 
+                rowObj.push(vVal); rowObj.push(mVal); 
+                let pct = vVal > 0 ? ((mVal - vVal) / vVal) : (mVal > 0 ? 1 : 0); 
+                if (vVal === 0 && mVal === 0) pct = 0; 
+                rowObj.push((pct * 100).toFixed(2) + '%'); 
+            }); 
+            wsData.push(rowObj); 
+        });
+        
         let csv = wsData.map(row => row.map(cell => { let s = String(cell === null || cell === undefined ? '' : cell); if (s.includes(',') || s.includes('"') || s.includes('\n')) { return '"' + s.replace(/"/g, '""') + '"'; } return s; }).join(',')).join('\r\n');
         let blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' }); let url = URL.createObjectURL(blob); let a = document.createElement('a'); a.href = url; a.download = `Comparison_Data_${new Date().getTime()}.csv`; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url); showToast("Tabel VS berhasil diexport ke CSV!");
     });
@@ -1894,9 +2003,16 @@
                 
                 const navCtrl = document.getElementById('navDashboardControls'); navCtrl.classList.remove('hidden'); navCtrl.classList.add('flex');
                 
-                // RENDER LANGSUNG TANPA JEDA
-                await executeFilterAndRender(); 
-                showToast(`Berhasil memuat ${formatNum(rawData.length)} baris.`); 
+                // JEDA 100MS SEBELUM MENGGAMBAR GRAFIK AGAR BROWSER BERNAFAS
+                setTimeout(async () => {
+                    try {
+                        await executeFilterAndRender(); 
+                        showToast(`Berhasil memuat ${formatNum(rawData.length)} baris.`); 
+                    } catch(e) { 
+                        console.error(e); 
+                        showToast('Sebagian grafik gagal dirender karena data terlalu besar.', 'error');
+                    }
+                }, 100);
 
             } else {
                 showToast('Tidak ada data valid. Periksa format CSV.', 'error');
@@ -1914,6 +2030,5 @@
 
     window.addEventListener('DOMContentLoaded', loadAllCsvFromGithub);
     </script>
-<div id="customMultiTooltip" class="hidden absolute bg-slate-800 text-white p-2.5 rounded-md shadow-xl border border-slate-700 z-[9999] max-h-64 overflow-y-auto w-max min-w-[200px] pointer-events-none opacity-0 transition-opacity duration-200"></div>
 </body>
 </html>
