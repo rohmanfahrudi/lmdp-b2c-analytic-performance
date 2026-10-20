@@ -31,7 +31,6 @@
         .pro-input:focus, .pro-select:focus { border-color: #002395; box-shadow: 0 0 0 1px #002395; }
         .tooltip { position: absolute; background: #0f172a; color: white; padding: 6px 10px; border-radius: 4px; font-size: 11px; pointer-events: none; opacity: 0; transition: opacity 0.15s; white-space: nowrap; z-index: 50; border: 1px solid #334155; }
         
-        /* Loading Overlay default HILANG, muncul hanya saat dipanggil */
         #loadingOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #f1f5f9; z-index: 9999; display: none; flex-direction: column; justify-content: center; align-items: center; }
         #loadingOverlay.active { display: flex; }
         
@@ -52,41 +51,29 @@
         .month-submenu { max-height: 0; overflow: hidden; transition: max-height 0.2s ease-out, opacity 0.2s; opacity: 0; pointer-events: none; }
         .month-submenu.show { max-height: 400px; opacity: 1; pointer-events: auto; }
         
-        /* Custom Scrollbar for mobile responsiveness */
         .overflow-x-auto::-webkit-scrollbar { height: 6px; }
         .overflow-x-auto::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 3px; }
+
+        /* Styles for Pivot Drag Drop */
+        .pivot-zone { min-height: 50px; transition: background-color 0.2s; }
+        .pivot-zone.drag-over { background-color: #e0e7ff; border-color: #6366f1; }
+        .pivot-field-item { cursor: grab; transition: all 0.1s; }
+        .pivot-field-item:active { cursor: grabbing; }
+        .pivot-field-item.dragging { opacity: 0.5; }
     </style>
 </head>
 <body class="antialiased min-h-screen flex flex-col">
     <div id="toastContainer" class="fixed top-2 right-4 z-[10000] flex flex-col gap-1.5 pointer-events-none"></div>
     
-    <!-- Loading Overlay - Tampil saat proses -->
+    <!-- Loading Overlay -->
     <div id="loadingOverlay">
         <h2 class="text-base font-semibold text-fr-text" id="loadingText">Processing Data...</h2>
-        <p class="text-xs text-fr-muted mt-1.5 font-medium" id="loadingSubText">Mengunggah file...</p>
+        <p class="text-xs text-fr-muted mt-1.5 font-medium" id="loadingSubText">Memuat data...</p>
         <div class="progress-bar-wrap"><div class="progress-bar-fill" id="loadingProgressBar"></div></div>
     </div>
     
     <div id="customTooltip" class="tooltip"></div>
-    
-    <!-- File Selection Modal (Untuk jaga-jaga jika ada fitur upload manual di masa depan) -->
-    <div id="fileSelectModal" class="fixed inset-0 bg-slate-900 bg-opacity-50 z-[9999] hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded shadow-xl w-full max-w-2xl flex flex-col max-h-[80vh]">
-            <div class="px-5 py-4 border-b border-gray-200 flex justify-between items-center">
-                <h3 class="font-bold text-fr-text text-sm">Pilih File untuk Diproses</h3>
-                <button id="closeFileModalBtn" class="text-gray-400 hover:text-gray-600 text-lg leading-none">&times;</button>
-            </div>
-            <div class="px-5 py-3 border-b border-gray-100 bg-gray-50 flex items-center">
-                <input type="checkbox" id="selectAllFilesCb" class="rounded text-fr-blue focus:ring-fr-blue h-3.5 w-3.5 cursor-pointer mr-2" checked>
-                <label for="selectAllFilesCb" class="text-xs font-semibold text-gray-700 cursor-pointer select-none">Pilih Semua</label>
-            </div>
-            <div id="fileListContainer" class="p-5 overflow-y-auto overflow-x-auto flex-grow flex flex-col gap-2"></div>
-            <div class="px-5 py-4 border-t border-gray-200 flex justify-end gap-2 bg-gray-50 rounded-b">
-                <button id="cancelFileModalBtn" class="px-4 py-2 text-xs font-semibold text-gray-600 bg-white border border-gray-300 rounded hover:bg-gray-50">Batal</button>
-                <button id="processFilesBtn" class="px-4 py-2 text-xs font-semibold text-white bg-fr-blue rounded hover:bg-blue-800 shadow-sm">Proses Data</button>
-            </div>
-        </div>
-    </div>
+    <div id="customMultiTooltip" class="hidden absolute bg-slate-800 text-white p-2.5 rounded-md shadow-xl border border-slate-700 z-[9999] max-h-64 overflow-y-auto w-max min-w-[200px] pointer-events-none opacity-0 transition-opacity duration-200"></div>
     
     <!-- VS Table Modal -->
     <div id="vsTableModal" class="fixed inset-0 bg-slate-900 bg-opacity-50 z-[9999] hidden flex items-center justify-center p-2 sm:p-4">
@@ -104,19 +91,50 @@
                         <input type="checkbox" id="vsDistinctTxCb" class="w-3.5 h-3.5 text-fr-blue rounded focus:ring-fr-blue cursor-pointer" checked> Distinct Tx
                     </label>
                     <div class="flex gap-2">
-                        <button id="vsTableSettingsBtn" class="px-2 py-1.5 bg-white border border-gray-300 text-gray-700 hover:bg-gray-100 rounded text-[10px] sm:text-[11px] font-bold shadow-sm flex items-center gap-1 transition-colors">⚙️ Setup</button>
+                        <button id="vsTableSettingsBtn" class="px-2 py-1.5 bg-white border border-gray-300 text-gray-700 hover:bg-gray-100 rounded text-[10px] sm:text-[11px] font-bold shadow-sm flex items-center gap-1 transition-colors">⚙️ Setup Pivot</button>
                         <button id="exportVsTableBtn" class="px-2 py-1.5 bg-fr-blue border border-fr-blue text-white hover:bg-blue-800 rounded text-[10px] sm:text-[11px] font-bold shadow-sm flex items-center gap-1 transition-colors"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> Export</button>
                         <button id="closeVsTableBtn" class="text-gray-400 hover:text-gray-600 text-lg leading-none px-1">&times;</button>
                     </div>
                     
-                    <div id="vsSettingsMenu" class="hidden absolute top-full right-0 sm:right-[100px] mt-1 w-[300px] sm:w-[440px] bg-white border border-gray-200 shadow-2xl rounded z-[60] text-[11px] flex flex-col sm:flex-row items-start">
-                        <div class="w-full sm:w-1/2 border-b sm:border-b-0 sm:border-r border-gray-200 flex flex-col max-h-60 sm:max-h-80">
-                            <div class="p-2 border-b border-gray-200 bg-gray-100 font-bold text-center">Dimensions (Drag to Reorder)</div>
-                            <ul id="vsDimList" class="overflow-y-auto p-1 bg-gray-50 flex-grow"></ul>
+                    <!-- PIVOT SETTINGS MENU -->
+                    <div id="vsSettingsMenu" class="hidden absolute top-full right-0 sm:right-[100px] mt-1 w-[320px] sm:w-[500px] bg-white border border-gray-200 shadow-2xl rounded z-[60] text-[11px] flex flex-col">
+                        <div class="p-2 border-b border-gray-200 bg-gray-100 font-bold flex justify-between items-center rounded-t">
+                            <span>Pivot Table Settings (Drag & Drop)</span>
+                            <button id="closeVsSettingsBtn" class="text-gray-500 hover:text-red-500 text-lg leading-none">&times;</button>
                         </div>
-                        <div class="w-full sm:w-1/2 flex flex-col max-h-60 sm:max-h-80">
-                            <div class="p-2 border-b border-gray-200 bg-gray-100 font-bold text-center">Metrics (Drag to Reorder)</div>
-                            <ul id="vsMetricList" class="overflow-y-auto p-1 bg-gray-50 flex-grow"></ul>
+                        <div class="p-3 flex flex-col gap-3">
+                            <!-- Available Fields -->
+                            <div class="flex flex-col">
+                                <span class="text-[10px] font-bold text-gray-500 uppercase mb-1">Available Dimensions</span>
+                                <div id="pivotZoneAvailable" class="pivot-zone border-2 border-dashed border-gray-300 rounded p-2 flex flex-wrap gap-1 bg-gray-50 min-h-[40px]" data-zone="available">
+                                    <!-- Fields go here -->
+                                </div>
+                            </div>
+                            
+                            <div class="flex gap-3">
+                                <!-- Row Dimensions -->
+                                <div class="flex flex-col flex-1">
+                                    <span class="text-[10px] font-bold text-gray-500 uppercase mb-1">Table Columns (Rows)</span>
+                                    <div id="pivotZoneRows" class="pivot-zone border-2 border-dashed border-blue-300 rounded p-2 flex flex-col gap-1 bg-blue-50/30 min-h-[60px]" data-zone="rows">
+                                        <!-- Fields go here -->
+                                    </div>
+                                </div>
+                                <!-- Filter Only Dimensions -->
+                                <div class="flex flex-col flex-1">
+                                    <span class="text-[10px] font-bold text-gray-500 uppercase mb-1 text-purple-700">Filter Only (Hide from Table)</span>
+                                    <div id="pivotZoneFilter" class="pivot-zone border-2 border-dashed border-purple-300 rounded p-2 flex flex-col gap-1 bg-purple-50/30 min-h-[60px]" data-zone="filters">
+                                        <!-- Fields go here -->
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Metrics -->
+                            <div class="flex flex-col mt-2 border-t pt-2">
+                                <span class="text-[10px] font-bold text-gray-500 uppercase mb-1">Metrics (Drag to Reorder)</span>
+                                <div id="pivotZoneMetrics" class="pivot-zone border border-gray-200 rounded p-2 flex flex-wrap gap-1 bg-gray-50 min-h-[40px]">
+                                    <!-- Metrics go here -->
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -158,20 +176,6 @@
         </div>
     </div>
     
-    <!-- Export Settings Modal -->
-    <div id="exportModal" class="fixed inset-0 bg-slate-900 bg-opacity-50 z-[9999] hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded shadow-xl w-full max-w-sm flex flex-col">
-            <div class="px-5 py-4 border-b border-gray-200 flex justify-between items-center"><h3 class="font-bold text-fr-text text-sm">Export Options (CSV)</h3><button id="closeExportModalBtn" class="text-gray-400 hover:text-gray-600 text-lg leading-none">&times;</button></div>
-            <div class="p-5 flex flex-col gap-3 text-sm">
-                <label class="flex items-center gap-2 cursor-pointer font-bold border-b border-gray-100 pb-3 text-gray-800"><input type="checkbox" id="exportAllCb" class="rounded text-fr-blue focus:ring-fr-blue h-4 w-4 cursor-pointer" checked> ALL</label>
-                <label class="flex items-center gap-2 cursor-pointer text-gray-700 hover:text-fr-blue transition-colors"><input type="checkbox" id="exportTxCb" class="export-cb rounded text-fr-blue focus:ring-fr-blue h-4 w-4 cursor-pointer" checked> 1. Data Transaksi</label>
-                <label class="flex items-center gap-2 cursor-pointer text-gray-700 hover:text-fr-blue transition-colors"><input type="checkbox" id="exportVsCb" class="export-cb rounded text-fr-blue focus:ring-fr-blue h-4 w-4 cursor-pointer" checked> 2. Data Periode VS</label>
-                <label class="flex items-start gap-2 cursor-pointer text-gray-700 hover:text-fr-blue transition-colors"><input type="checkbox" id="exportDateColsCb" class="export-cb mt-1 rounded text-fr-blue focus:ring-fr-blue h-4 w-4 cursor-pointer shrink-0" checked> <span>3. Include kolom Day, Month, Year untuk pivot (Ditambahkan di paling kanan)</span></label>
-            </div>
-            <div class="px-5 py-4 border-t border-gray-200 flex justify-end gap-2 bg-gray-50 rounded-b"><button id="cancelExportBtn" class="px-4 py-2 text-xs font-semibold text-gray-600 bg-white border border-gray-300 rounded hover:bg-gray-50">Batal</button><button id="proceedExportBtn" class="px-4 py-2 text-xs font-semibold text-white bg-fr-blue rounded hover:bg-blue-800 shadow-sm flex items-center gap-1"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> Download CSV</button></div>
-        </div>
-    </div>
-    
     <!-- Navigation -->
     <nav class="bg-white border-b border-fr-border px-4 sm:px-6 py-2.5 sticky top-0 z-50">
         <div class="max-w-[1500px] mx-auto flex flex-col md:flex-row justify-between items-center gap-3 md:gap-0">
@@ -187,20 +191,19 @@
                 </div>
             </div>
             
-            <!-- Nav Controls (Tombol Upload Manual Dihilangkan) -->
+            <!-- Nav Controls (Upload dihilangkan) -->
             <div class="flex items-center gap-1.5 whitespace-nowrap overflow-x-auto w-full md:w-auto pb-1 md:pb-0 justify-start md:justify-end">
                 <div id="navDashboardControls" class="hidden items-center gap-1.5 whitespace-nowrap">
                     <label class="flex items-center gap-1.5 cursor-pointer bg-blue-50 text-fr-blue border border-blue-200 px-2 py-1.5 rounded transition-colors text-[10px] sm:text-[11px] font-semibold whitespace-nowrap shrink-0"><input type="checkbox" id="toggleLabelsCheckbox" class="w-3.5 h-3.5 text-fr-blue rounded focus:ring-fr-blue cursor-pointer">Show Values</label>
                     <label class="flex items-center gap-1.5 cursor-pointer bg-purple-50 text-purple-700 border border-purple-200 px-2 py-1.5 rounded transition-colors text-[10px] sm:text-[11px] font-semibold whitespace-nowrap shrink-0"><input type="checkbox" id="toggleVsLineCheckbox" class="w-3.5 h-3.5 text-purple-700 rounded focus:ring-purple-700 cursor-pointer">Show VS Line</label>
                     
-                    <button id="openAdvCompareBtn" class="flex items-center gap-1 cursor-pointer bg-blue-50 text-fr-blue border border-blue-200 hover:bg-blue-100 px-2 py-1.5 rounded transition-colors text-[10px] sm:text-[11px] font-semibold whitespace-nowrap shrink-0">📊 Adv. Compare</button>
                     <button id="openVsTableBtn" class="flex items-center gap-1 cursor-pointer bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 px-2 py-1.5 rounded transition-colors text-[10px] sm:text-[11px] font-semibold whitespace-nowrap shrink-0"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg> VS Table</button>
                 </div>
             </div>
         </div>
     </nav>
     
-    <!-- MAIN CONTENT DISEMBUNYIKAN SEJAK AWAL MENGGUNAKAN INLINE CSS -->
+    <!-- MAIN CONTENT -->
     <main style="display: none;" id="mainContent" class="flex-grow max-w-[1500px] mx-auto w-full px-2 sm:px-4 lg:px-8 py-4 space-y-4">
         <div id="dashboardContent" class="hidden space-y-4">
             <!-- GLOBAL FILTERS -->
@@ -438,9 +441,6 @@
                     <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 relative w-full lg:w-auto">
                         <h3 class="section-title mb-0">Transaction Details</h3>
                         <div class="flex flex-wrap items-center gap-2 mb-0 sm:mb-2">
-                            <button id="exportTxBtn" class="px-3 py-1 bg-fr-blue hover:bg-blue-800 text-white text-[10px] font-bold rounded shadow-sm transition-colors flex items-center gap-1" title="Download Tabel sebagai File CSV">
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> Export
-                            </button>
                             <button id="clearAllFiltersBtn" class="px-3 py-1 bg-white hover:bg-red-50 text-fr-red text-[10px] font-bold rounded border border-gray-300 shadow-sm transition-colors flex items-center gap-1">
                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg> Clear
                             </button>
@@ -491,44 +491,6 @@
             </div>
         </div>
     </main>
-
-    <!-- Advanced Compare Modal -->
-    <div id="advCompareModal" class="fixed inset-0 bg-slate-900 bg-opacity-50 z-[10000] hidden flex items-center justify-center p-2 sm:p-4">
-        <div class="bg-white rounded shadow-xl w-full max-w-6xl flex flex-col max-h-[95vh] h-full sm:h-[800px]">
-            <div class="px-3 sm:px-5 py-3 border-b border-gray-200 flex justify-between items-center bg-gray-50 rounded-t">
-                <h3 class="font-bold text-fr-text text-sm">Advanced Cohort Comparison</h3>
-                <button id="closeAdvCompareBtn" class="text-gray-400 hover:text-gray-600 text-lg leading-none">&times;</button>
-            </div>
-            <div class="flex flex-col sm:flex-row flex-grow overflow-hidden">
-                <div class="w-full sm:w-1/3 border-b sm:border-b-0 sm:border-r border-gray-200 bg-gray-50 flex flex-col max-h-[40vh] sm:max-h-full">
-                    <div class="p-3 border-b border-gray-200 flex justify-between items-center">
-                        <span class="font-bold text-xs text-gray-700">Cohorts / Groups</span>
-                        <button id="addAdvGroupBtn" class="px-2 py-1 bg-fr-blue text-white text-[10px] font-bold rounded hover:bg-blue-800">+ Add Group</button>
-                    </div>
-                    <div id="advGroupContainer" class="p-3 overflow-y-auto flex-grow flex flex-col gap-3"></div>
-                    <div class="p-3 border-t border-gray-200 bg-white">
-                        <button id="runAdvCompareBtn" class="w-full py-2 bg-fr-blue text-white text-xs font-bold rounded hover:bg-blue-800 shadow-sm transition-colors">Run Comparison</button>
-                    </div>
-                </div>
-                <div class="w-full sm:w-2/3 flex flex-col bg-white overflow-hidden">
-                    <div class="p-3 sm:p-4 border-b border-gray-200 bg-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                        <h4 class="font-bold text-xs text-gray-700">Comparison Results <span class="text-[10px] font-normal text-gray-500 block sm:inline sm:ml-2">(Group 1 otomatis menjadi Baseline persentase)</span></h4>
-                        <button id="exportAdvCompareBtn" class="px-3 py-1 bg-white border border-gray-300 text-gray-700 hover:bg-gray-100 rounded text-[10px] font-bold shadow-sm hidden transition-colors flex items-center gap-1">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> Export CSV
-                        </button>
-                    </div>
-                    <div class="p-3 sm:p-4 overflow-auto flex-grow">
-                        <table class="min-w-full text-left whitespace-nowrap border-collapse" id="advCompareTable">
-                            <thead class="bg-gray-50 border-b border-gray-200 sticky top-0" id="advCompareHead"></thead>
-                            <tbody id="advCompareBody">
-                                <tr><td class="text-center py-12 text-gray-400 text-xs italic">Tambahkan minimal 2 group di panel kiri, lalu klik "Run Comparison"</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <script>
         function showToast(msg, type='info') {
@@ -590,7 +552,7 @@
             try { return n.toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0, useGrouping: true }); } catch (e) { return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "."); }
         };
         
-        const els = { file: document.getElementById('fileInput'), folder: document.getElementById('folderInput'), content: document.getElementById('dashboardContent'), main: document.getElementById('mainContent'), loadUI: document.getElementById('loadingOverlay'), tooltip: document.getElementById('customTooltip') };
+        const els = { content: document.getElementById('dashboardContent'), main: document.getElementById('mainContent'), loadUI: document.getElementById('loadingOverlay'), tooltip: document.getElementById('customTooltip') };
         const filters = { quick: document.getElementById('quickDateSelect'), dStart: document.getElementById('filterDateStart'), dEnd: document.getElementById('filterDateEnd'), dept: document.getElementById('filterDept'), eventType: document.getElementById('filterEventType') };
         
         document.getElementById('toggleLabelsCheckbox').addEventListener('change', (e) => { showChartLabels = e.target.checked; refreshAllCharts(); });
@@ -641,7 +603,6 @@
         monthSubmenu.addEventListener('mouseenter', () => monthSubmenu.classList.add('show'));
         document.addEventListener('click', (e) => { if(!dateRangeContainer.contains(e.target) && !monthSubmenu.contains(e.target)) monthSubmenu.classList.remove('show'); });
 
-        els.file.addEventListener('change', promptFileSelection); els.folder.addEventListener('change', promptFileSelection);
         Object.keys(filters).forEach(key => { if(key === 'quick') { /* handled above */ } else { filters[key].addEventListener('change', executeFilterAndRender); } });
 
         const resetTrendButtons = () => { ['trendNetBtn', 'trendQtyBtn', 'trendTxBtn'].forEach(id => { document.getElementById(id).className = "px-2 sm:px-3 py-1 text-[10px] font-bold rounded text-gray-500 hover:text-gray-700 transition-all"; }); };
@@ -782,145 +743,58 @@
             filters.dStart.value = toIsoLocal(start); filters.dEnd.value = toIsoLocal(end); executeFilterAndRender(); 
         }
         
-        const yieldToMain = () => new Promise(resolve => setTimeout(resolve, 0)); let pendingFilesToProcess = [];
+        const yieldToMain = () => new Promise(resolve => setTimeout(resolve, 0));
         
-        async function promptFileSelection(e) { 
-            const files = e.target.files; if (files.length === 0) return; 
-            pendingFilesToProcess = Array.from(files).filter(f => f.name.match(/\.(xlsx|xls|csv)$/i)); 
-            if(pendingFilesToProcess.length === 0) { showToast("Tidak ada file Excel/CSV yang valid ditemukan.", "error"); e.target.value = ''; return; } 
-            const container = document.getElementById('fileListContainer'); container.innerHTML = ''; const selectAllCb = document.getElementById('selectAllFilesCb'); selectAllCb.checked = true; 
-            pendingFilesToProcess.forEach((f, idx) => { 
-                const row = document.createElement('label'); row.className = "flex items-center gap-3 p-2 hover:bg-gray-100 rounded cursor-pointer transition-colors border border-transparent hover:border-gray-200 min-w-max"; 
-                const cb = document.createElement('input'); cb.type = "checkbox"; cb.className = "file-item-cb rounded text-fr-blue focus:ring-fr-blue h-3.5 w-3.5 cursor-pointer flex-shrink-0"; cb.checked = true; cb.dataset.idx = idx; 
-                cb.addEventListener('change', () => { const allCbs = document.querySelectorAll('.file-item-cb'); const allChecked = Array.from(allCbs).every(c => c.checked); selectAllCb.checked = allChecked; }); 
-                const nameSpan = document.createElement('span'); nameSpan.className = "text-xs font-medium text-gray-700 whitespace-nowrap"; nameSpan.innerText = f.webkitRelativePath || f.name; nameSpan.title = f.webkitRelativePath || f.name;
-                row.appendChild(cb); row.appendChild(nameSpan); container.appendChild(row); 
-            }); 
-            document.getElementById('fileSelectModal').classList.remove('hidden'); 
-        }
-        document.getElementById('selectAllFilesCb').addEventListener('change', (e) => { document.querySelectorAll('.file-item-cb').forEach(cb => cb.checked = e.target.checked); }); 
-        const closeModal = () => { document.getElementById('fileSelectModal').classList.add('hidden'); els.file.value = ''; els.folder.value = ''; }; 
-        document.getElementById('closeFileModalBtn').addEventListener('click', closeModal); document.getElementById('cancelFileModalBtn').addEventListener('click', closeModal);
-        document.getElementById('processFilesBtn').addEventListener('click', () => { 
-            const selectedIndexes = Array.from(document.querySelectorAll('.file-item-cb:checked')).map(cb => parseInt(cb.dataset.idx)); 
-            const selectedFiles = selectedIndexes.map(idx => pendingFilesToProcess[idx]); 
-            if(selectedFiles.length > 0) { closeModal(); executeFileProcessing(selectedFiles); } else { showToast("Pilih minimal satu file untuk diproses.", "error"); } 
-        });
-
         function setLoadingProgress(pct, text) {
             const bar = document.getElementById('loadingProgressBar'); if(bar) bar.style.width = pct + '%';
             if(text) { const el = document.getElementById('loadingSubText'); if(el) el.innerText = text; }
         }
+        
+        function processParsedJSON(json) {
+            for (let i = 0; i < json.length; i++) {
+                let row = json[i]; let nr = {}; for(let k in row) nr[k.trim()] = row[k]; if(!nr['Date'] && !nr['Items'] && !nr['Receipt Number']) continue;
+                let rawOutlet = nr['Outlet'] ? String(nr['Outlet']).trim() : ''; nr['Outlet'] = rawOutlet.split(',')[0].trim();
+                nr['AREA'] = nr['AREA'] ? String(nr['AREA']).trim() : 'Unknown'; nr['DEPT'] = nr['DEPT'] ? String(nr['DEPT']).trim() : 'Unknown';
+                nr['Event Type'] = nr['Event Type'] ? String(nr['Event Type']).trim() : 'Unknown'; nr['Items'] = nr['Items'] ? String(nr['Items']).trim() : 'Unknown';
+                nr['Collected By'] = nr['Collected By'] ? String(nr['Collected By']).trim() : (nr['CollectedBy'] || nr['collected by'] || '-');
+                nr['Served By'] = nr['Served By'] ? String(nr['Served By']).trim() : (nr['ServedBy'] || nr['served by'] || '-');
+                nr['Customer'] = nr['Customer'] ? String(nr['Customer']).trim() : (nr['customer'] || nr['CUSTOMER'] || '-');
+                nr['Reason of Refund'] = nr['Reason of Refund'] ? String(nr['Reason of Refund']).trim() : (nr['Reason Of Refund'] || nr['ReasonofRefund'] || nr['reason of refund'] || '-');
+                
+                let rawDate = nr['Date']; let dateStr = ''; let formattedDate = '';
+                if (typeof rawDate === 'number') {
+                    let d = new Date(Math.round((rawDate - 25569) * 86400 * 1000)); let y = d.getUTCFullYear(); let m = String(d.getUTCMonth() + 1).padStart(2, '0'); let day = String(d.getUTCDate()).padStart(2, '0');
+                    dateStr = `${y}-${m}-${day}`; formattedDate = `${day}/${m}/${y}`;
+                } else if (typeof rawDate === 'string') {
+                    let str = rawDate.split(' ')[0]; let parts = str.split(/[-/]/);
+                    if(parts.length === 3) {
+                        if(parts[0].length === 4) { dateStr = `${parts[0]}-${parts[1].padStart(2,'0')}-${parts[2].padStart(2,'0')}`; formattedDate = `${parts[2].padStart(2,'0')}/${parts[1].padStart(2,'0')}/${parts[0]}`; }
+                        else if(parts[2].length === 4) { dateStr = `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`; formattedDate = `${parts[0].padStart(2,'0')}/${parts[1].padStart(2,'0')}/${parts[2]}`; }
+                        else { dateStr = str; formattedDate = str; }
+                    } else { dateStr = str; formattedDate = str; }
+                }
+                nr['DateStr'] = dateStr; nr['FormattedDate'] = formattedDate;
 
-        async function executeFileProcessing(files) { 
-            els.loadUI.classList.add('active'); setLoadingProgress(0, 'Memulai...');
-            try { 
-                rawData = []; let totalFiles = files.length; 
-                for(let i=0; i<totalFiles; i++) { 
-                    let pct = Math.round(((i)/totalFiles)*100); setLoadingProgress(pct, `Mengunggah file ${i+1} dari ${totalFiles}... (${pct}%)`); await new Promise(r => requestAnimationFrame(() => r())); await processExcel(files[i]); 
-                } 
-                setLoadingProgress(95, 'Menyiapkan dasbor...'); await yieldToMain(); 
-                if (rawData.length > 0) { 
-                    setupDatePickers(); populateDropdowns(); populateItemDropdown(); 
-                    
-                    // PAKSA SEMBUNYIKAN LOADING DAN TAMPILKAN DASHBOARD SEBELUM RENDER BERAT
-                    document.getElementById('loadingOverlay').style.display = 'none'; 
-                    els.main.style.display = 'block'; 
-                    els.content.classList.remove('hidden');
-                    
-                    const navCtrl = document.getElementById('navDashboardControls'); navCtrl.classList.remove('hidden'); navCtrl.classList.add('flex');
-                    
-                    // BERI JEDA 1 DETIK SEBELUM MENGGAMBAR GRAFIK
-                    setTimeout(async () => {
-                        try {
-                            await executeFilterAndRender(); setLoadingProgress(100, 'Selesai!'); showToast(`Berhasil memuat ${formatNum(rawData.length)} baris data.`); 
-                        } catch(e) { console.error(e); }
-                    }, 1000);
-                } else { showToast("Data tidak valid, tidak dapat menemukan header yang tepat.", "error"); } 
-            } catch (err) { showToast("Error membaca file excel.", "error"); console.error(err); } finally { els.loadUI.classList.remove('active'); setLoadingProgress(0, ''); } 
+                let hrStr = nr['HOUR'] ? String(nr['HOUR']).trim() : ''; let exactTime = '-'; let rawTime = nr['Time'];
+                if (typeof rawDate === 'number' && rawDate % 1 !== 0) {
+                    let d = new Date(Math.round((rawDate - 25569) * 86400 * 1000)); hrStr = d.getUTCHours().toString();
+                    exactTime = String(d.getUTCHours()).padStart(2,'0') + ':' + String(d.getUTCMinutes()).padStart(2,'0');
+                } else if (typeof rawTime === 'number') {
+                    let totalMins = Math.round((rawTime % 1) * 24 * 60); hrStr = Math.floor(totalMins / 60).toString();
+                    exactTime = String(Math.floor(totalMins / 60)).padStart(2,'0') + ':' + String(totalMins % 60).padStart(2,'0');
+                } else if (typeof rawTime === 'string') { hrStr = rawTime.split(':')[0]; exactTime = rawTime; } 
+                else if (hrStr) { exactTime = hrStr.padStart(2, '0') + ':00'; }
+                nr['ParsedHour'] = hrStr.padStart(2, '0'); nr['ExactTime'] = exactTime;
+                
+                let dayStr = nr['DAY OF WEEK'] ? String(nr['DAY OF WEEK']).trim() : '';
+                if(nr['DateStr']) { let parts = nr['DateStr'].split('-'); if (parts.length === 3) { let safeDate = new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]), 12, 0, 0); let dayIdx = safeDate.getDay(); let isoDay = dayIdx === 0 ? 6 : dayIdx - 1; dayStr = DAYS[isoDay]; } }
+                nr['ParsedDay'] = dayStr;
+                const nCols = ['Net Sales', 'Gross Sales', 'Quantity', 'Tax', 'Gratuity', 'Discounts', 'Refunds', 'Total Collected', 'Total Collected Exc Rounding', 'Discount Applied (Rp)'];
+                nCols.forEach(c => { if(nr[c] !== undefined && typeof nr[c] === 'string') { let s = nr[c].replace(/,/g, '').trim(); nr[c] = parseFloat(s) || 0; } });
+                rawData.push(nr);
+            }
         }
         
-        function processExcel(file) {
-        return new Promise((res, rej) => {
-            if (file.name.toLowerCase().endsWith('.csv')) {
-                Papa.parse(file, {
-                    header: false, skipEmptyLines: true, worker: false,
-                    complete: async function(results) {
-                        await yieldToMain(); let rawSheet = results.data; let headerIdx = -1;
-                        for(let j=0; j < Math.min(rawSheet.length, 50); j++) { let rowStr = (rawSheet[j] || []).join(' '); if(rowStr.includes('Net Sales') && (rowStr.includes('Receipt Number') || rowStr.includes('SKU'))) { headerIdx = j; break; } }
-                        if(headerIdx !== -1) {
-                            let headers = rawSheet[headerIdx]; let json = [];
-                            for(let i = headerIdx + 1; i < rawSheet.length; i++) { let obj = {}; for(let c = 0; c < headers.length; c++) { if(headers[c]) obj[headers[c]] = rawSheet[i][c]; } json.push(obj); }
-                            processParsedJSON(json);
-                        }
-                        res();
-                    }, error: function(err) { console.error(err); rej(err); }
-                });
-            } else {
-                const r = new FileReader();
-                r.onload = async (e) => {
-                    await yieldToMain();
-                    try {
-                        const wb = XLSX.read(e.target.result, {type: 'array', cellDates: false});
-                        for (let sIdx = 0; sIdx < wb.SheetNames.length; sIdx++) {
-                            const sn = wb.SheetNames[sIdx]; const sheet = wb.Sheets[sn]; if (!sheet || !sheet['!ref']) continue;
-                            let refRange = XLSX.utils.decode_range(sheet['!ref']); let maxRow = Math.min(refRange.e.r, 50); let searchRange = Object.assign({}, refRange, { e: { c: refRange.e.c, r: maxRow } });
-                            const rawSheet = XLSX.utils.sheet_to_json(sheet, {header: 1, range: searchRange, defval: null}); if(rawSheet.length === 0) continue; let headerIdx = -1;
-                            for(let j=0; j < rawSheet.length; j++) { let rowStr = (rawSheet[j] || []).join(' '); if(rowStr.includes('Net Sales') && (rowStr.includes('Receipt Number') || rowStr.includes('SKU'))) { headerIdx = j; break; } }
-                            if(headerIdx === -1) continue; let json = XLSX.utils.sheet_to_json(sheet, {defval: null, range: headerIdx}); processParsedJSON(json);
-                        }
-                        res();
-                    } catch(err) { rej(err); }
-                };
-                r.readAsArrayBuffer(file);
-            }
-        });
-    }
-
-    function processParsedJSON(json) {
-        for (let i = 0; i < json.length; i++) {
-            let row = json[i]; let nr = {}; for(let k in row) nr[k.trim()] = row[k]; if(!nr['Date'] && !nr['Items'] && !nr['Receipt Number']) continue;
-            let rawOutlet = nr['Outlet'] ? String(nr['Outlet']).trim() : ''; nr['Outlet'] = rawOutlet.split(',')[0].trim();
-            nr['AREA'] = nr['AREA'] ? String(nr['AREA']).trim() : 'Unknown'; nr['DEPT'] = nr['DEPT'] ? String(nr['DEPT']).trim() : 'Unknown';
-            nr['Event Type'] = nr['Event Type'] ? String(nr['Event Type']).trim() : 'Unknown'; nr['Items'] = nr['Items'] ? String(nr['Items']).trim() : 'Unknown';
-            nr['Collected By'] = nr['Collected By'] ? String(nr['Collected By']).trim() : (nr['CollectedBy'] || nr['collected by'] || '-');
-            nr['Served By'] = nr['Served By'] ? String(nr['Served By']).trim() : (nr['ServedBy'] || nr['served by'] || '-');
-            nr['Customer'] = nr['Customer'] ? String(nr['Customer']).trim() : (nr['customer'] || nr['CUSTOMER'] || '-');
-            nr['Reason of Refund'] = nr['Reason of Refund'] ? String(nr['Reason of Refund']).trim() : (nr['Reason Of Refund'] || nr['ReasonofRefund'] || nr['reason of refund'] || '-');
-            
-            let rawDate = nr['Date']; let dateStr = ''; let formattedDate = '';
-            if (typeof rawDate === 'number') {
-                let d = new Date(Math.round((rawDate - 25569) * 86400 * 1000)); let y = d.getUTCFullYear(); let m = String(d.getUTCMonth() + 1).padStart(2, '0'); let day = String(d.getUTCDate()).padStart(2, '0');
-                dateStr = `${y}-${m}-${day}`; formattedDate = `${day}/${m}/${y}`;
-            } else if (typeof rawDate === 'string') {
-                let str = rawDate.split(' ')[0]; let parts = str.split(/[-/]/);
-                if(parts.length === 3) {
-                    if(parts[0].length === 4) { dateStr = `${parts[0]}-${parts[1].padStart(2,'0')}-${parts[2].padStart(2,'0')}`; formattedDate = `${parts[2].padStart(2,'0')}/${parts[1].padStart(2,'0')}/${parts[0]}`; }
-                    else if(parts[2].length === 4) { dateStr = `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`; formattedDate = `${parts[0].padStart(2,'0')}/${parts[1].padStart(2,'0')}/${parts[2]}`; }
-                    else { dateStr = str; formattedDate = str; }
-                } else { dateStr = str; formattedDate = str; }
-            }
-            nr['DateStr'] = dateStr; nr['FormattedDate'] = formattedDate;
-
-            let hrStr = nr['HOUR'] ? String(nr['HOUR']).trim() : ''; let exactTime = '-'; let rawTime = nr['Time'];
-            if (typeof rawDate === 'number' && rawDate % 1 !== 0) {
-                let d = new Date(Math.round((rawDate - 25569) * 86400 * 1000)); hrStr = d.getUTCHours().toString();
-                exactTime = String(d.getUTCHours()).padStart(2,'0') + ':' + String(d.getUTCMinutes()).padStart(2,'0');
-            } else if (typeof rawTime === 'number') {
-                let totalMins = Math.round((rawTime % 1) * 24 * 60); hrStr = Math.floor(totalMins / 60).toString();
-                exactTime = String(Math.floor(totalMins / 60)).padStart(2,'0') + ':' + String(totalMins % 60).padStart(2,'0');
-            } else if (typeof rawTime === 'string') { hrStr = rawTime.split(':')[0]; exactTime = rawTime; } 
-            else if (hrStr) { exactTime = hrStr.padStart(2, '0') + ':00'; }
-            nr['ParsedHour'] = hrStr.padStart(2, '0'); nr['ExactTime'] = exactTime;
-            
-            let dayStr = nr['DAY OF WEEK'] ? String(nr['DAY OF WEEK']).trim() : '';
-            if(nr['DateStr']) { let parts = nr['DateStr'].split('-'); if (parts.length === 3) { let safeDate = new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]), 12, 0, 0); let dayIdx = safeDate.getDay(); let isoDay = dayIdx === 0 ? 6 : dayIdx - 1; dayStr = DAYS[isoDay]; } }
-            nr['ParsedDay'] = dayStr;
-            const nCols = ['Net Sales', 'Gross Sales', 'Quantity', 'Tax', 'Gratuity', 'Discounts', 'Refunds', 'Total Collected', 'Total Collected Exc Rounding', 'Discount Applied (Rp)'];
-            nCols.forEach(c => { if(nr[c] !== undefined && typeof nr[c] === 'string') { let s = nr[c].replace(/,/g, '').trim(); nr[c] = parseFloat(s) || 0; } });
-            rawData.push(nr);
-        }
-    }
         const getCleanNum = (r, key) => { let val = r[key]; if(typeof val === 'number') return val; if(!val) return 0; let p = parseFloat(val.toString().replace(/,/g, '')); return isNaN(p) ? 0 : p; };
         function getDiscountValue(r) { let discVal = getCleanNum(r, 'Discounts'); if (discVal === 0) discVal = getCleanNum(r, 'Discount Applied (Rp)'); return Math.abs(discVal); }
         function getGratuityValue(r) { return getCleanNum(r, 'Gratuity'); }
@@ -1113,7 +987,6 @@
         bindFilterTooltip(outletSearch, outletDropdown, selectedOutletsSet); 
         bindFilterTooltip(discountSearch, discountDropdown, selectedDiscountsSet);
 
-        function debounce(func, wait) { let timeout; return function(...args) { clearTimeout(timeout); timeout = setTimeout(() => func.apply(this, args), wait); }; }
         function bindSimpleTooltip(el, textFunc) {
             el.addEventListener('mouseenter', () => {
                 let text = textFunc();
@@ -1200,86 +1073,86 @@
         }
         
         function calculateAndRenderGrowth() { 
-        let dates = filteredData.map(r => r.DateStr).filter(d=>d).sort(); if(dates.length === 0) return renderAllGrowth(0,0,0,0,0,0,0,0,0,0, '',''); 
-        function toIsoLocal(d) { let y = d.getFullYear(); let m = String(d.getMonth()+1).padStart(2,'0'); let dt = String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${dt}`; }
-        let pStartStr = ''; let pEndStr = ''; let compMode = compareSelect.value;
-        if (compMode === 'custom') { pStartStr = document.getElementById('compareDateStart').value; pEndStr = document.getElementById('compareDateEnd').value; } 
-        else if (compMode === 'prev_year') { let currStart = new Date(dates[0]); let currEnd = new Date(dates[dates.length-1]); currStart.setFullYear(currStart.getFullYear() - 1); currEnd.setFullYear(currEnd.getFullYear() - 1); pStartStr = toIsoLocal(currStart); pEndStr = toIsoLocal(currEnd); } 
-        else { let currStart = new Date(dates[0]); let currEnd = new Date(dates[dates.length-1]); let diffTime = Math.abs(currEnd - currStart); let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; let prevEnd = new Date(currStart); prevEnd.setDate(prevEnd.getDate() - 1); let prevStart = new Date(prevEnd); prevStart.setDate(prevStart.getDate() - (diffDays - 1)); pStartStr = toIsoLocal(prevStart); pEndStr = toIsoLocal(prevEnd); }
+            let dates = filteredData.map(r => r.DateStr).filter(d=>d).sort(); if(dates.length === 0) return renderAllGrowth(0,0,0,0,0,0,0,0,0,0, '',''); 
+            function toIsoLocal(d) { let y = d.getFullYear(); let m = String(d.getMonth()+1).padStart(2,'0'); let dt = String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${dt}`; }
+            let pStartStr = ''; let pEndStr = ''; let compMode = compareSelect.value;
+            if (compMode === 'custom') { pStartStr = document.getElementById('compareDateStart').value; pEndStr = document.getElementById('compareDateEnd').value; } 
+            else if (compMode === 'prev_year') { let currStart = new Date(dates[0]); let currEnd = new Date(dates[dates.length-1]); currStart.setFullYear(currStart.getFullYear() - 1); currEnd.setFullYear(currEnd.getFullYear() - 1); pStartStr = toIsoLocal(currStart); pEndStr = toIsoLocal(currEnd); } 
+            else { let currStart = new Date(dates[0]); let currEnd = new Date(dates[dates.length-1]); let diffTime = Math.abs(currEnd - currStart); let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; let prevEnd = new Date(currStart); prevEnd.setDate(prevEnd.getDate() - 1); let prevStart = new Date(prevEnd); prevStart.setDate(prevStart.getDate() - (diffDays - 1)); pStartStr = toIsoLocal(prevStart); pEndStr = toIsoLocal(prevEnd); }
 
-        const sDept = filters.dept.value; const sEvt = filters.eventType.value; const sv = (v) => v ? v.toString().trim() : ''; 
-        let prevData = rawData.filter(r => { 
-            let m = true; if(!r.DateStr || r.DateStr < pStartStr || r.DateStr > pEndStr) m = false; 
-            if (selectedAreasSet.size > 0 && !selectedAreasSet.has(sv(r['AREA']))) m = false; if (selectedOutletsSet.size > 0 && !selectedOutletsSet.has(sv(r['Outlet']))) m = false; 
-            if (sDept !== 'ALL' && sv(r['DEPT']) !== sDept) m = false; if (sEvt !== 'ALL' && sv(r['Event Type']) !== sEvt) m = false; 
-            if (selectedItemsSet.size > 0) { if(searchMode.value === 'item') { if(!selectedItemsSet.has(sv(r['Items']))) m = false; } else { if(!selectedItemsSet.has(sv(r['Receipt Number']))) m = false; } }
-            if (selectedDiscountsSet.size > 0 && !selectedDiscountsSet.has(sv(r['Discount Applied']))) m = false; 
-            return m; 
-        }); 
+            const sDept = filters.dept.value; const sEvt = filters.eventType.value; const sv = (v) => v ? v.toString().trim() : ''; 
+            let prevData = rawData.filter(r => { 
+                let m = true; if(!r.DateStr || r.DateStr < pStartStr || r.DateStr > pEndStr) m = false; 
+                if (selectedAreasSet.size > 0 && !selectedAreasSet.has(sv(r['AREA']))) m = false; if (selectedOutletsSet.size > 0 && !selectedOutletsSet.has(sv(r['Outlet']))) m = false; 
+                if (sDept !== 'ALL' && sv(r['DEPT']) !== sDept) m = false; if (sEvt !== 'ALL' && sv(r['Event Type']) !== sEvt) m = false; 
+                if (selectedItemsSet.size > 0) { if(searchMode.value === 'item') { if(!selectedItemsSet.has(sv(r['Items']))) m = false; } else { if(!selectedItemsSet.has(sv(r['Receipt Number']))) m = false; } }
+                if (selectedDiscountsSet.size > 0 && !selectedDiscountsSet.has(sv(r['Discount Applied']))) m = false; 
+                return m; 
+            }); 
 
-        let pGross=0, pNet=0, pColl=0, pQty=0, pDisc=0, pRef=0, pTax=0, pGrat=0; let pTx = new Set(); 
-        let pAggDate = {}; let pAggCat = {}; let pAggCatQty = {}; let pAggCatTx = {}; let pAggOutlet = {}; let pAggArea = {}; let pAggDept = {};
-        prevData.forEach(r => { 
-            const rn = getCleanNum(r, 'Net Sales'); const rg = getCleanNum(r, 'Gross Sales'); const rt = getCleanNum(r, 'Tax'); const rq = getCleanNum(r, 'Quantity'); let rc = getCleanNum(r, 'Total Collected Exc Rounding') || getCleanNum(r, 'Total Collected') || (rn + rt); let rd = getDiscountValue(r); let rref = Math.abs(getCleanNum(r, 'Refunds') || 0); let rgrat = getGratuityValue(r);
-            pGross += rg; pNet += rn; pColl += rc; pQty += rq; pDisc += rd; pRef += rref; pTax += rt; pGrat += rgrat; 
-            let rec = r['Receipt Number']; if(rec) pTx.add(rec); 
-            let dt = r.DateStr; if(dt) { if(!pAggDate[dt]) pAggDate[dt] = { net: 0, qty: 0, tx: new Set() }; pAggDate[dt].net += rn; pAggDate[dt].qty += rq; if(rec) pAggDate[dt].tx.add(rec); }
-            let cat = r.Category; if(cat && cat !== 'Unknown') { pAggCat[cat] = (pAggCat[cat]||0) + rn; pAggCatQty[cat] = (pAggCatQty[cat]||0) + rq; if(!pAggCatTx[cat]) pAggCatTx[cat] = new Set(); if(rec) pAggCatTx[cat].add(rec); }
-            let out = r.Outlet; if(out && out !== 'Unknown') pAggOutlet[out] = (pAggOutlet[out]||0) + rn; let area = r.AREA; if(area && area !== 'Unknown') pAggArea[area] = (pAggArea[area]||0) + rn; let dept = r.DEPT; if(dept && dept !== 'Unknown') pAggDept[dept] = (pAggDept[dept]||0) + rn;
-        });
-        window.currentCompareCat = pAggCat; window.currentCompareCatQty = pAggCatQty; window.currentCompareCatTx = pAggCatTx; window.currentCompareOutlet = pAggOutlet; window.currentCompareArea = pAggArea; window.currentCompareDept = pAggDept; window.prevDataExport = prevData; window.currentCompareDateRange = {start: pStartStr, end: pEndStr}; 
-        
-        let currDatesArr = Object.keys(currentAggDate).sort(); window.currentCompareSeries = { net: [], qty: [], tx: [], dates: [] };
-        let vsDatesArr = []; if (pStartStr && pEndStr) { let currD = new Date(pStartStr); let endD = new Date(pEndStr); while(currD <= endD) { vsDatesArr.push(toIsoLocal(currD)); currD.setDate(currD.getDate() + 1); } }
-        currDatesArr.forEach((cd, i) => { let vsDate = vsDatesArr[i] || ''; window.currentCompareSeries.dates.push(vsDate); if (vsDate && pAggDate[vsDate]) { window.currentCompareSeries.net.push(pAggDate[vsDate].net); window.currentCompareSeries.qty.push(pAggDate[vsDate].qty); window.currentCompareSeries.tx.push(pAggDate[vsDate].tx.size); } else { window.currentCompareSeries.net.push(0); window.currentCompareSeries.qty.push(0); window.currentCompareSeries.tx.push(0); } });
-        let pAvgTx = pTx.size > 0 ? (pNet / pTx.size) : 0;
-        renderAllGrowth(pGross, pNet, pColl, pTx.size, pQty, pDisc, pRef, pTax, pGrat, pAvgTx, pStartStr, pEndStr); 
-    }
-    
-    function renderAllGrowth(pGross, pNet, pColl, pTx, pQty, pDisc, pRef, pTax, pGrat, pAvgTx, dStart, dEnd) { 
-        const cur = window.currentStats; updateGrowUI('growGrossSales', cur.gross, pGross, dStart, dEnd, true); updateGrowUI('growNetSales', cur.net, pNet, dStart, dEnd, true); updateGrowUI('growTotalCollected', cur.coll, pColl, dStart, dEnd, true); updateGrowUI('growTransactions', cur.tx, pTx, dStart, dEnd, false); updateGrowUI('growItems', cur.qty, pQty, dStart, dEnd, false); updateGrowUI('growDiscounts', cur.disc, pDisc, dStart, dEnd, true); updateGrowUI('growRefunds', cur.ref, pRef, dStart, dEnd, true); updateGrowUI('growTax', cur.tax, pTax, dStart, dEnd, true); updateGrowUI('growGratuity', cur.grat, pGrat, dStart, dEnd, true); let cAvgTx = cur.tx > 0 ? (cur.net / cur.tx) : 0; updateGrowUI('growAvgTx', cAvgTx, pAvgTx, dStart, dEnd, true);
-    }
-    
-    function updateGrowUI(elId, curVal, prevVal, dStart, dEnd, isRp = false) { 
-        let el = document.getElementById(elId); if(!el) return; let label = compareSelect.value === 'prev_year' ? 'vs year' : (compareSelect.value === 'custom' ? 'vs custom' : 'vs prev'); let prevFormatted = isRp ? 'Rp ' + formatRp(prevVal) : formatNum(prevVal);
-        let tooltipTitle = `Prev: ${prevFormatted} <br/> <span class="text-gray-300">${dStart} to ${dEnd}</span>`; if(!dStart || !dEnd) tooltipTitle = "Data tidak tersedia";
-        let lblHtml = `<span class="group/tt relative cursor-help text-gray-400 text-[9px] ml-1 underline decoration-dotted"><span class="hidden group-hover/tt:block absolute left-full top-1/2 transform -translate-y-1/2 ml-2 z-[200] bg-gray-800 text-white p-2 rounded w-max min-w-[150px] shadow-xl text-[10px] text-center font-normal whitespace-nowrap before:content-[''] before:absolute before:top-1/2 before:-left-2 before:-translate-y-1/2 before:border-4 before:border-transparent before:border-r-gray-800">${tooltipTitle}</span>${label}</span>`;
-        if(prevVal === 0 && curVal === 0) { el.innerHTML = `<span class="text-gray-400 font-semibold text-[11px]">— 0.0%</span> ${lblHtml}`; return; } if(prevVal === 0) { el.innerHTML = `<span class="text-gray-400 font-semibold text-[11px]">No Prev Data</span> ${lblHtml}`; return; } 
-        let pct = ((curVal - prevVal) / prevVal) * 100; if (pct === 0 || isNaN(pct)) { el.innerHTML = `<span class="text-gray-400 font-semibold text-[11px]">— 0.0%</span> ${lblHtml}`; return; } 
-        let isPositive = pct > 0; let icon = isPositive ? '↑' : '↓'; let color = isPositive ? 'text-green-600' : 'text-fr-red'; if(elId === 'growDiscounts' || elId === 'growRefunds') { color = isPositive ? 'text-fr-red' : 'text-green-600'; }
-        el.innerHTML = `<span class="${color} font-semibold text-[11px]">${icon} ${Math.abs(pct).toFixed(1)}%</span> ${lblHtml}`; 
-    }
-
-    function getWeekNumber(d) { let date = new Date(d); date.setHours(0,0,0,0); date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7); let week1 = new Date(date.getFullYear(), 0, 4); return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7); }
-    function formatDateShort(d) { let dateObj = new Date(d); return `${dateObj.getDate().toString().padStart(2, '0')} ${dateObj.toLocaleString('en-US', {month:'short'})}`; }
-
-    function drawTrend() { 
-        let data = currentAggDate; let labels = Object.keys(data).sort(); let aggregated = {}; let weekRanges = {}; let weekNumbers = {}; 
-        labels.forEach(l => {
-            let key = l;
-            if(trendAgg === 'week') { let d = new Date(l); let day = d.getDay(); let diff = d.getDate() - day + (day === 0 ? -6 : 1); let monday = new Date(d.setDate(diff)); key = monday.toISOString().split('T')[0]; if(!weekRanges[key]) { let sunday = new Date(monday); sunday.setDate(sunday.getDate() + 6); weekRanges[key] = { start: key, end: sunday.toISOString().split('T')[0] }; weekNumbers[key] = getWeekNumber(monday); } } 
-            else if(trendAgg === 'month') { key = l.substring(0, 7); } else if(trendAgg === 'quarter') { let d = new Date(l); let q = Math.floor(d.getMonth() / 3) + 1; key = `${d.getFullYear()}-Q${q}`; }
-            if(!aggregated[key]) aggregated[key] = { net: 0, qty: 0, tx: new Set() }; aggregated[key].net += data[l].net; aggregated[key].qty += data[l].qty; data[l].tx.forEach(t => aggregated[key].tx.add(t));
-        });
-        let vsAggregated = {}; let vsWeekRanges = {};
-        if (window.currentCompareSeries && window.currentCompareSeries.dates && window.currentCompareSeries.dates.length > 0) {
-            labels.forEach((mainDateKey, idx) => {
-                let vsNet = window.currentCompareSeries.net[idx] || 0; let vsQty = window.currentCompareSeries.qty[idx] || 0; let vsTx = window.currentCompareSeries.tx[idx] || 0; let vsDate = window.currentCompareSeries.dates[idx] || ''; let key = mainDateKey;
-                if(trendAgg === 'week') { let d = new Date(mainDateKey); let day = d.getDay(); let diff = d.getDate() - day + (day === 0 ? -6 : 1); let monday = new Date(d.setDate(diff)); key = monday.toISOString().split('T')[0]; } else if(trendAgg === 'month') { key = mainDateKey.substring(0, 7); } else if(trendAgg === 'quarter') { let d = new Date(mainDateKey); let q = Math.floor(d.getMonth() / 3) + 1; key = `${d.getFullYear()}-Q${q}`; }
-                if(!vsAggregated[key]) vsAggregated[key] = { net: 0, qty: 0, tx: 0 }; vsAggregated[key].net += vsNet; vsAggregated[key].qty += vsQty; vsAggregated[key].tx += vsTx;
-                if(vsDate) { if(!vsWeekRanges[key]) vsWeekRanges[key] = { vsDates: [] }; vsWeekRanges[key].vsDates.push(vsDate); }
+            let pGross=0, pNet=0, pColl=0, pQty=0, pDisc=0, pRef=0, pTax=0, pGrat=0; let pTx = new Set(); 
+            let pAggDate = {}; let pAggCat = {}; let pAggCatQty = {}; let pAggCatTx = {}; let pAggOutlet = {}; let pAggArea = {}; let pAggDept = {};
+            prevData.forEach(r => { 
+                const rn = getCleanNum(r, 'Net Sales'); const rg = getCleanNum(r, 'Gross Sales'); const rt = getCleanNum(r, 'Tax'); const rq = getCleanNum(r, 'Quantity'); let rc = getCleanNum(r, 'Total Collected Exc Rounding') || getCleanNum(r, 'Total Collected') || (rn + rt); let rd = getDiscountValue(r); let rref = Math.abs(getCleanNum(r, 'Refunds') || 0); let rgrat = getGratuityValue(r);
+                pGross += rg; pNet += rn; pColl += rc; pQty += rq; pDisc += rd; pRef += rref; pTax += rt; pGrat += rgrat; 
+                let rec = r['Receipt Number']; if(rec) pTx.add(rec); 
+                let dt = r.DateStr; if(dt) { if(!pAggDate[dt]) pAggDate[dt] = { net: 0, qty: 0, tx: new Set() }; pAggDate[dt].net += rn; pAggDate[dt].qty += rq; if(rec) pAggDate[dt].tx.add(rec); }
+                let cat = r.Category; if(cat && cat !== 'Unknown') { pAggCat[cat] = (pAggCat[cat]||0) + rn; pAggCatQty[cat] = (pAggCatQty[cat]||0) + rq; if(!pAggCatTx[cat]) pAggCatTx[cat] = new Set(); if(rec) pAggCatTx[cat].add(rec); }
+                let out = r.Outlet; if(out && out !== 'Unknown') pAggOutlet[out] = (pAggOutlet[out]||0) + rn; let area = r.AREA; if(area && area !== 'Unknown') pAggArea[area] = (pAggArea[area]||0) + rn; let dept = r.DEPT; if(dept && dept !== 'Unknown') pAggDept[dept] = (pAggDept[dept]||0) + rn;
             });
+            window.currentCompareCat = pAggCat; window.currentCompareCatQty = pAggCatQty; window.currentCompareCatTx = pAggCatTx; window.currentCompareOutlet = pAggOutlet; window.currentCompareArea = pAggArea; window.currentCompareDept = pAggDept; window.prevDataExport = prevData; window.currentCompareDateRange = {start: pStartStr, end: pEndStr}; 
+            
+            let currDatesArr = Object.keys(currentAggDate).sort(); window.currentCompareSeries = { net: [], qty: [], tx: [], dates: [] };
+            let vsDatesArr = []; if (pStartStr && pEndStr) { let currD = new Date(pStartStr); let endD = new Date(pEndStr); while(currD <= endD) { vsDatesArr.push(toIsoLocal(currD)); currD.setDate(currD.getDate() + 1); } }
+            currDatesArr.forEach((cd, i) => { let vsDate = vsDatesArr[i] || ''; window.currentCompareSeries.dates.push(vsDate); if (vsDate && pAggDate[vsDate]) { window.currentCompareSeries.net.push(pAggDate[vsDate].net); window.currentCompareSeries.qty.push(pAggDate[vsDate].qty); window.currentCompareSeries.tx.push(pAggDate[vsDate].tx.size); } else { window.currentCompareSeries.net.push(0); window.currentCompareSeries.qty.push(0); window.currentCompareSeries.tx.push(0); } });
+            let pAvgTx = pTx.size > 0 ? (pNet / pTx.size) : 0;
+            renderAllGrowth(pGross, pNet, pColl, pTx.size, pQty, pDisc, pRef, pTax, pGrat, pAvgTx, pStartStr, pEndStr); 
         }
-        let aggLabels = Object.keys(aggregated).sort(); let vals = aggLabels.map(l => { if (trendMode === 'net') return aggregated[l].net; if (trendMode === 'qty') return aggregated[l].qty; if (trendMode === 'tx') return aggregated[l].tx.size; return 0; }); 
-        let displayLabels = aggLabels.map(d => { if(trendAgg === 'month') { let parts = d.split('-'); let dateObj = new Date(parseInt(parts[0]), parseInt(parts[1])-1, 1); return `${dateObj.toLocaleString('en-US', {month:'short'})} ${parts[0]}`; } if(trendAgg === 'week') { return `W${weekNumbers[d]}`; } if(trendAgg === 'quarter') { return d; } return formatDateShort(d); }); 
-        let labelText = trendMode === 'net' ? 'Net Sales' : (trendMode === 'qty' ? 'Quantity Sold' : 'Transactions'); let lineColor = trendMode === 'net' ? '#002395' : (trendMode === 'qty' ? '#0ea5e9' : '#8b5cf6'); let bgColor = trendMode === 'net' ? 'rgba(0, 35, 149, 0.05)' : (trendMode === 'qty' ? 'rgba(14, 165, 233, 0.05)' : 'rgba(139, 92, 246, 0.05)'); 
-        let datasets = [{ label: labelText, data:vals, borderColor: lineColor, backgroundColor: trendChartType === 'bar' ? lineColor : bgColor, borderWidth: 2, fill: trendChartType === 'line', tension:0.1, pointBackgroundColor: '#ffffff', pointBorderColor: lineColor, pointBorderWidth: 2, pointRadius: 3, pointHoverRadius: 5, borderRadius: trendChartType === 'bar' ? 3 : 0, maxBarThickness: 40 }];
-        let showVs = document.getElementById('toggleVsLineCheckbox').checked;
-        if (showVs && Object.keys(vsAggregated).length > 0) { let vsVals = aggLabels.map(l => { if(!vsAggregated[l]) return 0; if(trendMode === 'net') return vsAggregated[l].net; if(trendMode === 'qty') return vsAggregated[l].qty; if(trendMode === 'tx') return vsAggregated[l].tx; return 0; }); datasets.push({ label: 'VS ' + labelText, data: vsVals, borderColor: '#94a3b8', backgroundColor: trendChartType === 'bar' ? '#cbd5e1' : 'transparent', borderWidth: 2, borderDash: trendChartType === 'line' ? [5, 5] : [], fill: false, tension: 0.1, pointBackgroundColor: '#ffffff', pointBorderColor: '#94a3b8', pointRadius: 2, pointHoverRadius: 4, borderRadius: trendChartType === 'bar' ? 3 : 0, maxBarThickness: 40 }); }
         
-        if(charts['trend']) charts['trend'].destroy(); 
-        charts['trend'] = new Chart(document.getElementById('trendChart').getContext('2d'), { type: trendChartType, data:{ labels: displayLabels, datasets: datasets }, options:{ layout: { padding: { top: 25 } }, responsive:true, maintainAspectRatio:false, 
-            plugins:{ tooltip: { callbacks: { title: function(context) { let idx = context[0].dataIndex; let key = aggLabels[idx]; let datasetIdx = context[0].datasetIndex; if (datasetIdx === 1) { let vsInfo = vsWeekRanges[key]; if(vsInfo && vsInfo.vsDates && vsInfo.vsDates.length > 0) { let vsDates = vsInfo.vsDates.slice().sort(); let minDate = vsDates[0]; let maxDate = vsDates[vsDates.length - 1]; let startObj = new Date(minDate); let endObj = new Date(maxDate); if(trendAgg === 'week') { let startStr = `${startObj.getDate().toString().padStart(2,'0')} ${startObj.toLocaleString('en-US',{month:'short'})}`; let endStr = `${endObj.getDate().toString().padStart(2,'0')} ${endObj.toLocaleString('en-US',{month:'short'})}`; let vsWeekNum = getWeekNumber(startObj); return `VS Week ${vsWeekNum}: ${startStr} - ${endStr}`; } else if(trendAgg === 'month') { return `VS: ${startObj.toLocaleString('en-US',{month:'long'})} ${startObj.getFullYear()}`; } else if(trendAgg === 'quarter') { let q = Math.floor(startObj.getMonth() / 3) + 1; return `VS: Q${q} ${startObj.getFullYear()}`; } else { return `VS: ${formatDateShort(minDate)} ${startObj.getFullYear()}`; } } return `VS ${context[0].label}`; }
+        function renderAllGrowth(pGross, pNet, pColl, pTx, pQty, pDisc, pRef, pTax, pGrat, pAvgTx, dStart, dEnd) { 
+            const cur = window.currentStats; updateGrowUI('growGrossSales', cur.gross, pGross, dStart, dEnd, true); updateGrowUI('growNetSales', cur.net, pNet, dStart, dEnd, true); updateGrowUI('growTotalCollected', cur.coll, pColl, dStart, dEnd, true); updateGrowUI('growTransactions', cur.tx, pTx, dStart, dEnd, false); updateGrowUI('growItems', cur.qty, pQty, dStart, dEnd, false); updateGrowUI('growDiscounts', cur.disc, pDisc, dStart, dEnd, true); updateGrowUI('growRefunds', cur.ref, pRef, dStart, dEnd, true); updateGrowUI('growTax', cur.tax, pTax, dStart, dEnd, true); updateGrowUI('growGratuity', cur.grat, pGrat, dStart, dEnd, true); let cAvgTx = cur.tx > 0 ? (cur.net / cur.tx) : 0; updateGrowUI('growAvgTx', cAvgTx, pAvgTx, dStart, dEnd, true);
+        }
+        
+        function updateGrowUI(elId, curVal, prevVal, dStart, dEnd, isRp = false) { 
+            let el = document.getElementById(elId); if(!el) return; let label = compareSelect.value === 'prev_year' ? 'vs year' : (compareSelect.value === 'custom' ? 'vs custom' : 'vs prev'); let prevFormatted = isRp ? 'Rp ' + formatRp(prevVal) : formatNum(prevVal);
+            let tooltipTitle = `Prev: ${prevFormatted} <br/> <span class="text-gray-300">${dStart} to ${dEnd}</span>`; if(!dStart || !dEnd) tooltipTitle = "Data tidak tersedia";
+            let lblHtml = `<span class="group/tt relative cursor-help text-gray-400 text-[9px] ml-1 underline decoration-dotted"><span class="hidden group-hover/tt:block absolute left-full top-1/2 transform -translate-y-1/2 ml-2 z-[200] bg-gray-800 text-white p-2 rounded w-max min-w-[150px] shadow-xl text-[10px] text-center font-normal whitespace-nowrap before:content-[''] before:absolute before:top-1/2 before:-left-2 before:-translate-y-1/2 before:border-4 before:border-transparent before:border-r-gray-800">${tooltipTitle}</span>${label}</span>`;
+            if(prevVal === 0 && curVal === 0) { el.innerHTML = `<span class="text-gray-400 font-semibold text-[11px]">— 0.0%</span> ${lblHtml}`; return; } if(prevVal === 0) { el.innerHTML = `<span class="text-gray-400 font-semibold text-[11px]">No Prev Data</span> ${lblHtml}`; return; } 
+            let pct = ((curVal - prevVal) / prevVal) * 100; if (pct === 0 || isNaN(pct)) { el.innerHTML = `<span class="text-gray-400 font-semibold text-[11px]">— 0.0%</span> ${lblHtml}`; return; } 
+            let isPositive = pct > 0; let icon = isPositive ? '↑' : '↓'; let color = isPositive ? 'text-green-600' : 'text-fr-red'; if(elId === 'growDiscounts' || elId === 'growRefunds') { color = isPositive ? 'text-fr-red' : 'text-green-600'; }
+            el.innerHTML = `<span class="${color} font-semibold text-[11px]">${icon} ${Math.abs(pct).toFixed(1)}%</span> ${lblHtml}`; 
+        }
+
+        function getWeekNumber(d) { let date = new Date(d); date.setHours(0,0,0,0); date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7); let week1 = new Date(date.getFullYear(), 0, 4); return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7); }
+        function formatDateShort(d) { let dateObj = new Date(d); return `${dateObj.getDate().toString().padStart(2, '0')} ${dateObj.toLocaleString('en-US', {month:'short'})}`; }
+
+        function drawTrend() { 
+            let data = currentAggDate; let labels = Object.keys(data).sort(); let aggregated = {}; let weekRanges = {}; let weekNumbers = {}; 
+            labels.forEach(l => {
+                let key = l;
+                if(trendAgg === 'week') { let d = new Date(l); let day = d.getDay(); let diff = d.getDate() - day + (day === 0 ? -6 : 1); let monday = new Date(d.setDate(diff)); key = monday.toISOString().split('T')[0]; if(!weekRanges[key]) { let sunday = new Date(monday); sunday.setDate(sunday.getDate() + 6); weekRanges[key] = { start: key, end: sunday.toISOString().split('T')[0] }; weekNumbers[key] = getWeekNumber(monday); } } 
+                else if(trendAgg === 'month') { key = l.substring(0, 7); } else if(trendAgg === 'quarter') { let d = new Date(l); let q = Math.floor(d.getMonth() / 3) + 1; key = `${d.getFullYear()}-Q${q}`; }
+                if(!aggregated[key]) aggregated[key] = { net: 0, qty: 0, tx: new Set() }; aggregated[key].net += data[l].net; aggregated[key].qty += data[l].qty; data[l].tx.forEach(t => aggregated[key].tx.add(t));
+            });
+            let vsAggregated = {}; let vsWeekRanges = {};
+            if (window.currentCompareSeries && window.currentCompareSeries.dates && window.currentCompareSeries.dates.length > 0) {
+                labels.forEach((mainDateKey, idx) => {
+                    let vsNet = window.currentCompareSeries.net[idx] || 0; let vsQty = window.currentCompareSeries.qty[idx] || 0; let vsTx = window.currentCompareSeries.tx[idx] || 0; let vsDate = window.currentCompareSeries.dates[idx] || ''; let key = mainDateKey;
+                    if(trendAgg === 'week') { let d = new Date(mainDateKey); let day = d.getDay(); let diff = d.getDate() - day + (day === 0 ? -6 : 1); let monday = new Date(d.setDate(diff)); key = monday.toISOString().split('T')[0]; } else if(trendAgg === 'month') { key = mainDateKey.substring(0, 7); } else if(trendAgg === 'quarter') { let d = new Date(mainDateKey); let q = Math.floor(d.getMonth() / 3) + 1; key = `${d.getFullYear()}-Q${q}`; }
+                    if(!vsAggregated[key]) vsAggregated[key] = { net: 0, qty: 0, tx: 0 }; vsAggregated[key].net += vsNet; vsAggregated[key].qty += vsQty; vsAggregated[key].tx += vsTx;
+                    if(vsDate) { if(!vsWeekRanges[key]) vsWeekRanges[key] = { vsDates: [] }; vsWeekRanges[key].vsDates.push(vsDate); }
+                });
+            }
+            let aggLabels = Object.keys(aggregated).sort(); let vals = aggLabels.map(l => { if (trendMode === 'net') return aggregated[l].net; if (trendMode === 'qty') return aggregated[l].qty; if (trendMode === 'tx') return aggregated[l].tx.size; return 0; }); 
+            let displayLabels = aggLabels.map(d => { if(trendAgg === 'month') { let parts = d.split('-'); let dateObj = new Date(parseInt(parts[0]), parseInt(parts[1])-1, 1); return `${dateObj.toLocaleString('en-US', {month:'short'})} ${parts[0]}`; } if(trendAgg === 'week') { return `W${weekNumbers[d]}`; } if(trendAgg === 'quarter') { return d; } return formatDateShort(d); }); 
+            let labelText = trendMode === 'net' ? 'Net Sales' : (trendMode === 'qty' ? 'Quantity Sold' : 'Transactions'); let lineColor = trendMode === 'net' ? '#002395' : (trendMode === 'qty' ? '#0ea5e9' : '#8b5cf6'); let bgColor = trendMode === 'net' ? 'rgba(0, 35, 149, 0.05)' : (trendMode === 'qty' ? 'rgba(14, 165, 233, 0.05)' : 'rgba(139, 92, 246, 0.05)'); 
+            let datasets = [{ label: labelText, data:vals, borderColor: lineColor, backgroundColor: trendChartType === 'bar' ? lineColor : bgColor, borderWidth: 2, fill: trendChartType === 'line', tension:0.1, pointBackgroundColor: '#ffffff', pointBorderColor: lineColor, pointBorderWidth: 2, pointRadius: 3, pointHoverRadius: 5, borderRadius: trendChartType === 'bar' ? 3 : 0, maxBarThickness: 40 }];
+            let showVs = document.getElementById('toggleVsLineCheckbox').checked;
+            if (showVs && Object.keys(vsAggregated).length > 0) { let vsVals = aggLabels.map(l => { if(!vsAggregated[l]) return 0; if(trendMode === 'net') return vsAggregated[l].net; if(trendMode === 'qty') return vsAggregated[l].qty; if(trendMode === 'tx') return vsAggregated[l].tx; return 0; }); datasets.push({ label: 'VS ' + labelText, data: vsVals, borderColor: '#94a3b8', backgroundColor: trendChartType === 'bar' ? '#cbd5e1' : 'transparent', borderWidth: 2, borderDash: trendChartType === 'line' ? [5, 5] : [], fill: false, tension: 0.1, pointBackgroundColor: '#ffffff', pointBorderColor: '#94a3b8', pointRadius: 2, pointHoverRadius: 4, borderRadius: trendChartType === 'bar' ? 3 : 0, maxBarThickness: 40 }); }
+            
+            if(charts['trend']) charts['trend'].destroy(); 
+            charts['trend'] = new Chart(document.getElementById('trendChart').getContext('2d'), { type: trendChartType, data:{ labels: displayLabels, datasets: datasets }, options:{ layout: { padding: { top: 25 } }, responsive:true, maintainAspectRatio:false, 
+                plugins:{ tooltip: { callbacks: { title: function(context) { let idx = context[0].dataIndex; let key = aggLabels[idx]; let datasetIdx = context[0].datasetIndex; if (datasetIdx === 1) { let vsInfo = vsWeekRanges[key]; if(vsInfo && vsInfo.vsDates && vsInfo.vsDates.length > 0) { let vsDates = vsInfo.vsDates.slice().sort(); let minDate = vsDates[0]; let maxDate = vsDates[vsDates.length - 1]; let startObj = new Date(minDate); let endObj = new Date(maxDate); if(trendAgg === 'week') { let startStr = `${startObj.getDate().toString().padStart(2,'0')} ${startObj.toLocaleString('en-US',{month:'short'})}`; let endStr = `${endObj.getDate().toString().padStart(2,'0')} ${endObj.toLocaleString('en-US',{month:'short'})}`; let vsWeekNum = getWeekNumber(startObj); return `VS Week ${vsWeekNum}: ${startStr} - ${endStr}`; } else if(trendAgg === 'month') { return `VS: ${startObj.toLocaleString('en-US',{month:'long'})} ${startObj.getFullYear()}`; } else if(trendAgg === 'quarter') { let q = Math.floor(startObj.getMonth() / 3) + 1; return `VS: Q${q} ${startObj.getFullYear()}`; } else { return `VS: ${formatDateShort(minDate)} ${startObj.getFullYear()}`; } } return `VS ${context[0].label}`; }
                     if(trendAgg === 'week' && weekRanges[key]) { let startObj = new Date(weekRanges[key].start); let endObj = new Date(weekRanges[key].end); let startStr = `${startObj.getDate().toString().padStart(2,'0')} ${startObj.toLocaleString('en-US',{month:'short'})}`; let endStr = `${endObj.getDate().toString().padStart(2,'0')} ${endObj.toLocaleString('en-US',{month:'short'})}`; return `Week ${weekNumbers[key]}: ${startStr} - ${endStr}`; }
                     if(trendAgg === 'month') { let parts = key.split('-'); let dateObj = new Date(parseInt(parts[0]), parseInt(parts[1])-1, 1); return `${dateObj.toLocaleString('en-US', {month:'long'})} ${parts[0]}`; } if(trendAgg === 'quarter') { return key; } return context[0].label; },
                 label: function(context) { let val = context.raw; let label = context.dataset.label; let isRp = trendMode === 'net'; return isRp ? ` ${label}: Rp ${formatRp(val)}` : ` ${label}: ${formatNum(val)}`; } } },
@@ -1430,34 +1303,146 @@
         arr.forEach((x,i) => { tb.innerHTML += ` <tr class="hover:bg-gray-50 transition-colors"> <td class="py-2.5 px-2"> <span class="text-fr-muted text-[10px] mr-2 w-3 inline-block">${i+1}.</span> <span class="font-medium">${x.k}</span> </td> <td class="py-2.5 px-2 text-right">${formatNum(x.q)}</td> <td class="py-2.5 px-2 text-right font-medium">${formatRp(x.n)}</td> </tr>`; }); 
     }
 
+    // ==========================================
+    // PIVOT TABLE SETUP (VS TABLE)
+    // ==========================================
     let vsDimConfig = [
-        { id: 'date', key: 'DateStr', label: 'Trend (Date)', visible: true, filterType: 'none' }, { id: 'category', key: 'Category', label: 'Category', visible: false, filterType: 'search' }, { id: 'outlet', key: 'Outlet', label: 'Outlet', visible: false, filterType: 'search' }, { id: 'area', key: 'AREA', label: 'Area', visible: false, filterType: 'search' }, { id: 'item', key: 'Items', label: 'Item', visible: false, filterType: 'search' }, { id: 'dept', key: 'DEPT', label: 'Dept', visible: false, filterType: 'search' }, { id: 'disc', key: 'Discount Applied', label: 'Discount Applied', visible: false, filterType: 'search' }
+        { id: 'date', key: 'DateStr', label: 'Trend (Date)' },
+        { id: 'category', key: 'Category', label: 'Category' },
+        { id: 'outlet', key: 'Outlet', label: 'Outlet' },
+        { id: 'area', key: 'AREA', label: 'Area' },
+        { id: 'item', key: 'Items', label: 'Item' },
+        { id: 'dept', key: 'DEPT', label: 'Dept' },
+        { id: 'disc', key: 'Discount Applied', label: 'Discount Applied' }
     ];
+    
+    // zone: 'rows' (ditampilkan), 'filters' (disembunyikan tapi bisa difilter), 'available' (tidak dipakai)
+    let vsPivotState = {
+        date: 'available',
+        category: 'available',
+        outlet: 'rows', // default
+        area: 'rows', // default
+        item: 'filters', // default
+        dept: 'available',
+        disc: 'available'
+    };
+
     let vsMetricConfig = [
-        { id: 'net', label: 'Net Sales', visible: true, isRp: true }, { id: 'gross', label: 'Gross Sales', visible: false, isRp: true }, { id: 'qty', label: 'Quantity', visible: false, isRp: false }, { id: 'coll', label: 'Total Collected', visible: false, isRp: true }, { id: 'tax', label: 'Tax', visible: false, isRp: true }, { id: 'grat', label: 'Gratuity', visible: false, isRp: true }, { id: 'disc', label: 'Discount', visible: false, isRp: true }, { id: 'ref', label: 'Refund', visible: false, isRp: true }, { id: 'tx', label: 'Total Transaksi', visible: false, isRp: false }
+        { id: 'net', label: 'Net Sales', visible: true, isRp: true }, { id: 'gross', label: 'Gross Sales', visible: false, isRp: true }, { id: 'qty', label: 'Quantity', visible: false, isRp: false }, { id: 'coll', label: 'Total Collected', visible: false, isRp: true }, { id: 'tax', label: 'Tax', visible: false, isRp: true }, { id: 'grat', label: 'Gratuity', visible: false, isRp: true }, { id: 'disc', label: 'Discount', visible: false, isRp: true }, { id: 'ref', label: 'Refund', visible: false, isRp: true }, { id: 'tx', label: 'Total Transaksi', visible: true, isRp: false }
     ];
     
-    let vsDimFilters = {}; let vsCacheMainAgg = null; let vsCacheVsAgg = null; let vsRenderDebounce = null; let dragVsDimIdx = -1; let dragVsMetIdx = -1;
+    let vsDimFilters = {}; let vsCacheMainAgg = null; let vsCacheVsAgg = null; let vsRenderDebounce = null;
     
-    function initVsSettings() {
-        const buildList = (config, listId, dragVarName, callback) => {
-            const list = document.getElementById(listId); list.innerHTML = '';
-            config.forEach((item, idx) => {
-                let li = document.createElement('li'); li.className = "flex items-center p-1.5 border-b border-gray-100 bg-white mb-1 rounded cursor-move hover:bg-gray-100 transition-colors"; li.draggable = true; li.dataset.idx = idx;
-                li.innerHTML = `<div class="flex items-center gap-2 w-full pointer-events-none"><span class="text-gray-400 cursor-move tracking-tighter">⋮⋮</span><input type="checkbox" class="pointer-events-auto rounded text-fr-blue w-3 h-3 cursor-pointer focus:ring-0" ${item.visible ? 'checked' : ''}><span class="font-medium text-gray-700">${item.label}</span></div>`;
-                li.querySelector('input').addEventListener('change', (e) => { item.visible = e.target.checked; if (!item.visible && vsDimFilters[item.id]) delete vsDimFilters[item.id]; renderVsDimFilterPanel(); scheduleRenderVsTable(); });
-                li.addEventListener('dragstart', (e) => { window[dragVarName] = +e.target.closest('li').dataset.idx; e.dataTransfer.effectAllowed = 'move'; setTimeout(() => e.target.classList.add('opacity-50'), 0); });
-                li.addEventListener('dragover', (e) => { e.preventDefault(); return false; }); li.addEventListener('dragenter', (e) => { e.preventDefault(); e.target.closest('li')?.classList.add('border-blue-400', 'border-t-2'); }); li.addEventListener('dragleave', (e) => { e.target.closest('li')?.classList.remove('border-blue-400', 'border-t-2'); }); li.addEventListener('dragend', (e) => { e.target.classList.remove('opacity-50'); });
-                li.addEventListener('drop', (e) => { e.stopPropagation(); const targetLi = e.target.closest('li'); if(!targetLi) return false; targetLi.classList.remove('border-blue-400', 'border-t-2'); const dropIdx = +targetLi.dataset.idx; const draggedItem = config.splice(window[dragVarName], 1)[0]; config.splice(dropIdx, 0, draggedItem); callback(); scheduleRenderVsTable(); return false; });
-                list.appendChild(li);
+    function initVsPivotUI() {
+        const zoneAvail = document.getElementById('pivotZoneAvailable');
+        const zoneRows = document.getElementById('pivotZoneRows');
+        const zoneFilters = document.getElementById('pivotZoneFilter');
+        const zoneMetrics = document.getElementById('pivotZoneMetrics');
+
+        zoneAvail.innerHTML = ''; zoneRows.innerHTML = ''; zoneFilters.innerHTML = ''; zoneMetrics.innerHTML = '';
+
+        // Render Dimensions based on state
+        vsDimConfig.forEach(dim => {
+            let zone = vsPivotState[dim.id] || 'available';
+            let target = zone === 'rows' ? zoneRows : (zone === 'filters' ? zoneFilters : zoneAvail);
+            
+            let el = document.createElement('div');
+            el.className = "pivot-field-item bg-white border border-gray-300 rounded px-2 py-1 flex items-center gap-1 shadow-sm text-[11px] hover:bg-gray-50 w-full mb-1";
+            el.draggable = true;
+            el.dataset.id = dim.id;
+            
+            let icon = zone === 'rows' ? '<span class="text-blue-500 font-bold">≡</span>' : (zone === 'filters' ? '<span class="text-purple-500 font-bold">▼</span>' : '<span class="text-gray-400">⋮⋮</span>');
+            el.innerHTML = `${icon} <span class="font-medium text-gray-700 flex-grow truncate">${dim.label}</span>`;
+            
+            el.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('text/plain', dim.id);
+                e.dataTransfer.effectAllowed = 'move';
+                setTimeout(() => el.classList.add('dragging'), 0);
             });
-        };
-        buildList(vsDimConfig, 'vsDimList', 'dragVsDimIdx', () => initVsSettings()); buildList(vsMetricConfig, 'vsMetricList', 'dragVsMetIdx', () => initVsSettings());
+            el.addEventListener('dragend', () => { el.classList.remove('dragging'); });
+            
+            target.appendChild(el);
+        });
+
+        // Render Metrics (just simple reorder list, no zones)
+        vsMetricConfig.forEach(met => {
+            let el = document.createElement('div');
+            el.className = "pivot-field-item bg-white border border-gray-300 rounded px-2 py-1 flex items-center gap-1 shadow-sm text-[11px] hover:bg-gray-50 cursor-move";
+            el.draggable = true;
+            el.dataset.id = met.id;
+            el.innerHTML = `<span class="text-gray-400">⋮⋮</span> <input type="checkbox" class="rounded text-fr-blue w-3 h-3 cursor-pointer" ${met.visible ? 'checked' : ''}> <span class="font-medium text-gray-700">${met.label}</span>`;
+            
+            el.querySelector('input').addEventListener('change', (e) => {
+                met.visible = e.target.checked;
+                scheduleRenderVsTable();
+                renderVsDimFilterPanel();
+            });
+            
+            el.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('text/plain', 'metric_' + met.id);
+                e.dataTransfer.effectAllowed = 'move';
+                setTimeout(() => el.classList.add('dragging'), 0);
+            });
+            el.addEventListener('dragend', () => { el.classList.remove('dragging'); });
+            
+            zoneMetrics.appendChild(el);
+        });
+
+        // Setup Drop Zones for Dimensions
+        [zoneAvail, zoneRows, zoneFilters].forEach(zone => {
+            zone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                let draggedData = e.dataTransfer.types.includes('text/plain') ? document.querySelector('.dragging')?.dataset.id : null;
+                // Only allow dimension dragging to these zones (metrics have data starting with 'metric_')
+                if (draggedData && !draggedData.startsWith('metric_')) {
+                    zone.classList.add('drag-over');
+                }
+            });
+            zone.addEventListener('dragleave', (e) => {
+                zone.classList.remove('drag-over');
+            });
+            zone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                zone.classList.remove('drag-over');
+                let id = e.dataTransfer.getData('text/plain');
+                if (!id || id.startsWith('metric_')) return;
+                
+                let targetZone = zone.dataset.zone;
+                // Validate: cannot drop into filter zone if it's the only row dimension? We'll handle it dynamically.
+                vsPivotState[id] = targetZone;
+                initVsPivotUI();
+                renderVsDimFilterPanel();
+                scheduleRenderVsTable();
+            });
+        });
+
+        // Setup Drop Zone for Metrics Reorder
+        zoneMetrics.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            zoneMetrics.classList.add('drag-over');
+        });
+        zoneMetrics.addEventListener('dragleave', () => zoneMetrics.classList.remove('drag-over'));
+        zoneMetrics.addEventListener('drop', (e) => {
+            e.preventDefault();
+            zoneMetrics.classList.remove('drag-over');
+            let id = e.dataTransfer.getData('text/plain');
+            if (!id || !id.startsWith('metric_')) return;
+            let metId = id.replace('metric_', '');
+            // Move metric to end (simple reorder)
+            let idx = vsMetricConfig.findIndex(m => m.id === metId);
+            if (idx > -1) {
+                let item = vsMetricConfig.splice(idx, 1)[0];
+                vsMetricConfig.push(item);
+                initVsPivotUI();
+                scheduleRenderVsTable();
+            }
+        });
     }
 
     function scheduleRenderVsTable() { if (vsRenderDebounce) clearTimeout(vsRenderDebounce); vsRenderDebounce = setTimeout(() => { renderVsTable(); vsRenderDebounce = null; }, 120); }
 
-    document.getElementById('vsTableSettingsBtn').addEventListener('click', (e) => { e.stopPropagation(); const menu = document.getElementById('vsSettingsMenu'); menu.classList.toggle('hidden'); if(!menu.classList.contains('hidden')) initVsSettings(); });
+    document.getElementById('vsTableSettingsBtn').addEventListener('click', (e) => { e.stopPropagation(); const menu = document.getElementById('vsSettingsMenu'); menu.classList.toggle('hidden'); if(!menu.classList.contains('hidden')) initVsPivotUI(); });
+    document.getElementById('closeVsSettingsBtn').addEventListener('click', () => { document.getElementById('vsSettingsMenu').classList.add('hidden'); });
     document.addEventListener('click', (e) => { if(!e.target.closest('#vsSettingsMenu') && !e.target.closest('#vsTableSettingsBtn')) { document.getElementById('vsSettingsMenu')?.classList.add('hidden'); } });
 
     const vsTableModal = document.getElementById('vsTableModal');
@@ -1483,15 +1468,47 @@
     
     function renderVsDimFilterPanel() {
         const panel = document.getElementById('vsDimFilterPanel'); panel.innerHTML = '';
-        let filterableDims = vsDimConfig.filter(d => d.visible && d.filterType === 'search'); if (filterableDims.length === 0) { panel.classList.add('hidden'); return; } panel.classList.remove('hidden');
+        // Only show filters for dims that are in 'filters' zone, OR any dim that has active filters (even if in rows)
+        let activeFilterDims = vsDimConfig.filter(d => vsPivotState[d.id] === 'filters' || (vsDimFilters[d.id] && vsDimFilters[d.id].size > 0));
+        
+        if (activeFilterDims.length === 0) { panel.classList.add('hidden'); return; } panel.classList.remove('hidden');
         let header = document.createElement('div'); header.className = 'flex items-center gap-2 mr-2'; header.innerHTML = `<span class="text-[10px] font-bold text-gray-600 uppercase">Filter by Dimension:</span>`; panel.appendChild(header);
-        filterableDims.forEach(dim => {
+        
+        activeFilterDims.forEach(dim => {
             let uniqVals = Array.from(new Set(rawData.map(r => (r[dim.key] || '').toString().trim()).filter(x => x && x !== 'Unknown' && x !== '-'))).sort(); if (!vsDimFilters[dim.id]) vsDimFilters[dim.id] = new Set(); let selectedSet = vsDimFilters[dim.id];
             let wrapper = document.createElement('div'); wrapper.className = 'flex flex-col shrink-0 relative'; wrapper.dataset.dimId = dim.id;
             let labelText = selectedSet.size === 0 ? '' : (selectedSet.size === 1 ? Array.from(selectedSet)[0] : `${selectedSet.size} terpilih`); let placeholder = `All ${dim.label}...`;
-            wrapper.innerHTML = ` <label class="text-[9px] font-bold text-gray-500 uppercase tracking-wider mb-0.5">${dim.label}</label> <div class="relative" style="width:100%; min-width:150px;"> <input type="text" data-vsdim-input="${dim.id}" class="pro-input text-[11px] p-1.5 w-full cursor-pointer pr-7" placeholder="${placeholder}" value="${labelText}" autocomplete="off"> <button data-vsdim-clear="${dim.id}" class="absolute right-1.5 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-fr-red text-sm font-bold hidden" title="Clear">&times;</button> </div> <div data-vsdim-menu="${dim.id}" class="hidden absolute top-full left-0 mt-1 w-full min-w-[220px] max-h-56 overflow-y-auto bg-white border border-gray-200 shadow-2xl z-[80] rounded"> <div data-vsdim-options="${dim.id}" class="p-0"></div> </div> `; panel.appendChild(wrapper);
+            
+            // CHANGE: Use title attribute to store full text for custom tooltip, NOT native title
+            let fullText = selectedSet.size > 0 ? Array.from(selectedSet).join(', ') : 'All';
+            
+            wrapper.innerHTML = ` 
+                <label class="text-[9px] font-bold text-gray-500 uppercase tracking-wider mb-0.5">${dim.label} ${vsPivotState[dim.id] === 'filters' ? '<span class="text-[8px] text-purple-500 font-normal ml-1">(Filter Only)</span>' : ''}</label> 
+                <div class="relative" style="width:100%; min-width:150px;"> 
+                    <input type="text" data-vsdim-input="${dim.id}" class="pro-input text-[11px] p-1.5 w-full cursor-pointer pr-7" placeholder="${placeholder}" value="${labelText}" autocomplete="off" data-fulltext="${fullText}"> 
+                    <button data-vsdim-clear="${dim.id}" class="absolute right-1.5 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-fr-red text-sm font-bold hidden" title="Clear">&times;</button> 
+                </div> 
+                <div data-vsdim-menu="${dim.id}" class="hidden absolute top-full left-0 mt-1 w-full min-w-[220px] max-h-56 overflow-y-auto bg-white border border-gray-200 shadow-2xl z-[80] rounded"> 
+                    <div data-vsdim-options="${dim.id}" class="p-0"></div> 
+                </div> 
+            `; 
+            panel.appendChild(wrapper);
+            
             let inputEl = wrapper.querySelector(`[data-vsdim-input="${dim.id}"]`); let menuEl = wrapper.querySelector(`[data-vsdim-menu="${dim.id}"]`); let optionsEl = wrapper.querySelector(`[data-vsdim-options="${dim.id}"]`); let clearBtn = wrapper.querySelector(`[data-vsdim-clear="${dim.id}"]`);
+            
+            // Custom Tooltip Binding
+            wrapper.addEventListener('mouseenter', () => {
+                if(selectedSet.size > 0 && menuEl.classList.contains('hidden')) {
+                    let listHtml = Array.from(selectedSet).map(item => `<div class="text-[10px] leading-relaxed border-b border-slate-700 last:border-0 py-0.5 whitespace-normal break-words">• ${item}</div>`).join('');
+                    customMultiTooltip.innerHTML = `<div class="font-bold text-[10px] mb-1 border-b border-slate-600 pb-1 text-blue-300">${dim.label} (${selectedSet.size}):</div>` + listHtml;
+                    let rect = wrapper.getBoundingClientRect(); customMultiTooltip.style.top = (rect.bottom + window.scrollY + 5) + 'px'; customMultiTooltip.style.left = rect.left + 'px';
+                    customMultiTooltip.classList.remove('hidden'); setTimeout(() => customMultiTooltip.classList.remove('opacity-0'), 10);
+                }
+            });
+            wrapper.addEventListener('mouseleave', () => { customMultiTooltip.classList.add('opacity-0'); setTimeout(() => customMultiTooltip.classList.add('hidden'), 200); });
+            
             let updateClearBtn = () => { if (selectedSet.size > 0) clearBtn.classList.remove('hidden'); else clearBtn.classList.add('hidden'); }; updateClearBtn();
+            
             let renderOptions = (search = '') => {
                 optionsEl.innerHTML = ''; let filtered = uniqVals.filter(v => v.toLowerCase().includes(search.toLowerCase())).slice(0, 200);
                 if (selectedSet.size > 0) { let clearRow = document.createElement('div'); clearRow.className = 'px-3 py-2 bg-red-50 border-b border-red-100 text-fr-red text-[11px] font-bold cursor-pointer hover:bg-red-100 flex justify-between items-center sticky top-0 z-10 transition-colors'; clearRow.innerHTML = `<span>${selectedSet.size} terpilih</span><span>Clear &times;</span>`; clearRow.onclick = (e) => { e.stopPropagation(); selectedSet.clear(); updateInputVal(); updateClearBtn(); renderOptions(''); scheduleRenderVsTable(); }; optionsEl.appendChild(clearRow); }
@@ -1504,7 +1521,11 @@
                     });
                 }
             };
-            let updateInputVal = () => { if (selectedSet.size === 0) { inputEl.value = ''; inputEl.placeholder = `All ${dim.label}...`; } else if (selectedSet.size === 1) { inputEl.value = Array.from(selectedSet)[0]; inputEl.placeholder = `All ${dim.label}...`; } else { inputEl.value = `${selectedSet.size} terpilih`; inputEl.placeholder = `All ${dim.label}...`; } };
+            let updateInputVal = () => { 
+                if (selectedSet.size === 0) { inputEl.value = ''; inputEl.placeholder = `All ${dim.label}...`; inputEl.dataset.fulltext = 'All'; } 
+                else if (selectedSet.size === 1) { inputEl.value = Array.from(selectedSet)[0]; inputEl.placeholder = `All ${dim.label}...`; inputEl.dataset.fulltext = Array.from(selectedSet)[0]; } 
+                else { inputEl.value = `${selectedSet.size} terpilih`; inputEl.placeholder = `All ${dim.label}...`; inputEl.dataset.fulltext = Array.from(selectedSet).join(', '); } 
+            };
             inputEl.addEventListener('focus', () => { inputEl.value = ''; menuEl.classList.remove('hidden'); renderOptions(''); }); inputEl.addEventListener('input', (e) => { renderOptions(e.target.value); }); inputEl.addEventListener('blur', () => { setTimeout(() => { menuEl.classList.add('hidden'); updateInputVal(); }, 250); }); clearBtn.addEventListener('click', (e) => { e.stopPropagation(); selectedSet.clear(); updateInputVal(); updateClearBtn(); scheduleRenderVsTable(); });
         });
     }
@@ -1519,34 +1540,89 @@
     function renderVsTable() {
         let isDistinctTx = document.getElementById('vsDistinctTxCb').checked; let tooltipEl = document.getElementById('vsPeriodTooltip');
         if(tooltipEl) { let mStart = document.getElementById('vsModalMainStart').value || '-'; let mEnd = document.getElementById('vsModalMainEnd').value || '-'; let vStart = '-'; let vEnd = '-'; if (window.currentCompareDateRange) { vStart = window.currentCompareDateRange.start || '-'; vEnd = window.currentCompareDateRange.end || '-'; } tooltipEl.innerHTML = `<strong>Main Period:</strong> ${mStart} s/d ${mEnd}<br/><strong>Compare VS:</strong> ${vStart} s/d ${vEnd}`; }
-        let activeDims = vsDimConfig.filter(d => d.visible); let activeMets = vsMetricConfig.filter(m => m.visible); let thead = document.getElementById('vsTableHead'); let tbody = document.getElementById('vsTableBody');
-        if (activeDims.length === 0 || activeMets.length === 0) { thead.innerHTML = ''; tbody.innerHTML = '<tr><td class="text-center py-4 text-gray-500 text-[11px]">Pilih minimal 1 Dimensi dan 1 Metric di menu Setup Table (⚙️)</td></tr>'; return; }
+        
+        // Get active DIMENSIONS from 'rows' zone only
+        let activeDims = vsDimConfig.filter(d => vsPivotState[d.id] === 'rows'); 
+        let activeMets = vsMetricConfig.filter(m => m.visible); 
+        
+        let thead = document.getElementById('vsTableHead'); let tbody = document.getElementById('vsTableBody');
+        
+        if (activeDims.length === 0 || activeMets.length === 0) { 
+            thead.innerHTML = ''; 
+            tbody.innerHTML = '<tr><td class="text-center py-4 text-gray-500 text-[11px]">Pilih minimal 1 Dimensi di area "Table Columns" dan 1 Metric di menu Setup Pivot (⚙️)</td></tr>'; 
+            return; 
+        }
 
         function aggData(data) {
             let agg = {};
             data.forEach(r => {
+                // Generate dimension values ONLY for activeDims (rows)
                 let dimVals = activeDims.map(d => { let k = d.key; let val = r[k] || 'Unknown'; if (k === 'DateStr' && r['FormattedDate']) val = r['FormattedDate']; return val; });
-                let flatKey = JSON.stringify(dimVals); if(!agg[flatKey]) { agg[flatKey] = { dims: dimVals, metrics: {} }; activeMets.forEach(m => { if(m.id === 'tx') { if (isDistinctTx) agg[flatKey].metrics.txSet = new Set(); else agg[flatKey].metrics.txCount = 0; } else agg[flatKey].metrics[m.id] = 0; }); }
+                let flatKey = JSON.stringify(dimVals); 
+                if(!agg[flatKey]) { 
+                    agg[flatKey] = { dims: dimVals, metrics: {} }; 
+                    activeMets.forEach(m => { 
+                        if(m.id === 'tx') { 
+                            if (isDistinctTx) agg[flatKey].metrics.txSet = new Set(); 
+                            else agg[flatKey].metrics.txCount = 0; 
+                        } else agg[flatKey].metrics[m.id] = 0; 
+                    }); 
+                }
                 activeMets.forEach(m => {
-                    if (m.id === 'tx') { if (isDistinctTx) { if(r['Receipt Number']) agg[flatKey].metrics.txSet.add(r['Receipt Number']); } else { agg[flatKey].metrics.txCount++; } }
-                    else if (m.id === 'qty') { agg[flatKey].metrics.qty += getCleanNum(r, 'Quantity'); } else if (m.id === 'disc') { agg[flatKey].metrics.disc += getDiscountValue(r); } else if (m.id === 'ref') { agg[flatKey].metrics.ref += Math.abs(getCleanNum(r, 'Refunds') || 0); } else if (m.id === 'coll') { agg[flatKey].metrics.coll += getCleanNum(r, 'Total Collected Exc Rounding') || getCleanNum(r, 'Total Collected') || (getCleanNum(r, 'Net Sales') + getCleanNum(r, 'Tax')); } else { let cMap = { 'net': 'Net Sales', 'gross': 'Gross Sales', 'tax': 'Tax', 'grat': 'Gratuity' }; agg[flatKey].metrics[m.id] += getCleanNum(r, cMap[m.id]); }
+                    if (m.id === 'tx') { 
+                        if (isDistinctTx) { if(r['Receipt Number']) agg[flatKey].metrics.txSet.add(r['Receipt Number']); } 
+                        else { agg[flatKey].metrics.txCount++; } 
+                    }
+                    else if (m.id === 'qty') { agg[flatKey].metrics.qty += getCleanNum(r, 'Quantity'); } 
+                    else if (m.id === 'disc') { agg[flatKey].metrics.disc += getDiscountValue(r); } 
+                    else if (m.id === 'ref') { agg[flatKey].metrics.ref += Math.abs(getCleanNum(r, 'Refunds') || 0); } 
+                    else if (m.id === 'coll') { agg[flatKey].metrics.coll += getCleanNum(r, 'Total Collected Exc Rounding') || getCleanNum(r, 'Total Collected') || (getCleanNum(r, 'Net Sales') + getCleanNum(r, 'Tax')); } 
+                    else { let cMap = { 'net': 'Net Sales', 'gross': 'Gross Sales', 'tax': 'Tax', 'grat': 'Gratuity' }; agg[flatKey].metrics[m.id] += getCleanNum(r, cMap[m.id]); }
                 });
             });
             Object.values(agg).forEach(obj => { if(obj.metrics.txSet) { obj.metrics.tx = obj.metrics.txSet.size; delete obj.metrics.txSet; } else if(obj.metrics.txCount !== undefined) { obj.metrics.tx = obj.metrics.txCount; delete obj.metrics.txCount; } });
             return agg;
         }
 
-        let aggKey = JSON.stringify({ dims: activeDims.map(d => d.id), mets: activeMets.map(m => m.id), filtKey: getActiveVsDimFilterKey(), distinct: isDistinctTx, mainDate: filters.dStart.value + '|' + filters.dEnd.value, vsDate: (window.currentCompareDateRange ? window.currentCompareDateRange.start + '|' + window.currentCompareDateRange.end : ''), filterDataHash: filteredData.length });
+        let aggKey = JSON.stringify({ 
+            dims: activeDims.map(d => d.id), 
+            mets: activeMets.map(m => m.id), 
+            filtKey: getActiveVsDimFilterKey(), 
+            distinct: isDistinctTx, 
+            mainDate: filters.dStart.value + '|' + filters.dEnd.value, 
+            vsDate: (window.currentCompareDateRange ? window.currentCompareDateRange.start + '|' + window.currentCompareDateRange.end : ''), 
+            filterDataHash: filteredData.length 
+        });
+        
         let filteredMain = applyVsDimFilters(filteredData); let filteredVs = applyVsDimFilters(window.prevDataExport || []);
-        let mainAgg, vsAgg; if (aggKey === vsLastAggKey && vsCacheMainAgg && vsCacheVsAgg) { mainAgg = vsCacheMainAgg; vsAgg = vsCacheVsAgg; } else { mainAgg = aggData(filteredMain); vsAgg = aggData(filteredVs); vsCacheMainAgg = mainAgg; vsCacheVsAgg = vsAgg; vsLastAggKey = aggKey; }
+        let mainAgg, vsAgg; 
+        if (aggKey === vsLastAggKey && vsCacheMainAgg && vsCacheVsAgg) { 
+            mainAgg = vsCacheMainAgg; vsAgg = vsCacheVsAgg; 
+        } else { 
+            mainAgg = aggData(filteredMain); vsAgg = aggData(filteredVs); 
+            vsCacheMainAgg = mainAgg; vsCacheVsAgg = vsAgg; vsLastAggKey = aggKey; 
+        }
+        
         let allKeys = Array.from(new Set([...Object.keys(mainAgg), ...Object.keys(vsAgg)])).sort();
-        let combinedData = allKeys.map(k => { let dims = JSON.parse(k); let main = mainAgg[k] ? mainAgg[k].metrics : {}; let vs = vsAgg[k] ? vsAgg[k].metrics : {}; activeMets.forEach(m => { if(main[m.id] === undefined) main[m.id] = 0; if(vs[m.id] === undefined) vs[m.id] = 0; }); return { dims, main, vs }; });
+        let combinedData = allKeys.map(k => { 
+            let dims = JSON.parse(k); 
+            let main = mainAgg[k] ? mainAgg[k].metrics : {}; 
+            let vs = vsAgg[k] ? vsAgg[k].metrics : {}; 
+            activeMets.forEach(m => { if(main[m.id] === undefined) main[m.id] = 0; if(vs[m.id] === undefined) vs[m.id] = 0; }); 
+            return { dims, main, vs }; 
+        });
 
         let tree = {}; let grandTotals = { main: {}, vs: {} }; activeMets.forEach(m => { grandTotals.main[m.id] = 0; grandTotals.vs[m.id] = 0; });
         function initMetricsZero() { let m = { main:{}, vs:{} }; activeMets.forEach(me => { m.main[me.id] = 0; m.vs[me.id] = 0; }); return m; }
+        
         combinedData.forEach(row => {
-            let curr = tree; activeMets.forEach(m => { grandTotals.main[m.id] += row.main[m.id]; grandTotals.vs[m.id] += row.vs[m.id]; });
-            row.dims.forEach((d, i) => { if(!curr[d]) curr[d] = { _totals: initMetricsZero(), _children: {} }; activeMets.forEach(me => { curr[d]._totals.main[me.id] += row.main[me.id]; curr[d]._totals.vs[me.id] += row.vs[me.id]; }); curr = curr[d]._children; });
+            let curr = tree; 
+            activeMets.forEach(m => { grandTotals.main[m.id] += row.main[m.id]; grandTotals.vs[m.id] += row.vs[m.id]; });
+            row.dims.forEach((d, i) => { 
+                if(!curr[d]) curr[d] = { _totals: initMetricsZero(), _children: {} }; 
+                activeMets.forEach(me => { curr[d]._totals.main[me.id] += row.main[me.id]; curr[d]._totals.vs[me.id] += row.vs[me.id]; }); 
+                curr = curr[d]._children; 
+            });
         });
 
         vsFinalRows = [];
@@ -1564,7 +1640,18 @@
             let keys = sortNodeKeys(node, currentPath.length);
             keys.forEach(k => {
                 let child = node[k]; let path = [...currentPath, k]; let isLeaf = Object.keys(child._children).length === 0;
-                if (isLeaf) { vsFinalRows.push({ type: 'data', dims: path, main: child._totals.main, vs: child._totals.vs }); } else { traverse(child._children, path); if (activeDims.length > 1) { let subDims = [...path]; while(subDims.length < activeDims.length) { if(subDims.length === path.length) subDims.push('Total ' + path[path.length-1]); else subDims.push(''); } vsFinalRows.push({ type: 'subtotal', level: path.length, dims: subDims, main: child._totals.main, vs: child._totals.vs }); } }
+                if (isLeaf) { vsFinalRows.push({ type: 'data', dims: path, main: child._totals.main, vs: child._totals.vs }); } 
+                else { 
+                    traverse(child._children, path); 
+                    if (activeDims.length > 1) { 
+                        let subDims = [...path]; 
+                        while(subDims.length < activeDims.length) { 
+                            if(subDims.length === path.length) subDims.push('Total ' + path[path.length-1]); 
+                            else subDims.push(''); 
+                        } 
+                        vsFinalRows.push({ type: 'subtotal', level: path.length, dims: subDims, main: child._totals.main, vs: child._totals.vs }); 
+                    } 
+                }
             });
         }
         traverse(tree, []);
@@ -1597,211 +1684,13 @@
 
     document.getElementById('exportVsTableBtn').addEventListener('click', () => {
         if(vsFinalRows.length === 0) { showToast('Tidak ada data untuk di-export', 'error'); return; }
-        let activeDims = vsDimConfig.filter(d => d.visible); let activeMets = vsMetricConfig.filter(m => m.visible); let wsData = [];
+        let activeDims = vsDimConfig.filter(d => vsPivotState[d.id] === 'rows'); let activeMets = vsMetricConfig.filter(m => m.visible); let wsData = [];
         let r1 = []; activeDims.forEach(d => r1.push(d.label.toUpperCase())); activeMets.forEach(m => { r1.push(m.label.toUpperCase() + ' VS'); r1.push(m.label.toUpperCase() + ' MAIN'); r1.push(m.label.toUpperCase() + ' GROWTH'); }); wsData.push(r1);
         vsFinalRows.forEach(r => { let rowObj = []; activeDims.forEach((d, i) => { rowObj.push(r.dims[i] !== undefined ? r.dims[i] : ''); }); activeMets.forEach(m => { let mVal = r.main[m.id] || 0; let vVal = r.vs[m.id] || 0; rowObj.push(vVal); rowObj.push(mVal); let pct = vVal > 0 ? ((mVal - vVal) / vVal) : (mVal > 0 ? 1 : 0); if (vVal === 0 && mVal === 0) pct = 0; rowObj.push((pct * 100).toFixed(2) + '%'); }); wsData.push(rowObj); });
         let csv = wsData.map(row => row.map(cell => { let s = String(cell === null || cell === undefined ? '' : cell); if (s.includes(',') || s.includes('"') || s.includes('\n')) { return '"' + s.replace(/"/g, '""') + '"'; } return s; }).join(',')).join('\r\n');
         let blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' }); let url = URL.createObjectURL(blob); let a = document.createElement('a'); a.href = url; a.download = `Comparison_Data_${new Date().getTime()}.csv`; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url); showToast("Tabel VS berhasil diexport ke CSV!");
     });
     
-    const exportModal = document.getElementById('exportModal'); const closeExportModal = () => exportModal.classList.add('hidden');
-    document.getElementById('closeExportModalBtn').addEventListener('click', closeExportModal); document.getElementById('cancelExportBtn').addEventListener('click', closeExportModal);
-    document.getElementById('exportAllCb').addEventListener('change', (e) => { document.querySelectorAll('.export-cb').forEach(cb => cb.checked = e.target.checked); });
-    document.querySelectorAll('.export-cb').forEach(cb => { cb.addEventListener('change', () => { const allChecked = Array.from(document.querySelectorAll('.export-cb')).every(c => c.checked); document.getElementById('exportAllCb').checked = allChecked; }); });
-
-    document.getElementById('exportTxBtn').addEventListener('click', () => { if (!filteredData || filteredData.length === 0) { showToast("Tidak ada data untuk diekspor", "error"); return; } exportModal.classList.remove('hidden'); });
-    document.getElementById('proceedExportBtn').addEventListener('click', () => {
-        closeExportModal(); let withTx = document.getElementById('exportTxCb').checked; let withVs = document.getElementById('exportVsCb').checked; let withDate = document.getElementById('exportDateColsCb').checked;
-        if(!withTx && !withVs) { showToast("Pilih minimal 1 data untuk diexport", "error"); return; } showToast("Menyiapkan file CSV... mohon tunggu sebentar", "info");
-        setTimeout(() => {
-            try {
-                const escapeCsv = (val) => { let s = String(val === null || val === undefined ? '' : val); if (s.includes(',') || s.includes('"') || s.includes('\n') || s.includes('\r')) { return '"' + s.replace(/"/g, '""') + '"'; } return s; };
-                const arrayToCsv = (arr) => arr.map(row => row.map(escapeCsv).join(',')).join('\r\n'); const visibleCols = colsConfig.filter(c => c.visible && c.id !== 'index'); const visibleColLabels = visibleCols.map(c => c.label); const numericCols = {}; visibleCols.forEach(c => { if (c.isNum) numericCols[c.id] = { isRp: c.isRp, isNeg: c.isNeg }; });
-                const sortForExport = (dataArr) => { return [...dataArr].sort((a, b) => { const da = a.DateStr || ''; const db = b.DateStr || ''; if (da !== db) return da < db ? -1 : 1; const ta = a.ExactTime || ''; const tb = b.ExactTime || ''; if (ta !== tb) return ta < tb ? -1 : 1; const oa = (a.Outlet || '').toString().toLowerCase(); const ob = (b.Outlet || '').toString().toLowerCase(); if (oa !== ob) return oa < ob ? -1 : 1; return 0; }); };
-                const formatData = (dataArr) => {
-                    const header = [...visibleColLabels]; if (withDate) header.push('Year', 'Month', 'Day'); const rows = [header]; const numCols = visibleCols.length;
-                    for (let i = 0; i < dataArr.length; i++) {
-                        const r = dataArr[i]; const row = new Array(numCols + (withDate ? 3 : 0)); let colIdx = 0;
-                        for (let j = 0; j < numCols; j++) {
-                            const col = visibleCols[j]; const id = col.id; let val; if (id === 'Total Collected') { val = getCleanNum(r, 'Total Collected Exc Rounding') || getCleanNum(r, 'Total Collected') || (getCleanNum(r, 'Net Sales') + getCleanNum(r, 'Tax')); } else if (numericCols[id]) { const raw = getCleanNum(r, id) || 0; val = (numericCols[id].isNeg ? -1 : 1) * Math.abs(raw); } else if (id === 'DateStr') { val = r['FormattedDate'] || r['DateStr'] || ''; } else if (id === 'ExactTime') { val = r['ExactTime'] || ''; } else { val = r[id] || ''; }
-                            row[colIdx++] = val;
-                        }
-                        if (withDate) { const dStr = r.DateStr; if (dStr) { const p1 = dStr.indexOf('-'); const p2 = dStr.indexOf('-', p1 + 1); row[colIdx++] = +dStr.substring(0, p1); row[colIdx++] = +dStr.substring(p1 + 1, p2); row[colIdx++] = +dStr.substring(p2 + 1); } else { row[colIdx++] = ''; row[colIdx++] = ''; row[colIdx++] = ''; } }
-                        rows.push(row);
-                    }
-                    return rows;
-                };
-                let csvParts = []; let filterRows = [];
-                filterRows.push(['=== APPLIED FILTERS ===']); filterRows.push(['Filter', 'Value']); filterRows.push(['Date Range', `${filters.dStart.value} to ${filters.dEnd.value}`]); filterRows.push(['Compare Vs', compareSelect.value === 'custom' ? `${document.getElementById('compareDateStart').value} to ${document.getElementById('compareDateEnd').value}` : compareSelect.options[compareSelect.selectedIndex].text]);
-                filterRows.push(['Search Type', searchMode.value === 'item' ? 'Items' : 'Receipts']); filterRows.push(['Search Query', selectedItemsSet.size > 0 ? Array.from(selectedItemsSet).join('; ') : 'All']); filterRows.push(['Outlet', selectedOutletsSet.size > 0 ? Array.from(selectedOutletsSet).join('; ') : 'All']);
-                filterRows.push(['Area', selectedAreasSet.size > 0 ? Array.from(selectedAreasSet).join('; ') : 'All']); filterRows.push(['Dept', filters.dept.value === 'ALL' ? 'All' : filters.dept.value]); filterRows.push(['Event Type', filters.eventType.value === 'ALL' ? 'All' : filters.eventType.value]); filterRows.push(['Discount Applied', selectedDiscountsSet.size > 0 ? Array.from(selectedDiscountsSet).join('; ') : 'All']);
-                csvParts.push(arrayToCsv(filterRows));
-                
-                if (withTx) { const sortedTx = sortForExport(txSortedData); let txRows = formatData(sortedTx); let txSection = [['=== DATA TRANSAKSI ==='], []]; txSection = txSection.concat(txRows); csvParts.push(arrayToCsv(txSection)); }
-                if (withVs && window.prevDataExport) { const sortedVs = sortForExport(window.prevDataExport); let vsRows = formatData(sortedVs); let vsSection = [['=== DATA PERIODE VS ==='], []]; vsSection = vsSection.concat(vsRows); csvParts.push(arrayToCsv(vsSection)); }
-                
-                let finalCsv = csvParts.join('\r\n\r\n\r\n'); let blob = new Blob(['\ufeff' + finalCsv], { type: 'text/csv;charset=utf-8;' }); let url = URL.createObjectURL(blob); let a = document.createElement('a'); a.href = url;
-                let fileName = "Export_Transactions.csv"; if (filters.dStart.value && filters.dEnd.value) { fileName = `Transactions_${filters.dStart.value}_to_${filters.dEnd.value}.csv`; }
-                a.download = fileName; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url); showToast("File CSV berhasil diunduh!");
-            } catch (err) { console.error(err); showToast("Gagal mengekspor file CSV.", "error"); }
-        }, 50);
-    });
-
-    // ========================================================================
-    // ADVANCED COHORT COMPARE MODULE
-    // ========================================================================
-    
-    let advGroups = []; let advGroupCounter = 0; let lastAdvResults = []; let advAllItems = []; let advAllDiscounts = []; let advAllOutlets = []; let advAllAreas = []; let advAllDepts = []; let advAllEventTypes = [];
-
-    function populateAdvGlobalLists() { if(rawData.length === 0) return; advAllItems = Array.from(new Set(rawData.map(r => r['Items']).filter(x => x && x !== 'Unknown' && x !== '-'))).sort(); advAllDiscounts = Array.from(new Set(rawData.map(r => r['Discount Applied']).filter(x => x && x !== 'Unknown' && x !== '-'))).sort(); advAllOutlets = Array.from(new Set(rawData.map(r => r['Outlet']).filter(x => x && x !== 'Unknown' && x !== '-'))).sort(); advAllAreas = Array.from(new Set(rawData.map(r => r['AREA']).filter(x => x && x !== 'Unknown' && x !== '-'))).sort(); advAllDepts = Array.from(new Set(rawData.map(r => r['DEPT']).filter(x => x && x !== 'Unknown' && x !== '-'))).sort(); advAllEventTypes = Array.from(new Set(rawData.map(r => r['Event Type']).filter(x => x && x !== 'Unknown' && x !== '-'))).sort(); }
-
-    function getAdvAvailableItems(group) { if(!group) return []; let tempFiltered = rawData.filter(r => { const sv = (v) => v ? v.toString().trim() : ''; if(group.start && (!r.DateStr || r.DateStr < group.start)) return false; if(group.end && (!r.DateStr || r.DateStr > group.end)) return false; if(group.eventType !== 'ALL' && sv(r['Event Type']) !== group.eventType) return false; if(group.discounts.size > 0 && !group.discounts.has(sv(r['Discount Applied']))) return false; if(group.outlets.size > 0 && !group.outlets.has(sv(r['Outlet']))) return false; if(group.areas.size > 0 && !group.areas.has(sv(r['AREA']))) return false; if(group.dept !== 'ALL' && sv(r['DEPT']) !== group.dept) return false; return true; }); return Array.from(new Set(tempFiltered.map(r => r['Items']).filter(x => x && x !== 'Unknown' && x !== '-'))).sort(); }
-    function getAdvAvailableDiscounts(group) { if(!group) return []; let tempFiltered = rawData.filter(r => { const sv = (v) => v ? v.toString().trim() : ''; if(group.start && (!r.DateStr || r.DateStr < group.start)) return false; if(group.end && (!r.DateStr || r.DateStr > group.end)) return false; if(group.eventType !== 'ALL' && sv(r['Event Type']) !== group.eventType) return false; if(group.items.size > 0 && !group.items.has(sv(r['Items']))) return false; if(group.outlets.size > 0 && !group.outlets.has(sv(r['Outlet']))) return false; if(group.areas.size > 0 && !group.areas.has(sv(r['AREA']))) return false; if(group.dept !== 'ALL' && sv(r['DEPT']) !== group.dept) return false; return true; }); return Array.from(new Set(tempFiltered.map(r => r['Discount Applied']).filter(x => x && x !== 'Unknown' && x !== '-'))).sort(); }
-    function getAdvAvailableOutlets(group) { if(!group) return []; let tempFiltered = rawData.filter(r => { const sv = (v) => v ? v.toString().trim() : ''; if(group.start && (!r.DateStr || r.DateStr < group.start)) return false; if(group.end && (!r.DateStr || r.DateStr > group.end)) return false; if(group.eventType !== 'ALL' && sv(r['Event Type']) !== group.eventType) return false; if(group.items.size > 0 && !group.items.has(sv(r['Items']))) return false; if(group.discounts.size > 0 && !group.discounts.has(sv(r['Discount Applied']))) return false; if(group.areas.size > 0 && !group.areas.has(sv(r['AREA']))) return false; if(group.dept !== 'ALL' && sv(r['DEPT']) !== group.dept) return false; return true; }); return Array.from(new Set(tempFiltered.map(r => r['Outlet']).filter(x => x && x !== 'Unknown' && x !== '-'))).sort(); }
-    function getAdvAvailableAreas(group) { if(!group) return []; let tempFiltered = rawData.filter(r => { const sv = (v) => v ? v.toString().trim() : ''; if(group.start && (!r.DateStr || r.DateStr < group.start)) return false; if(group.end && (!r.DateStr || r.DateStr > group.end)) return false; if(group.eventType !== 'ALL' && sv(r['Event Type']) !== group.eventType) return false; if(group.items.size > 0 && !group.items.has(sv(r['Items']))) return false; if(group.discounts.size > 0 && !group.discounts.has(sv(r['Discount Applied']))) return false; if(group.outlets.size > 0 && !group.outlets.has(sv(r['Outlet']))) return false; if(group.dept !== 'ALL' && sv(r['DEPT']) !== group.dept) return false; return true; }); return Array.from(new Set(tempFiltered.map(r => r['AREA']).filter(x => x && x !== 'Unknown' && x !== '-'))).sort(); }
-
-    document.getElementById('openAdvCompareBtn').addEventListener('click', () => { if(rawData.length === 0) { showToast('Upload data terlebih dahulu', 'error'); return; } populateAdvGlobalLists(); document.getElementById('advCompareModal').classList.remove('hidden'); if(advGroups.length === 0) { addAdvGroup(); addAdvGroup(); } });
-    document.getElementById('closeAdvCompareBtn').addEventListener('click', () => { document.getElementById('advCompareModal').classList.add('hidden'); }); document.getElementById('addAdvGroupBtn').addEventListener('click', addAdvGroup);
-
-    function addAdvGroup() {
-        advGroupCounter++; let groupId = 'adv_g_' + advGroupCounter;
-        advGroups.push({ id: groupId, name: 'Group ' + advGroupCounter, start: '', end: '', items: new Set(), discounts: new Set(), outlets: new Set(), areas: new Set(), dept: 'ALL', eventType: 'ALL',
-            filterConfig: [ { id: 'date', label: 'Date Range', visible: true }, { id: 'items', label: 'Item', visible: true }, { id: 'discount', label: 'Discount Applied', visible: true }, { id: 'outlet', label: 'Outlet', visible: false }, { id: 'area', label: 'Area', visible: false }, { id: 'dept', label: 'Dept', visible: false }, { id: 'event', label: 'Event Type', visible: false } ]
-        });
-        renderAdvGroups();
-    }
-
-    function removeAdvGroup(id) { advGroups = advGroups.filter(g => g.id !== id); renderAdvGroups(); }
-
-    function renderAdvGroups() {
-        const container = document.getElementById('advGroupContainer'); container.innerHTML = '';
-        advGroups.forEach((g, idx) => {
-            let itemInputVal = g.items.size === 0 ? '' : (g.items.size === 1 ? Array.from(g.items)[0] : `${g.items.size} terpilih`); let discInputVal = g.discounts.size === 0 ? '' : (g.discounts.size === 1 ? Array.from(g.discounts)[0] : `${g.discounts.size} terpilih`); let outletInputVal = g.outlets.size === 0 ? '' : (g.outlets.size === 1 ? Array.from(g.outlets)[0] : `${g.outlets.size} terpilih`); let areaInputVal = g.areas.size === 0 ? '' : (g.areas.size === 1 ? Array.from(g.areas)[0] : `${g.areas.size} terpilih`);
-            let sortedConfig = [...g.filterConfig].sort((a,b) => { const order = ['date', 'items', 'discount', 'outlet', 'area', 'dept', 'event']; return order.indexOf(a.id) - order.indexOf(b.id); });
-
-            let filterHtml = '';
-            sortedConfig.forEach(f => {
-                if(!f.visible) return;
-                if(f.id === 'date') { filterHtml += ` <div class="flex flex-col gap-1 mt-1 relative" data-adv-filter="date"> <label class="text-[9px] font-bold text-gray-500 uppercase tracking-wider">${f.label}</label> <div class="flex items-center gap-1"> <input type="date" class="pro-input text-[10px] p-1.5 w-full bg-gray-50 border-gray-200" value="${g.start}" onchange="updateAdvGroup('${g.id}', 'start', this.value); renderAdvGroups();" title="Start Date"> <span class="text-gray-400 font-bold">-</span> <input type="date" class="pro-input text-[10px] p-1.5 w-full bg-gray-50 border-gray-200" value="${g.end}" onchange="updateAdvGroup('${g.id}', 'end', this.value); renderAdvGroups();" title="End Date"> </div> </div>`; } 
-                else if(f.id === 'items') { filterHtml += ` <div class="flex flex-col gap-1 mt-1 relative" data-adv-filter="items" id="adv-item-wrap-${g.id}"> <label class="text-[9px] font-bold text-gray-500 uppercase tracking-wider">${f.label}</label> <input type="text" id="adv-item-search-${g.id}" class="pro-input text-[10px] p-1.5 w-full cursor-pointer" placeholder="Semua Item" value="${itemInputVal}" readonly onfocus="openAdvMenu('item', '${g.id}')" oninput="filterAdvMenu('item', '${g.id}', this.value)"> <div id="adv-item-menu-${g.id}" class="hidden absolute top-full left-0 w-full bg-white border border-gray-200 shadow-xl z-[60] max-h-48 overflow-y-auto mt-1 rounded"></div> </div>`; } 
-                else if(f.id === 'discount') { filterHtml += ` <div class="flex flex-col gap-1 mt-1 relative" data-adv-filter="discount" id="adv-disc-wrap-${g.id}"> <label class="text-[9px] font-bold text-gray-500 uppercase tracking-wider">${f.label}</label> <input type="text" id="adv-disc-search-${g.id}" class="pro-input text-[10px] p-1.5 w-full cursor-pointer" placeholder="Semua Diskon" value="${discInputVal}" readonly onfocus="openAdvMenu('disc', '${g.id}')" oninput="filterAdvMenu('disc', '${g.id}', this.value)"> <div id="adv-disc-menu-${g.id}" class="hidden absolute top-full left-0 w-full bg-white border border-gray-200 shadow-xl z-[60] max-h-48 overflow-y-auto mt-1 rounded"></div> </div>`; } 
-                else if(f.id === 'outlet') { filterHtml += ` <div class="flex flex-col gap-1 mt-1 relative" data-adv-filter="outlet" id="adv-outlet-wrap-${g.id}"> <label class="text-[9px] font-bold text-gray-500 uppercase tracking-wider">${f.label}</label> <input type="text" id="adv-outlet-search-${g.id}" class="pro-input text-[10px] p-1.5 w-full cursor-pointer" placeholder="Semua Outlet" value="${outletInputVal}" readonly onfocus="openAdvMenu('outlet', '${g.id}')" oninput="filterAdvMenu('outlet', '${g.id}', this.value)"> <div id="adv-outlet-menu-${g.id}" class="hidden absolute top-full left-0 w-full bg-white border border-gray-200 shadow-xl z-[60] max-h-48 overflow-y-auto mt-1 rounded"></div> </div>`; } 
-                else if(f.id === 'area') { filterHtml += ` <div class="flex flex-col gap-1 mt-1 relative" data-adv-filter="area" id="adv-area-wrap-${g.id}"> <label class="text-[9px] font-bold text-gray-500 uppercase tracking-wider">${f.label}</label> <input type="text" id="adv-area-search-${g.id}" class="pro-input text-[10px] p-1.5 w-full cursor-pointer" placeholder="Semua Area" value="${areaInputVal}" readonly onfocus="openAdvMenu('area', '${g.id}')" oninput="filterAdvMenu('area', '${g.id}', this.value)"> <div id="adv-area-menu-${g.id}" class="hidden absolute top-full left-0 w-full bg-white border border-gray-200 shadow-xl z-[60] max-h-48 overflow-y-auto mt-1 rounded"></div> </div>`; } 
-                else if(f.id === 'dept') { filterHtml += ` <div class="flex flex-col gap-1 mt-1 relative" data-adv-filter="dept"> <label class="text-[9px] font-bold text-gray-500 uppercase tracking-wider">${f.label}</label> <select class="pro-select text-[10px] p-1.5 w-full bg-gray-50 border-gray-200" onchange="updateAdvGroup('${g.id}', 'dept', this.value); renderAdvGroups();"> <option value="ALL">All</option> ${advAllDepts.map(d => `<option value="${d}" ${g.dept === d ? 'selected' : ''}>${d}</option>`).join('')} </select> </div>`; } 
-                else if(f.id === 'event') { filterHtml += ` <div class="flex flex-col gap-1 mt-1 relative" data-adv-filter="event"> <label class="text-[9px] font-bold text-gray-500 uppercase tracking-wider">${f.label}</label> <select class="pro-select text-[10px] p-1.5 w-full bg-gray-50 border-gray-200" onchange="updateAdvGroup('${g.id}', 'eventType', this.value); renderAdvGroups();"> <option value="ALL">All</option> ${advAllEventTypes.map(d => `<option value="${d}" ${g.eventType === d ? 'selected' : ''}>${d}</option>`).join('')} </select> </div>`; }
-            });
-
-            let div = document.createElement('div'); div.className = "bg-white p-3 rounded border border-gray-200 shadow-sm flex flex-col gap-2 relative transition-all";
-            div.innerHTML = ` <div class="flex justify-between items-center mb-1"> <input type="text" class="font-bold text-xs text-fr-blue border-b border-transparent hover:border-gray-300 focus:border-fr-blue outline-none w-3/4 px-1 bg-transparent" value="${g.name}" onchange="updateAdvGroup('${g.id}', 'name', this.value)"> <div class="flex items-center gap-1"> <button onclick="toggleAdvFilterSettings('${g.id}')" class="text-gray-400 hover:text-gray-600 text-xs" title="Set Filters">⚙️</button> ${advGroups.length > 1 ? `<button onclick="removeAdvGroup('${g.id}')" class="text-red-400 hover:text-red-600 text-lg leading-none" title="Hapus Group">&times;</button>` : ''} </div> </div> ${filterHtml} <div id="adv-filter-settings-${g.id}" class="hidden absolute top-full right-0 mt-1 w-56 bg-white border border-gray-200 shadow-2xl rounded z-[70] text-[11px]"> <div class="p-2 border-b border-gray-200 font-bold flex justify-between items-center bg-gray-50 rounded-t"> <span>Atur Filter (Drag & Drop)</span> <button onclick="toggleAdvFilterSettings('${g.id}')" class="text-gray-500 hover:text-red-500 text-sm leading-none">&times;</button> </div> <ul id="adv-filter-list-${g.id}" class="max-h-64 overflow-y-auto p-1 bg-gray-50"></ul> </div> `;
-            container.appendChild(div);
-        });
-        advGroups.forEach(g => { initAdvFilterSettings(g.id); });
-    }
-
-    window.toggleAdvFilterSettings = function(groupId) { let menu = document.getElementById(`adv-filter-settings-${groupId}`); menu.classList.toggle('hidden'); };
-    document.addEventListener('click', (e) => { advGroups.forEach(g => { let menu = document.getElementById(`adv-filter-settings-${g.id}`); let btn = e.target.closest(`#adv-filter-settings-${g.id}`)?.previousElementSibling?.querySelector('button[title="Set Filters"]'); if(menu && !menu.contains(e.target)) { let settingBtn = e.target.closest('button[title="Set Filters"]'); if(!settingBtn || settingBtn.getAttribute('onclick') !== `toggleAdvFilterSettings('${g.id}')`) { menu.classList.add('hidden'); } } }); });
-
-    function initAdvFilterSettings(groupId) {
-        let g = advGroups.find(x => x.id === groupId); if(!g) return; const list = document.getElementById(`adv-filter-list-${groupId}`); if(!list) return; list.innerHTML = '';
-        let dragStartIdx = -1; const order = ['date', 'items', 'discount', 'outlet', 'area', 'dept', 'event']; g.filterConfig.sort((a,b) => order.indexOf(a.id) - order.indexOf(b.id));
-        g.filterConfig.forEach((f, idx) => {
-            let li = document.createElement('li'); li.className = "flex items-center p-1.5 border-b border-gray-100 bg-white mb-1 rounded cursor-move hover:bg-gray-100 transition-colors"; li.draggable = true; li.dataset.idx = idx;
-            li.innerHTML = `<div class="flex items-center gap-2 w-full pointer-events-none"> <span class="text-gray-400 cursor-move tracking-tighter">⋮⋮</span> <input type="checkbox" class="pointer-events-auto rounded text-fr-blue w-3 h-3 cursor-pointer focus:ring-0" ${f.visible ? 'checked' : ''}> <span class="font-medium text-gray-700">${f.label}</span> </div>`;
-            li.querySelector('input').addEventListener('change', (e) => { f.visible = e.target.checked; let popoverId = `adv-filter-settings-${groupId}`; let popoverWasOpen = !document.getElementById(popoverId).classList.contains('hidden'); renderAdvGroups(); if(popoverWasOpen) { let newPopover = document.getElementById(popoverId); if(newPopover) newPopover.classList.remove('hidden'); } });
-            li.addEventListener('dragstart', (e) => { dragStartIdx = +e.target.closest('li').dataset.idx; e.dataTransfer.effectAllowed = 'move'; setTimeout(() => e.target.classList.add('opacity-50'), 0); });
-            li.addEventListener('dragover', (e) => { e.preventDefault(); return false; }); li.addEventListener('dragenter', (e) => { e.preventDefault(); e.target.closest('li')?.classList.add('border-blue-400', 'border-t-2'); }); li.addEventListener('dragleave', (e) => { e.target.closest('li')?.classList.remove('border-blue-400', 'border-t-2'); }); li.addEventListener('dragend', (e) => { e.target.classList.remove('opacity-50'); });
-            li.addEventListener('drop', (e) => { e.stopPropagation(); const targetLi = e.target.closest('li'); if(!targetLi) return false; targetLi.classList.remove('border-blue-400', 'border-t-2'); const dragEndIndex = +targetLi.dataset.idx; const item = g.filterConfig.splice(dragStartIdx, 1)[0]; g.filterConfig.splice(dragEndIndex, 0, item); let popoverId = `adv-filter-settings-${groupId}`; let popoverWasOpen = !document.getElementById(popoverId).classList.contains('hidden'); renderAdvGroups(); if(popoverWasOpen) { let newPopover = document.getElementById(popoverId); if(newPopover) newPopover.classList.remove('hidden'); } return false; });
-            list.appendChild(li);
-        });
-    }
-
-    window.updateAdvGroup = function(id, field, value) { let g = advGroups.find(x => x.id === id); if(g) g[field] = value; };
-    window.openAdvMenu = function(type, groupId) { let input = document.getElementById(`adv-${type}-search-${groupId}`); if(!input) return; input.removeAttribute('readonly'); input.value = ''; document.getElementById(`adv-${type}-menu-${groupId}`).classList.remove('hidden'); renderAdvDropdown(type, groupId, ''); };
-    window.filterAdvMenu = function(type, groupId, val) { let menu = document.getElementById(`adv-${type}-menu-${groupId}`); if(!menu) return; menu.classList.remove('hidden'); renderAdvDropdown(type, groupId, val); };
-
-    function renderAdvDropdown(type, groupId, searchStr) {
-        let g = advGroups.find(x => x.id === groupId); if(!g) return; let menu = document.getElementById(`adv-${type}-menu-${groupId}`); if(!menu) return;
-        let list, set; if(type === 'item') { list = getAdvAvailableItems(g); set = g.items; } else if(type === 'disc') { list = getAdvAvailableDiscounts(g); set = g.discounts; } else if(type === 'outlet') { list = getAdvAvailableOutlets(g); set = g.outlets; } else if(type === 'area') { list = getAdvAvailableAreas(g); set = g.areas; } else return;
-        let filtered = list.filter(x => x.toLowerCase().includes(searchStr.toLowerCase())); let html = '';
-        if (set.size > 0) { html += `<div class="px-2 py-1.5 bg-red-50 border-b border-red-100 text-fr-red text-[10px] font-bold cursor-pointer hover:bg-red-100 flex justify-between items-center sticky top-0 z-10" onclick="clearAdvSet('${type}', '${groupId}')"><span>${set.size} terpilih</span> <span>Clear &times;</span></div>`; }
-        if (filtered.length === 0) { html += `<div class="p-2 text-[10px] text-gray-500 italic">Tidak ditemukan</div>`; } else { html += filtered.slice(0, 100).map(val => { let checked = set.has(val) ? 'checked' : ''; let safeVal = val.replace(/'/g, "\\'").replace(/"/g, '&quot;'); return `<div class="px-2 py-1.5 hover:bg-gray-50 flex items-start gap-2 cursor-pointer border-b border-gray-50 last:border-0" onclick="event.stopPropagation(); toggleAdvSetItem('${type}', '${groupId}', '${safeVal}')"> <input type="checkbox" class="mt-0.5 cursor-pointer rounded text-fr-blue focus:ring-fr-blue h-3 w-3 shrink-0" ${checked} onclick="event.stopPropagation(); toggleAdvSetItem('${type}', '${groupId}', '${safeVal}')"> <span class="text-[10px] font-medium text-gray-700 leading-tight pointer-events-none">${val}</span> </div>`; }).join(''); }
-        menu.innerHTML = html;
-    }
-
-    window.toggleAdvSetItem = function(type, groupId, val) { let g = advGroups.find(x => x.id === groupId); if(!g) return; let set; if(type === 'item') set = g.items; else if(type === 'disc') set = g.discounts; else if(type === 'outlet') set = g.outlets; else if(type === 'area') set = g.areas; else return; if (set.has(val)) set.delete(val); else set.add(val); let input = document.getElementById(`adv-${type}-search-${groupId}`); if(input) renderAdvDropdown(type, groupId, input.value); };
-    window.clearAdvSet = function(type, groupId) { let g = advGroups.find(x => x.id === groupId); if(!g) return; if (type === 'item') g.items.clear(); else if (type === 'disc') g.discounts.clear(); else if (type === 'outlet') g.outlets.clear(); else if (type === 'area') g.areas.clear(); renderAdvDropdown(type, groupId, ''); updateAdvInput(type, groupId); }
-
-    function updateAdvInput(type, groupId) {
-        let g = advGroups.find(x => x.id === groupId); if(!g) return; let set; if(type === 'item') set = g.items; else if(type === 'disc') set = g.discounts; else if(type === 'outlet') set = g.outlets; else if(type === 'area') set = g.areas; else return;
-        let input = document.getElementById(`adv-${type}-search-${groupId}`); if(!input) return; input.setAttribute('readonly', true);
-        if(set.size === 0) input.value = ''; else if(set.size === 1) input.value = Array.from(set)[0]; else input.value = `${set.size} terpilih`; input.title = set.size > 0 ? Array.from(set).join('\n') : '';
-    }
-
-    document.addEventListener('click', (e) => { advGroups.forEach(g => { ['item', 'disc', 'outlet', 'area'].forEach(type => { let wrap = document.getElementById(`adv-${type}-wrap-${g.id}`); let menu = document.getElementById(`adv-${type}-menu-${g.id}`); if (wrap && menu) { if (!wrap.contains(e.target)) { if (!menu.classList.contains('hidden')) { menu.classList.add('hidden'); updateAdvInput(type, g.id); } } } }); }); });
-
-    document.getElementById('runAdvCompareBtn').addEventListener('click', () => {
-        let results = advGroups.map(g => {
-            let filtered = rawData.filter(r => {
-                let match = true; const sv = (v) => v ? v.toString().trim() : '';
-                if(g.start && (!r.DateStr || r.DateStr < g.start)) match = false; if(g.end && (!r.DateStr || r.DateStr > g.end)) match = false;
-                if (g.items.size > 0 && !g.items.has(sv(r['Items']))) match = false; if (g.discounts.size > 0 && !g.discounts.has(sv(r['Discount Applied']))) match = false; if (g.outlets.size > 0 && !g.outlets.has(sv(r['Outlet']))) match = false; if (g.areas.size > 0 && !g.areas.has(sv(r['AREA']))) match = false; if (g.dept !== 'ALL' && sv(r['DEPT']) !== g.dept) match = false; if (g.eventType !== 'ALL' && sv(r['Event Type']) !== g.eventType) match = false;
-                return match;
-            });
-            let net = 0, gross = 0, qty = 0, txSet = new Set(), disc = 0, ref = 0, tax = 0, grat = 0, coll = 0;
-            filtered.forEach(r => { net += getCleanNum(r, 'Net Sales'); gross += getCleanNum(r, 'Gross Sales'); qty += getCleanNum(r, 'Quantity'); tax += getCleanNum(r, 'Tax'); coll += getCleanNum(r, 'Total Collected Exc Rounding') || getCleanNum(r, 'Total Collected') || (getCleanNum(r, 'Net Sales') + getCleanNum(r, 'Tax')); disc += getDiscountValue(r); grat += getGratuityValue(r); ref += Math.abs(getCleanNum(r, 'Refunds') || 0); if(r['Receipt Number']) txSet.add(r['Receipt Number']); });
-            return { name: g.name, start: g.start, end: g.end, items: g.items, discounts: g.discounts, outlets: g.outlets, areas: g.areas, dept: g.dept, eventType: g.eventType, net, gross, qty, tx: txSet.size, disc, ref, tax, grat, coll, avgTx: txSet.size > 0 ? net / txSet.size : 0 };
-        });
-        renderAdvCompareTable(results);
-    });
-
-    function renderAdvCompareTable(results) {
-        lastAdvResults = results; const thead = document.getElementById('advCompareHead'); const tbody = document.getElementById('advCompareBody'); document.getElementById('exportAdvCompareBtn').classList.remove('hidden');
-        let trHead = document.createElement('tr'); trHead.innerHTML = `<th class="py-2.5 px-3 text-xs bg-gray-100 border border-gray-200 text-gray-700 shadow-sm z-10 sticky left-0 text-center align-middle">METRIC</th>`;
-        results.forEach((res, idx) => {
-            let periodStr = (!res.start && !res.end) ? 'Seluruh Waktu' : `${res.start || '...'} s/d ${res.end || '...'}`; let isBaseline = idx === 0 ? '<span class="px-1.5 py-0.5 bg-gray-200 text-gray-700 rounded text-[8px] ml-1 font-bold">BASELINE</span>' : '';
-            let itemStr = res.items.size === 0 ? 'All' : (res.items.size === 1 ? Array.from(res.items)[0] : `${res.items.size} Selected`); let itemFull = res.items.size > 0 ? Array.from(res.items).join(', ') : 'All';
-            let discStr = res.discounts.size === 0 ? 'All' : (res.discounts.size === 1 ? Array.from(res.discounts)[0] : `${res.discounts.size} Selected`); let discFull = res.discounts.size > 0 ? Array.from(res.discounts).join(', ') : 'All';
-            trHead.innerHTML += `<th class="py-2.5 px-3 text-xs bg-gray-50 border border-gray-200 text-center text-fr-blue font-bold min-w-[170px] shadow-sm align-top"> <div class="flex items-center justify-center">${res.name} ${isBaseline}</div> <span class="text-[9px] text-gray-500 font-normal block mt-1 uppercase">${periodStr}</span> <span class="text-[9px] text-gray-500 font-normal block truncate max-w-[170px] mx-auto uppercase mt-1" title="${itemFull}">Item: <span class="font-semibold text-gray-700">${itemStr}</span></span> <span class="text-[9px] text-gray-500 font-normal block truncate max-w-[170px] mx-auto uppercase" title="${discFull}">Disc: <span class="font-semibold text-gray-700">${discStr}</span></span> </th>`;
-        });
-        thead.innerHTML = ''; thead.appendChild(trHead); tbody.innerHTML = '';
-
-        const metrics = [
-            { id: 'net', label: 'Net Sales', isRp: true, isNeg: false }, { id: 'gross', label: 'Gross Sales', isRp: true, isNeg: false }, { id: 'coll', label: 'Total Collected', isRp: true, isNeg: false },
-            { id: 'disc', label: 'Total Discounts', isRp: true, isNeg: true }, { id: 'ref', label: 'Refunds', isRp: true, isNeg: true }, { id: 'tax', label: 'Total Tax', isRp: true, isNeg: false }, { id: 'grat', label: 'Total Gratuity', isRp: true, isNeg: false },
-            { id: 'qty', label: 'Quantity Sold', isRp: false, isNeg: false }, { id: 'tx', label: 'Transactions', isRp: false, isNeg: false }, { id: 'avgTx', label: 'Avg Transaction Value', isRp: true, isNeg: false, calc: (r) => r.tx > 0 ? (r.net / r.tx) : 0 }
-        ];
-
-        metrics.forEach(m => {
-            let tr = document.createElement('tr'); tr.className = "hover:bg-blue-50/50 border-b border-gray-100 transition-colors"; tr.innerHTML = `<td class="py-2 px-3 font-semibold text-[11px] text-gray-700 border border-gray-200 bg-white sticky left-0 z-10">${m.label}</td>`;
-            let baseVal = m.calc ? m.calc(results[0]) : results[0][m.id];
-            results.forEach((res, i) => {
-                let val = m.calc ? m.calc(res) : res[m.id]; let str = m.isRp ? 'Rp ' + formatRp(val) : formatNum(val);
-                if (i > 0) {
-                    if (baseVal > 0) { let pct = ((val - baseVal) / baseVal) * 100; let isPos = pct > 0; let color = isPos ? 'text-green-600' : 'text-red-500'; if (m.isNeg) color = isPos ? 'text-red-500' : 'text-green-600'; let icon = isPos ? '▲' : '▼'; str += ` <span class="text-[10px] ${color} ml-1.5 font-bold whitespace-nowrap bg-${isPos?'green':'red'}-50 px-1 py-0.5 rounded">${icon}${Math.abs(pct).toFixed(1)}%</span>`; } 
-                    else if (baseVal === 0 && val > 0) { let color = m.isNeg ? 'text-red-500' : 'text-green-600'; str += ` <span class="text-[10px] ${color} ml-1.5 font-bold whitespace-nowrap bg-green-50 px-1 py-0.5 rounded">▲100%</span>`; }
-                } else { str += ` <span class="text-[10px] text-gray-400 ml-1.5 font-bold">—</span>`; }
-                tr.innerHTML += `<td class="py-2 px-3 text-right text-[12px] font-medium border border-gray-200 text-gray-800">${str}</td>`;
-            });
-            tbody.appendChild(tr);
-        });
-    }
-
-    document.getElementById('exportAdvCompareBtn').addEventListener('click', () => {
-        if(lastAdvResults.length === 0) return;
-        const escapeCsv = (val) => { let s = String(val === null || val === undefined ? '' : val); if (s.includes(',') || s.includes('"') || s.includes('\n') || s.includes('\r')) { return '"' + s.replace(/"/g, '""') + '"'; } return s; };
-        const headerRow = ['Metric']; const subHeaderRow = ['']; const itemRow = ['']; const discRow = ['']; const otherRow = [''];
-        lastAdvResults.forEach((r, idx) => {
-            let baselineStr = idx === 0 ? " (BASELINE)" : ""; headerRow.push(r.name + baselineStr + ' - Value'); subHeaderRow.push(r.start || r.end ? `${r.start||'All'} to ${r.end||'All'}` : 'Seluruh Waktu'); itemRow.push(`Item: ${r.items.size > 0 ? Array.from(r.items).join('; ') : 'All'}`); discRow.push(`Disc: ${r.discounts.size > 0 ? Array.from(r.discounts).join('; ') : 'All'}`);
-            let otherFilters = []; if(r.outlets.size > 0) otherFilters.push(`Outlet: ${Array.from(r.outlets).join('; ')}`); if(r.areas.size > 0) otherFilters.push(`Area: ${Array.from(r.areas).join('; ')}`); if(r.dept !== 'ALL') otherFilters.push(`Dept: ${r.dept}`); if(r.eventType !== 'ALL') otherFilters.push(`Event: ${r.eventType}`); otherRow.push(otherFilters.length > 0 ? otherFilters.join(' | ') : '-');
-            if(idx > 0) { headerRow.push(r.name + ' - Growth vs Baseline'); subHeaderRow.push(''); itemRow.push(''); discRow.push(''); otherRow.push(''); }
-        });
-        let wsData = [headerRow, subHeaderRow, itemRow, discRow, otherRow, []];
-        const baseResult = lastAdvResults[0];
-        const metrics = [ { id: 'net', label: 'Net Sales' }, { id: 'gross', label: 'Gross Sales' }, { id: 'coll', label: 'Total Collected' }, { id: 'disc', label: 'Total Discounts' }, { id: 'ref', label: 'Refunds' }, { id: 'tax', label: 'Total Tax' }, { id: 'grat', label: 'Total Gratuity' }, { id: 'qty', label: 'Quantity Sold' }, { id: 'tx', label: 'Transactions' }, { id: 'avgTx', label: 'Avg Transaction Value', calc: (r) => r.tx > 0 ? (r.net / r.tx) : 0 } ];
-        metrics.forEach(m => { let row = [m.label]; lastAdvResults.forEach((res, idx) => { let val = m.calc ? m.calc(res) : res[m.id]; row.push(val); if (idx > 0) { let baseVal = m.calc ? m.calc(baseResult) : baseResult[m.id]; row.push(baseVal > 0 ? ((val - baseVal) / baseVal * 100).toFixed(2) + '%' : ''); } }); wsData.push(row); });
-        let csv = wsData.map(row => row.map(escapeCsv).join(',')).join('\r\n'); let blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' }); let url = URL.createObjectURL(blob); let a = document.createElement('a'); a.href = url; a.download = `Adv_Compare_${new Date().getTime()}.csv`; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url); showToast("Advanced Comparison berhasil diexport ke CSV!");
-    });
-
     // ============================================================
     // AUTO-LOAD CSV DARI GITHUB
     // ============================================================
@@ -1857,23 +1746,21 @@
                 populateDropdowns();
                 populateItemDropdown();
                 
-                // PAKSA SEMBUNYIKAN LOADING DAN TAMPILKAN DASHBOARD SEBELUM RENDER BERAT
+                // PAKSA SEMBUNYIKAN LOADING DAN TAMPILKAN DASHBOARD
                 document.getElementById('loadingOverlay').style.display = 'none'; 
                 els.main.style.display = 'block'; 
                 els.content.classList.remove('hidden');
                 
                 const navCtrl = document.getElementById('navDashboardControls'); navCtrl.classList.remove('hidden'); navCtrl.classList.add('flex');
                 
-                // BERI JEDA 500MS SEBELUM MENGGAMBAR GRAFIK AGAR BROWSER BERNapas
-                setTimeout(async () => {
-                    try {
-                        await executeFilterAndRender(); 
-                        showToast(`Berhasil memuat ${formatNum(rawData.length)} baris.`); 
-                    } catch(e) { 
-                        console.error(e); 
-                        showToast('Sebagian grafik gagal dirender karena data terlalu besar.', 'error');
-                    }
-                }, 500);
+                // LANGSUNG RENDER TANPA JEDA
+                try {
+                    await executeFilterAndRender(); 
+                    showToast(`Berhasil memuat ${formatNum(rawData.length)} baris.`); 
+                } catch(e) { 
+                    console.error(e); 
+                    showToast('Sebagian grafik gagal dirender karena data terlalu besar.', 'error');
+                }
 
             } else {
                 showToast('Tidak ada data valid. Periksa format CSV.', 'error');
@@ -1891,6 +1778,5 @@
 
     window.addEventListener('DOMContentLoaded', loadAllCsvFromGithub);
     </script>
-<div id="customMultiTooltip" class="hidden absolute bg-slate-800 text-white p-2.5 rounded-md shadow-xl border border-slate-700 z-[9999] max-h-64 overflow-y-auto w-max min-w-[200px] pointer-events-none opacity-0 transition-opacity duration-200"></div>
 </body>
 </html>
