@@ -109,42 +109,40 @@
                     </label>
                     <div class="flex gap-2">
                         <button id="fullscreenVsBtn" class="px-2 py-1.5 bg-white border border-gray-300 text-gray-700 hover:bg-gray-100 rounded text-[10px] sm:text-[11px] font-bold shadow-sm flex items-center gap-1 transition-colors" title="Toggle Fullscreen">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
+                            <svg id="fullscreenIcon" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
                         </button>
                         <button id="vsTableSettingsBtn" class="px-2 py-1.5 bg-white border border-gray-300 text-gray-700 hover:bg-gray-100 rounded text-[10px] sm:text-[11px] font-bold shadow-sm flex items-center gap-1 transition-colors">⚙️ Setup</button>
                         <button id="exportVsTableBtn" class="px-2 py-1.5 bg-fr-blue border border-fr-blue text-white hover:bg-blue-800 rounded text-[10px] sm:text-[11px] font-bold shadow-sm flex items-center gap-1 transition-colors"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> Export</button>
                         <button id="closeVsTableBtn" class="text-gray-400 hover:text-gray-600 text-lg leading-none px-1">&times;</button>
                     </div>
                     
-                    <div id="vsSettingsMenu" class="hidden absolute top-full right-0 sm:right-[100px] mt-1 w-[300px] sm:w-[480px] bg-white border border-gray-200 shadow-2xl rounded z-[60] text-[11px] flex flex-col sm:flex-row items-start">
-                        <div class="w-full sm:w-1/3 border-b sm:border-b-0 sm:border-r border-gray-200 flex flex-col max-h-60 sm:max-h-80">
+                    <div id="vsSettingsMenu" class="hidden absolute top-full right-0 sm:right-[100px] mt-1 w-[300px] sm:w-[500px] bg-white border border-gray-200 shadow-2xl rounded z-[60] text-[11px] flex flex-col sm:flex-row items-start">
+                        <div class="w-full sm:w-[30%] border-b sm:border-b-0 sm:border-r border-gray-200 flex flex-col max-h-60 sm:max-h-80">
                             <div class="p-2 border-b border-gray-200 bg-gray-100 font-bold text-center">Dimensions</div>
                             <ul id="vsDimList" class="overflow-y-auto p-1 bg-gray-50 flex-grow"></ul>
                         </div>
-                        <div class="w-full sm:w-1/3 border-b sm:border-b-0 sm:border-r border-gray-200 flex flex-col max-h-60 sm:max-h-80">
+                        <div class="w-full sm:w-[30%] border-b sm:border-b-0 sm:border-r border-gray-200 flex flex-col max-h-60 sm:max-h-80">
                             <div class="p-2 border-b border-gray-200 bg-gray-100 font-bold text-center">Metrics</div>
                             <ul id="vsMetricList" class="overflow-y-auto p-1 bg-gray-50 flex-grow"></ul>
                         </div>
-                        <div class="w-full sm:w-1/3 flex flex-col">
+                        <div class="w-full sm:w-[40%] flex flex-col max-h-80">
                             <div class="p-2 border-b border-gray-200 bg-gray-100 font-bold text-center">Pivot Options</div>
-                            <div class="p-3 bg-gray-50 flex-grow flex flex-col gap-3">
+                            <div class="p-3 bg-gray-50 flex-grow flex flex-col gap-3 overflow-y-auto">
                                 <label class="flex items-center gap-2 cursor-pointer font-medium text-gray-700 hover:text-fr-blue">
                                     <input type="checkbox" id="vsRepeatLabelsCb" class="w-3.5 h-3.5 rounded text-fr-blue focus:ring-fr-blue cursor-pointer"> 
-                                    Repeat All Items Label
+                                    Repeat Labels
                                 </label>
-                                <div class="flex flex-col gap-1">
-                                    <span class="font-bold text-gray-600 text-[10px] uppercase tracking-wider mb-1">Total Display</span>
+                                <div class="flex flex-col gap-1 border-t border-gray-200 pt-2">
+                                    <span class="font-bold text-gray-600 text-[10px] uppercase tracking-wider mb-1">Show Subtotal For:</span>
+                                    <div id="vsSubtotalLevelContainer" class="flex flex-col gap-1.5 pl-1">
+                                        <!-- Checkboxes will be generated here -->
+                                    </div>
+                                </div>
+                                <div class="flex flex-col gap-1 border-t border-gray-200 pt-2">
+                                    <span class="font-bold text-gray-600 text-[10px] uppercase tracking-wider mb-1">Grand Total</span>
                                     <label class="flex items-center gap-2 cursor-pointer text-gray-700 hover:text-fr-blue">
-                                        <input type="radio" name="vsTotalMode" value="both" class="w-3.5 h-3.5 text-fr-blue focus:ring-fr-blue cursor-pointer" checked> 
-                                        Subtotal & Grand Total
-                                    </label>
-                                    <label class="flex items-center gap-2 cursor-pointer text-gray-700 hover:text-fr-blue">
-                                        <input type="radio" name="vsTotalMode" value="grand" class="w-3.5 h-3.5 text-fr-blue focus:ring-fr-blue cursor-pointer"> 
-                                        Grand Total Only
-                                    </label>
-                                    <label class="flex items-center gap-2 cursor-pointer text-gray-700 hover:text-fr-blue">
-                                        <input type="radio" name="vsTotalMode" value="none" class="w-3.5 h-3.5 text-fr-blue focus:ring-fr-blue cursor-pointer"> 
-                                        Hide Totals
+                                        <input type="checkbox" id="vsGrandTotalCb" class="w-3.5 h-3.5 rounded text-fr-blue focus:ring-fr-blue cursor-pointer" checked> 
+                                        Show Grand Total
                                     </label>
                                 </div>
                             </div>
@@ -727,8 +725,7 @@
                 div.onclick = (e) => { 
                     e.stopPropagation(); if(e.target !== cb) cb.checked = !cb.checked; 
                     if(cb.checked) selectedAreasSet.add(out); else selectedAreasSet.delete(out); 
-                    let curSearch = areaSearch.value;
-                    renderAreaDropdown(curSearch);
+                    renderAreaDropdown(areaSearch.value);
                     updateClearAreaButton();
                     clearTimeout(window.filterDebounceTimer); window.filterDebounceTimer = setTimeout(() => { executeFilterAndRender(); }, 350);
                 }; 
@@ -753,7 +750,8 @@
         }
         areaSearch.addEventListener('focus', () => { areaSearch.value = ''; areaDropdown.classList.remove('hidden'); renderAreaDropdown(''); });
         areaSearch.addEventListener('input', (e) => { areaDropdown.classList.remove('hidden'); renderAreaDropdown(e.target.value); });
-        areaSearch.addEventListener('blur', () => { setTimeout(() => updateSelectedAreasUI(), 200); });
+        // PERBAIKAN: Blur hanya menutup dropdown jika benar-benar di luar container, bukan karena klik item
+        areaSearch.addEventListener('blur', () => { setTimeout(() => { if(!areaSearch.matches(':focus') && document.activeElement !== areaSearch) { areaDropdown.classList.add('hidden'); updateSelectedAreasUI(); } }, 200); });
         document.addEventListener('click', (e) => { if(!document.getElementById('areaSearchContainer').contains(e.target)) areaDropdown.classList.add('hidden'); });
 
         function getAvailableOptions(targetColumn, excludeSearchMode = false) {
@@ -1006,8 +1004,7 @@
                 div.onclick = (e) => { 
                     e.stopPropagation(); if(e.target !== cb) cb.checked = !cb.checked; 
                     if(cb.checked) selectedDiscountsSet.add(out); else selectedDiscountsSet.delete(out); 
-                    let curSearch = discountSearch.value;
-                    renderDiscountDropdown(curSearch); updateClearDiscountButton();
+                    renderDiscountDropdown(discountSearch.value); updateClearDiscountButton();
                     clearTimeout(window.filterDebounceTimer); window.filterDebounceTimer = setTimeout(() => { executeFilterAndRender(); }, 350);
                 }; 
                 div.appendChild(cb); div.appendChild(span); frag.appendChild(div); 
@@ -1031,7 +1028,7 @@
         }
         discountSearch.addEventListener('focus', () => { discountSearch.value = ''; discountDropdown.classList.remove('hidden'); renderDiscountDropdown(''); });
         discountSearch.addEventListener('input', (e) => { discountDropdown.classList.remove('hidden'); renderDiscountDropdown(e.target.value); });
-        discountSearch.addEventListener('blur', () => { setTimeout(() => updateSelectedDiscountsUI(), 200); });
+        discountSearch.addEventListener('blur', () => { setTimeout(() => { if(!discountSearch.matches(':focus') && document.activeElement !== discountSearch) { discountDropdown.classList.add('hidden'); updateSelectedDiscountsUI(); } }, 200); });
         document.addEventListener('click', (e) => { if(!document.getElementById('discountSearchContainer').contains(e.target)) discountDropdown.classList.add('hidden'); });
 
         const compareSelect = document.getElementById('compareSelect');
@@ -1061,7 +1058,7 @@
                 div.addEventListener('click', (e) => { 
                     e.stopPropagation(); if(e.target !== cb) cb.checked = !cb.checked; 
                     if(cb.checked) selectedItemsSet.add(item); else selectedItemsSet.delete(item); 
-                    let curSearch = searchInput.value; renderItemDropdown(curSearch); updateClearButton();
+                    renderItemDropdown(searchInput.value); updateClearButton();
                     clearTimeout(window.filterDebounceTimer); window.filterDebounceTimer = setTimeout(() => { executeFilterAndRender(); }, 350);
                 }); 
                 div.appendChild(cb); div.appendChild(span); frag.appendChild(div); 
@@ -1080,7 +1077,7 @@
         }
         searchInput.addEventListener('focus', () => { searchInput.value = ''; itemDropdown.classList.remove('hidden'); renderItemDropdown(''); customMultiTooltip.classList.add('hidden'); }); 
         searchInput.addEventListener('input', (e) => { itemDropdown.classList.remove('hidden'); renderItemDropdown(e.target.value); }); 
-        searchInput.addEventListener('blur', () => { setTimeout(() => updateSelectedItemsUI(), 200); }); 
+        searchInput.addEventListener('blur', () => { setTimeout(() => { if(!searchInput.matches(':focus') && document.activeElement !== searchInput) { itemDropdown.classList.add('hidden'); updateSelectedItemsUI(); } }, 200); }); 
         
         function bindFilterTooltip(inputEl, dropdownEl, setObj) {
             let targetEl = inputEl.closest('.filter-item') || inputEl;
@@ -1114,7 +1111,7 @@
                 div.onclick = (e) => { 
                     e.stopPropagation(); if(e.target !== cb) cb.checked = !cb.checked; 
                     if(cb.checked) selectedOutletsSet.add(out); else selectedOutletsSet.delete(out); 
-                    let curSearch = outletSearch.value; renderOutletDropdown(curSearch); updateClearOutletButton();
+                    renderOutletDropdown(outletSearch.value); updateClearOutletButton();
                     clearTimeout(window.filterDebounceTimer); window.filterDebounceTimer = setTimeout(() => { executeFilterAndRender(); }, 350);
                 }; 
                 div.appendChild(cb); div.appendChild(span); frag.appendChild(div); 
@@ -1137,7 +1134,7 @@
         }
         outletSearch.addEventListener('focus', () => { outletSearch.value = ''; outletDropdown.classList.remove('hidden'); renderOutletDropdown(''); });
         outletSearch.addEventListener('input', (e) => { outletDropdown.classList.remove('hidden'); renderOutletDropdown(e.target.value); });
-        outletSearch.addEventListener('blur', () => { setTimeout(() => updateSelectedOutletsUI(), 200); });
+        outletSearch.addEventListener('blur', () => { setTimeout(() => { if(!outletSearch.matches(':focus') && document.activeElement !== outletSearch) { outletDropdown.classList.add('hidden'); updateSelectedOutletsUI(); } }, 200); });
         document.addEventListener('click', (e) => { if(!document.getElementById('outletSearchContainer').contains(e.target)) outletDropdown.classList.add('hidden'); });
         bindFilterTooltip(areaSearch, areaDropdown, selectedAreasSet); 
         bindFilterTooltip(outletSearch, outletDropdown, selectedOutletsSet); 
@@ -1492,16 +1489,52 @@
 
     // EVENT LISTENER UNTUK REPEAT LABELS & TOTAL MODE
     document.getElementById('vsRepeatLabelsCb').addEventListener('change', scheduleRenderVsTable);
-    document.querySelectorAll('input[name="vsTotalMode"]').forEach(radio => {
-        radio.addEventListener('change', scheduleRenderVsTable);
-    });
+    document.getElementById('vsGrandTotalCb').addEventListener('change', scheduleRenderVsTable);
+
+    function renderSubtotalCheckboxes() {
+        const container = document.getElementById('vsSubtotalLevelContainer');
+        if(!container) return;
+        container.innerHTML = '';
+        let activeDims = vsDimConfig.filter(d => d.visible);
+        
+        if (activeDims.length <= 1) {
+            container.innerHTML = '<span class="text-[10px] text-gray-400 italic">Butuh minimal 2 dimensi untuk subtotal.</span>';
+            return;
+        }
+
+        activeDims.forEach((dim, index) => {
+            if (index === activeDims.length - 1) return; // Level terakhir tidak perlu subtotal karena sudah jadi baris data
+            
+            let label = document.createElement('label');
+            label.className = 'flex items-center gap-2 cursor-pointer text-gray-700 hover:text-fr-blue text-[11px]';
+            let cb = document.createElement('input');
+            cb.type = 'checkbox';
+            cb.className = 'w-3.5 h-3.5 rounded text-fr-blue focus:ring-fr-blue cursor-pointer';
+            cb.checked = dim.showSubtotal !== false; // Default true
+            cb.dataset.dimId = dim.id;
+            cb.addEventListener('change', (e) => {
+                dim.showSubtotal = e.target.checked;
+                scheduleRenderVsTable();
+            });
+            
+            let span = document.createElement('span');
+            span.innerText = `Subtotal ${dim.label}`;
+            
+            label.appendChild(cb);
+            label.appendChild(span);
+            container.appendChild(label);
+        });
+    }
 
     const vsTableModal = document.getElementById('vsTableModal');
     document.getElementById('openVsTableBtn').addEventListener('click', () => {
         if(rawData.length === 0) { showToast('Tidak ada data, upload file terlebih dahulu', 'error'); return; }
         document.getElementById('vsModalMainStart').value = filters.dStart.value; document.getElementById('vsModalMainEnd').value = filters.dEnd.value; document.getElementById('vsModalCompareMode').value = compareSelect.value; document.getElementById('vsModalVsStart').value = document.getElementById('compareDateStart').value; document.getElementById('vsModalVsEnd').value = document.getElementById('compareDateEnd').value;
         if(compareSelect.value === 'custom') { document.getElementById('vsModalCustomDateWrapper').classList.remove('hidden'); document.getElementById('vsModalCustomDateWrapper').classList.add('flex'); } else { document.getElementById('vsModalCustomDateWrapper').classList.remove('flex'); document.getElementById('vsModalCustomDateWrapper').classList.add('hidden'); }
-        vsTableModal.classList.remove('hidden'); renderVsDimFilterPanel(); renderVsTable();
+        vsTableModal.classList.remove('hidden'); 
+        renderSubtotalCheckboxes();
+        renderVsDimFilterPanel(); 
+        renderVsTable();
         let activeF = []; if(filters.dStart.value) activeF.push(`Date: ${filters.dStart.value}`); if(filters.dept.value !== 'ALL') activeF.push(`Dept: ${filters.dept.value}`); if(filters.eventType.value !== 'ALL') activeF.push(`Event: ${filters.eventType.value}`); if(selectedItemsSet.size > 0) activeF.push(`${searchMode.value}: ${selectedItemsSet.size} terpilih`); if(selectedOutletsSet.size > 0) activeF.push(`Outlet: ${selectedOutletsSet.size} terpilih`); if(selectedAreasSet.size > 0) activeF.push(`Area: ${selectedAreasSet.size} terpilih`); if(selectedDiscountsSet.size > 0) activeF.push(`Disc: ${selectedDiscountsSet.size} terpilih`);
         let msg = "VS Table disinkronisasi. Filter: " + (activeF.length > 0 ? activeF.join(', ') : 'Semua Data'); showToast(msg, 'info');
     });
@@ -1572,13 +1605,38 @@
                     filtered.forEach(val => {
                         let div = document.createElement('div'); div.className = 'px-3 py-2 hover:bg-gray-50 flex items-start gap-2 cursor-pointer border-b border-gray-50 last:border-0'; let cb = document.createElement('input'); cb.type = 'checkbox'; cb.className = 'mt-0.5 cursor-pointer rounded text-fr-blue focus:ring-fr-blue h-3 w-3 shrink-0'; cb.checked = selectedSet.has(val);
                         let span = document.createElement('span'); span.className = 'text-[11px] font-medium text-gray-700 leading-tight'; span.innerText = val;
-                        div.onmousedown = (e) => e.preventDefault(); div.onclick = (e) => { e.stopPropagation(); if (e.target !== cb) cb.checked = !cb.checked; if (cb.checked) selectedSet.add(val); else selectedSet.delete(val); updateInputVal(); updateClearBtn(); renderOptions(inputEl.value.startsWith('All') || /\d+ terpilih/.test(inputEl.value) ? '' : inputEl.value); scheduleRenderVsTable(); };
+                        div.onmousedown = (e) => e.preventDefault(); 
+                        div.onclick = (e) => { 
+                            e.stopPropagation(); 
+                            if (e.target !== cb) cb.checked = !cb.checked; 
+                            if (cb.checked) selectedSet.add(val); else selectedSet.delete(val); 
+                            updateInputVal(); 
+                            updateClearBtn(); 
+                            // Hanya re-render options, jangan tutup menu
+                            renderOptions(inputEl.value.startsWith('All') || /\d+ terpilih/.test(inputEl.value) ? '' : inputEl.value); 
+                            scheduleRenderVsTable(); 
+                        };
                         div.appendChild(cb); div.appendChild(span); optionsEl.appendChild(div);
                     });
                 }
             };
             let updateInputVal = () => { if (selectedSet.size === 0) { inputEl.value = ''; inputEl.placeholder = `All ${dim.label}...`; } else if (selectedSet.size === 1) { inputEl.value = Array.from(selectedSet)[0]; inputEl.placeholder = `All ${dim.label}...`; } else { inputEl.value = `${selectedSet.size} terpilih`; inputEl.placeholder = `All ${dim.label}...`; } };
-            inputEl.addEventListener('focus', () => { inputEl.value = ''; menuEl.classList.remove('hidden'); renderOptions(''); }); inputEl.addEventListener('input', (e) => { renderOptions(e.target.value); }); inputEl.addEventListener('blur', () => { setTimeout(() => { menuEl.classList.add('hidden'); updateInputVal(); }, 250); }); clearBtn.addEventListener('click', (e) => { e.stopPropagation(); selectedSet.clear(); updateInputVal(); updateClearBtn(); scheduleRenderVsTable(); });
+            
+            inputEl.addEventListener('focus', () => { inputEl.value = ''; menuEl.classList.remove('hidden'); renderOptions(''); }); 
+            inputEl.addEventListener('input', (e) => { renderOptions(e.target.value); }); 
+            
+            // PERBAIKAN: Blur handler yang lebih pintar
+            inputEl.addEventListener('blur', () => { 
+                setTimeout(() => { 
+                    // Cek apakah fokus masih di dalam wrapper (misal user klik checkbox)
+                    if (!wrapper.contains(document.activeElement)) { 
+                        menuEl.classList.add('hidden'); 
+                        updateInputVal(); 
+                    } 
+                }, 250); 
+            }); 
+            
+            clearBtn.addEventListener('click', (e) => { e.stopPropagation(); selectedSet.clear(); updateInputVal(); updateClearBtn(); scheduleRenderVsTable(); });
         });
     }
 
@@ -1615,7 +1673,7 @@
         let activeMets = vsMetricConfig.filter(m => m.visible); 
         
         let repeatLabels = document.getElementById('vsRepeatLabelsCb')?.checked || false;
-        let totalMode = document.querySelector('input[name="vsTotalMode"]:checked')?.value || 'both';
+        let showGrandTotal = document.getElementById('vsGrandTotalCb')?.checked !== false;
 
         let thead = document.getElementById('vsTableHead'); 
         let tbody = document.getElementById('vsTableBody');
@@ -1640,7 +1698,7 @@
             return agg;
         }
 
-        let aggKey = JSON.stringify({ dims: activeDims.map(d => d.id), mets: activeMets.map(m => m.id), filtKey: getActiveVsDimFilterKey(), distinct: isDistinctTx, mainDate: filters.dStart.value + '|' + filters.dEnd.value, vsDate: (window.currentCompareDateRange ? window.currentCompareDateRange.start + '|' + window.currentCompareDateRange.end : ''), filterDataHash: filteredData.length, repeat: repeatLabels, total: totalMode });
+        let aggKey = JSON.stringify({ dims: activeDims.map(d => d.id), mets: activeMets.map(m => m.id), filtKey: getActiveVsDimFilterKey(), distinct: isDistinctTx, mainDate: filters.dStart.value + '|' + filters.dEnd.value, vsDate: (window.currentCompareDateRange ? window.currentCompareDateRange.start + '|' + window.currentCompareDateRange.end : ''), filterDataHash: filteredData.length, repeat: repeatLabels, total: showGrandTotal, sub: activeDims.map(d => d.showSubtotal) });
         let filteredMain = applyVsDimFilters(filteredData); let filteredVs = applyVsDimFilters(window.prevDataExport || []);
         let mainAgg, vsAgg; if (aggKey === vsLastAggKey && vsCacheMainAgg && vsCacheVsAgg) { mainAgg = vsCacheMainAgg; vsAgg = vsCacheVsAgg; } else { mainAgg = aggData(filteredMain); vsAgg = aggData(filteredVs); vsCacheMainAgg = mainAgg; vsCacheVsAgg = vsAgg; vsLastAggKey = aggKey; }
         let allKeys = Array.from(new Set([...Object.keys(mainAgg), ...Object.keys(vsAgg)])).sort();
@@ -1671,7 +1729,11 @@
                 if (isLeaf) { vsFinalRows.push({ type: 'data', dims: path, main: child._totals.main, vs: child._totals.vs }); } 
                 else { 
                     traverse(child._children, path); 
-                    if (totalMode === 'both' && activeDims.length > 1) { 
+                    // Cek setting checkbox subtotal untuk level ini
+                    let currentDim = activeDims[path.length - 1];
+                    let shouldShowSubtotal = currentDim && currentDim.showSubtotal !== false;
+                    
+                    if (shouldShowSubtotal && path.length < activeDims.length) { 
                         let subDims = [...path]; 
                         while(subDims.length < activeDims.length) { 
                             if(subDims.length === path.length) subDims.push('Total ' + path[path.length-1]); 
@@ -1684,7 +1746,7 @@
         }
         traverse(tree, []);
         
-        if (totalMode !== 'none') {
+        if (showGrandTotal) {
             let gtDims = activeDims.map((d, i) => i === 0 ? 'GRAND TOTAL' : ''); 
             vsFinalRows.push({ type: 'grandtotal', level: 0, dims: gtDims, main: grandTotals.main, vs: grandTotals.vs });
         }
@@ -1712,8 +1774,8 @@
 
         tbody.innerHTML = '';
         
-        // LOGIKA ROW SPAN YANG SUDAH DIPERBAIKI
-        let rowSpans = {}; // Menyimpan informasi span untuk setiap baris data
+        // LOGIKA ROW SPAN YANG SUDAH DIPERBAIKI (Hanya untuk tipe 'data')
+        let rowSpans = {}; 
         if (!repeatLabels) {
             tableDims.forEach(d => {
                 let origIdx = activeDims.findIndex(ad => ad.id === d.id);
@@ -1802,38 +1864,108 @@
         });
     }
 
-    // FUNGSI FULLSCREEN
+    // FUNGSI FULLSCREEN YANG SUDAH DIPERBAIKI
     const fullscreenBtn = document.getElementById('fullscreenVsBtn');
     const vsTableModalContent = document.getElementById('vsTableModalContent');
-    fullscreenBtn.addEventListener('click', () => {
+    const fullscreenIcon = document.getElementById('fullscreenIcon');
+    
+    const enterFullscreenSvg = `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>`;
+    const exitFullscreenSvg = `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 11l3-3m0 0l3 3m-3-3v8m0-13a9 9 0 110 18 9 9 0 010-18z"></path></svg>`;
+
+    function toggleFullscreen() {
         if (!document.fullscreenElement) {
             vsTableModalContent.requestFullscreen().catch(err => {
                 showToast(`Error attempting to enable full-screen mode: ${err.message}`, 'error');
             });
-            fullscreenBtn.innerHTML = `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 11l3-3m0 0l3 3m-3-3v8m0-13a9 9 0 110 18 9 9 0 010-18z"></path></svg>`;
         } else {
             document.exitFullscreen();
-            fullscreenBtn.innerHTML = `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>`;
+        }
+    }
+
+    fullscreenBtn.addEventListener('click', toggleFullscreen);
+
+    document.addEventListener('fullscreenchange', () => {
+        if (document.fullscreenElement) {
+            fullscreenIcon.innerHTML = exitFullscreenSvg;
+            fullscreenBtn.title = "Exit Fullscreen";
+            vsTableModalContent.classList.remove('max-w-6xl', 'max-h-[95vh]');
+            vsTableModalContent.classList.add('max-w-full', 'h-screen', 'max-h-screen', 'rounded-none');
+        } else {
+            fullscreenIcon.innerHTML = enterFullscreenSvg;
+            fullscreenBtn.title = "Enter Fullscreen";
+            vsTableModalContent.classList.remove('max-w-full', 'h-screen', 'max-h-screen', 'rounded-none');
+            vsTableModalContent.classList.add('max-w-6xl', 'max-h-[95vh]');
         }
     });
 
+    // FUNGSI EXPORT YANG SUDAH DIPERBAIKI (MENGIKUTI VISUAL TABEL)
     document.getElementById('exportVsTableBtn').addEventListener('click', () => {
         if(vsFinalRows.length === 0) { showToast('Tidak ada data untuk di-export', 'error'); return; }
+        
         let activeDims = vsDimConfig.filter(d => d.visible); 
         let tableDims = vsDimConfig.filter(d => d.visible && (d.showInTable !== undefined ? d.showInTable : true)); 
         let activeMets = vsMetricConfig.filter(m => m.visible); 
+        let repeatLabels = document.getElementById('vsRepeatLabelsCb')?.checked || false;
+        
         let wsData = [];
         let r1 = []; 
         tableDims.forEach(d => r1.push(d.label.toUpperCase())); 
         activeMets.forEach(m => { r1.push(m.label.toUpperCase() + ' VS'); r1.push(m.label.toUpperCase() + ' MAIN'); r1.push(m.label.toUpperCase() + ' GROWTH'); }); 
         wsData.push(r1);
         
-        vsFinalRows.forEach(r => { 
+        // Kalkulasi rowspan untuk export (sama seperti visual)
+        let rowSpans = {}; 
+        if (!repeatLabels) {
+            tableDims.forEach(d => {
+                let origIdx = activeDims.findIndex(ad => ad.id === d.id);
+                if(origIdx === -1) return;
+                let currentVal = null; let spanCount = 0; let startRowIdx = -1;
+                for(let i = 0; i < vsFinalRows.length; i++) {
+                    let r = vsFinalRows[i];
+                    if(r.type !== 'data') continue; 
+                    let val = r.dims[origIdx];
+                    if (val !== currentVal) {
+                        if (spanCount > 1 && startRowIdx !== -1) {
+                            if(!rowSpans[startRowIdx]) rowSpans[startRowIdx] = {};
+                            rowSpans[startRowIdx][d.id] = spanCount;
+                        }
+                        currentVal = val; spanCount = 1; startRowIdx = i;
+                    } else { spanCount++; }
+                }
+                if (spanCount > 1 && startRowIdx !== -1) {
+                    if(!rowSpans[startRowIdx]) rowSpans[startRowIdx] = {};
+                    rowSpans[startRowIdx][d.id] = spanCount;
+                }
+            });
+        }
+
+        // Simpan data yang sudah di-cover untuk di-skip di CSV
+        let coveredCells = {}; 
+        if (!repeatLabels) {
+            tableDims.forEach(d => {
+                for(let prevIdx = 0; prevIdx < vsFinalRows.length; prevIdx++) {
+                    if (rowSpans[prevIdx] && rowSpans[prevIdx][d.id] !== undefined) {
+                        let span = rowSpans[prevIdx][d.id];
+                        for(let k = 1; k < span; k++) {
+                            if(!coveredCells[prevIdx + k]) coveredCells[prevIdx + k] = {};
+                            coveredCells[prevIdx + k][d.id] = true;
+                        }
+                    }
+                }
+            });
+        }
+
+        vsFinalRows.forEach((r, rowIdx) => { 
             let rowObj = []; 
-            tableDims.forEach((d, i) => { 
+            tableDims.forEach((d) => { 
                 let originalIndex = activeDims.findIndex(ad => ad.id === d.id);
                 if(originalIndex === -1) return;
-                rowObj.push(r.dims[originalIndex] !== undefined ? r.dims[originalIndex] : ''); 
+                
+                if (coveredCells[rowIdx] && coveredCells[rowIdx][d.id]) {
+                    rowObj.push(''); // Kosongkan jika di-cover rowspan
+                } else {
+                    rowObj.push(r.dims[originalIndex] !== undefined ? r.dims[originalIndex] : ''); 
+                }
             }); 
             activeMets.forEach(m => { 
                 let mVal = r.main[m.id] || 0; let vVal = r.vs[m.id] || 0; 
