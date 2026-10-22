@@ -1619,6 +1619,7 @@
                             if (cb.checked) selectedSet.add(val); else selectedSet.delete(val); 
                             updateInputVal(); 
                             updateClearBtn(); 
+                            // Hanya re-render options, jangan tutup menu
                             renderOptions(inputEl.value.startsWith('All') || /\d+ terpilih/.test(inputEl.value) ? '' : inputEl.value); 
                             scheduleRenderVsTable(); 
                         };
