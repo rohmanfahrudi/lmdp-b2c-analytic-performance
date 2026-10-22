@@ -750,8 +750,15 @@
         }
         areaSearch.addEventListener('focus', () => { areaSearch.value = ''; areaDropdown.classList.remove('hidden'); renderAreaDropdown(''); });
         areaSearch.addEventListener('input', (e) => { areaDropdown.classList.remove('hidden'); renderAreaDropdown(e.target.value); });
-        // PERBAIKAN: Blur hanya menutup dropdown jika benar-benar di luar container, bukan karena klik item
-        areaSearch.addEventListener('blur', () => { setTimeout(() => { if(!areaSearch.matches(':focus') && document.activeElement !== areaSearch) { areaDropdown.classList.add('hidden'); updateSelectedAreasUI(); } }, 200); });
+        // Blur handler yang lebih pintar
+        areaSearch.addEventListener('blur', () => { 
+            setTimeout(() => { 
+                if (!document.getElementById('areaSearchContainer').contains(document.activeElement)) { 
+                    areaDropdown.classList.add('hidden'); 
+                    updateSelectedAreasUI(); 
+                } 
+            }, 200); 
+        });
         document.addEventListener('click', (e) => { if(!document.getElementById('areaSearchContainer').contains(e.target)) areaDropdown.classList.add('hidden'); });
 
         function getAvailableOptions(targetColumn, excludeSearchMode = false) {
@@ -1028,7 +1035,7 @@
         }
         discountSearch.addEventListener('focus', () => { discountSearch.value = ''; discountDropdown.classList.remove('hidden'); renderDiscountDropdown(''); });
         discountSearch.addEventListener('input', (e) => { discountDropdown.classList.remove('hidden'); renderDiscountDropdown(e.target.value); });
-        discountSearch.addEventListener('blur', () => { setTimeout(() => { if(!discountSearch.matches(':focus') && document.activeElement !== discountSearch) { discountDropdown.classList.add('hidden'); updateSelectedDiscountsUI(); } }, 200); });
+        discountSearch.addEventListener('blur', () => { setTimeout(() => { if (!document.getElementById('discountSearchContainer').contains(document.activeElement)) { discountDropdown.classList.add('hidden'); updateSelectedDiscountsUI(); } }, 200); });
         document.addEventListener('click', (e) => { if(!document.getElementById('discountSearchContainer').contains(e.target)) discountDropdown.classList.add('hidden'); });
 
         const compareSelect = document.getElementById('compareSelect');
@@ -1077,7 +1084,7 @@
         }
         searchInput.addEventListener('focus', () => { searchInput.value = ''; itemDropdown.classList.remove('hidden'); renderItemDropdown(''); customMultiTooltip.classList.add('hidden'); }); 
         searchInput.addEventListener('input', (e) => { itemDropdown.classList.remove('hidden'); renderItemDropdown(e.target.value); }); 
-        searchInput.addEventListener('blur', () => { setTimeout(() => { if(!searchInput.matches(':focus') && document.activeElement !== searchInput) { itemDropdown.classList.add('hidden'); updateSelectedItemsUI(); } }, 200); }); 
+        searchInput.addEventListener('blur', () => { setTimeout(() => { if (!document.getElementById('itemSearchContainer').contains(document.activeElement)) { itemDropdown.classList.add('hidden'); updateSelectedItemsUI(); } }, 200); }); 
         
         function bindFilterTooltip(inputEl, dropdownEl, setObj) {
             let targetEl = inputEl.closest('.filter-item') || inputEl;
@@ -1134,7 +1141,7 @@
         }
         outletSearch.addEventListener('focus', () => { outletSearch.value = ''; outletDropdown.classList.remove('hidden'); renderOutletDropdown(''); });
         outletSearch.addEventListener('input', (e) => { outletDropdown.classList.remove('hidden'); renderOutletDropdown(e.target.value); });
-        outletSearch.addEventListener('blur', () => { setTimeout(() => { if(!outletSearch.matches(':focus') && document.activeElement !== outletSearch) { outletDropdown.classList.add('hidden'); updateSelectedOutletsUI(); } }, 200); });
+        outletSearch.addEventListener('blur', () => { setTimeout(() => { if (!document.getElementById('outletSearchContainer').contains(document.activeElement)) { outletDropdown.classList.add('hidden'); updateSelectedOutletsUI(); } }, 200); });
         document.addEventListener('click', (e) => { if(!document.getElementById('outletSearchContainer').contains(e.target)) outletDropdown.classList.add('hidden'); });
         bindFilterTooltip(areaSearch, areaDropdown, selectedAreasSet); 
         bindFilterTooltip(outletSearch, outletDropdown, selectedOutletsSet); 
@@ -1612,7 +1619,6 @@
                             if (cb.checked) selectedSet.add(val); else selectedSet.delete(val); 
                             updateInputVal(); 
                             updateClearBtn(); 
-                            // Hanya re-render options, jangan tutup menu
                             renderOptions(inputEl.value.startsWith('All') || /\d+ terpilih/.test(inputEl.value) ? '' : inputEl.value); 
                             scheduleRenderVsTable(); 
                         };
@@ -1625,10 +1631,9 @@
             inputEl.addEventListener('focus', () => { inputEl.value = ''; menuEl.classList.remove('hidden'); renderOptions(''); }); 
             inputEl.addEventListener('input', (e) => { renderOptions(e.target.value); }); 
             
-            // PERBAIKAN: Blur handler yang lebih pintar
+            // PERBAIKAN: Blur handler yang lebih pintar untuk dropdown di modal
             inputEl.addEventListener('blur', () => { 
                 setTimeout(() => { 
-                    // Cek apakah fokus masih di dalam wrapper (misal user klik checkbox)
                     if (!wrapper.contains(document.activeElement)) { 
                         menuEl.classList.add('hidden'); 
                         updateInputVal(); 
@@ -1774,8 +1779,8 @@
 
         tbody.innerHTML = '';
         
-        // LOGIKA ROW SPAN YANG SUDAH DIPERBAIKI (Hanya untuk tipe 'data')
-        let rowSpans = {}; 
+        // LOGIKA ROW SPAN YANG SUDAH DIPERBAIKI (Menggunakan rowMap untuk akurasi)
+        let rowMap = {}; 
         if (!repeatLabels) {
             tableDims.forEach(d => {
                 let origIdx = activeDims.findIndex(ad => ad.id === d.id);
@@ -1787,15 +1792,15 @@
                 
                 for(let i = 0; i < vsFinalRows.length; i++) {
                     let r = vsFinalRows[i];
-                    // Hanya hitung rowspan untuk baris DATA, jangan hitung SUBTOTAL atau GRANDTOTAL
+                    // Hanya hitung rowspan untuk baris DATA
                     if(r.type !== 'data') continue; 
                     
                     let val = r.dims[origIdx];
                     if (val !== currentVal) {
                         // Simpan span sebelumnya jika valid
                         if (spanCount > 1 && startRowIdx !== -1) {
-                            if(!rowSpans[startRowIdx]) rowSpans[startRowIdx] = {};
-                            rowSpans[startRowIdx][d.id] = spanCount;
+                            if(!rowMap[startRowIdx]) rowMap[startRowIdx] = {};
+                            rowMap[startRowIdx][d.id] = spanCount;
                         }
                         // Reset untuk nilai baru
                         currentVal = val; 
@@ -1807,8 +1812,8 @@
                 }
                 // Simpan span terakhir jika ada
                 if (spanCount > 1 && startRowIdx !== -1) {
-                    if(!rowSpans[startRowIdx]) rowSpans[startRowIdx] = {};
-                    rowSpans[startRowIdx][d.id] = spanCount;
+                    if(!rowMap[startRowIdx]) rowMap[startRowIdx] = {};
+                    rowMap[startRowIdx][d.id] = spanCount;
                 }
             });
         }
@@ -1824,8 +1829,8 @@
                 let isCovered = false;
                 if (!repeatLabels) {
                     for(let prevIdx = rowIdx - 1; prevIdx >= 0; prevIdx--) {
-                        if (rowSpans[prevIdx] && rowSpans[prevIdx][d.id] !== undefined) {
-                            let span = rowSpans[prevIdx][d.id];
+                        if (rowMap[prevIdx] && rowMap[prevIdx][d.id] !== undefined) {
+                            let span = rowMap[prevIdx][d.id];
                             if (rowIdx < prevIdx + span) {
                                 isCovered = true;
                             }
@@ -1842,8 +1847,8 @@
                 let td = document.createElement('td'); 
                 td.className = "py-2 px-3 text-[11px] text-gray-800 border border-gray-200 whitespace-nowrap "; 
                 
-                if (rowSpans[rowIdx] && rowSpans[rowIdx][d.id] !== undefined) {
-                    td.rowSpan = rowSpans[rowIdx][d.id];
+                if (rowMap[rowIdx] && rowMap[rowIdx][d.id] !== undefined) {
+                    td.rowSpan = rowMap[rowIdx][d.id];
                     td.classList.add('align-top'); // Agar teks di atas saat rowspan
                 }
                 
